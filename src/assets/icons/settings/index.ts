@@ -1,0 +1,17 @@
+export { default as CompanyIcon } from './company.svg';
+export { default as CookieIcon } from './cookie.svg';
+export { default as DocumentsIcon } from './documents.svg';
+export { default as EmailIcon } from './email.svg';
+export { default as IndustryIcon } from './industry.svg';
+export { default as LanguageIcon } from './language.svg';
+export { default as LocationIcon } from './location.svg';
+export { default as LogoutIcon } from './logout.svg';
+export { default as PasswordIcon } from './password.svg';
+export { default as PersonalIcon } from './personal.svg';
+export { default as SettingsIcon } from './settings.svg';
+export { default as SkillsIcon } from './skills.svg';
+export { default as StarIcon } from './star.svg';
+export { default as StartpageIcon } from './startpage.svg';
+export { default as ThemeIcon } from './theme.svg';
+export { default as UserIcon } from './user.svg';
+export { default as UsersIcon } from './users.svg';

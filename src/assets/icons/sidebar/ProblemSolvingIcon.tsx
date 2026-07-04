@@ -1,0 +1,12 @@
+import type { SVGProps } from 'react';
+
+export function ProblemSolvingIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 16 18" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M1.2 12.8L3.72 10.28L3.68 10.24C3.36 9.92 3.2 9.54667 3.2 9.12C3.2 8.69333 3.36 8.32 3.68 8L11.2 0.48C11.52 0.16 11.8933 0 12.32 0C12.7467 0 13.12 0.16 13.44 0.48L15.52 2.56C15.84 2.88 16 3.25333 16 3.68C16 4.10667 15.84 4.48 15.52 4.8L8 12.32C7.68 12.64 7.30667 12.8 6.88 12.8C6.45333 12.8 6.08 12.64 5.76 12.32L5.72 12.28L5.2 12.8H1.2ZM10.86 7.22L8.78 5.14L4.82 9.1L6.9 11.18L10.86 7.22ZM0 17.6V14.4H16V17.6H0Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}

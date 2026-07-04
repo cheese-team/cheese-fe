@@ -1,0 +1,162 @@
+@import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
+
+@theme {
+  --font-sans: 'Pretendard', system-ui, sans-serif;
+
+  /* ================================
+     Palette
+     ================================ */
+
+  /* Primary */
+  --color-primary-100: #fffcf0;
+  --color-primary-200: #fff8de;
+  --color-primary-300: #fff2c6;
+  --color-primary-400: #ffeba9;
+  --color-primary-500: #ffe58d;
+  --color-primary-600: #ffe078;
+  --color-primary-700: #ffda5e;
+  --color-primary-800: #ffd33d;
+
+  /* Secondary */
+  --color-secondary-100: #fae1b8;
+  --color-secondary-200: #f7cd8b;
+  --color-secondary-300: #f4b961;
+  --color-secondary-400: #f3aa47;
+  --color-secondary-500: #f19c38;
+  --color-secondary-600: #ec9135;
+  --color-secondary-700: #e68231;
+  --color-secondary-800: #df732c;
+
+  /* Gray scale */
+  --color-gray-50: #ffffff;
+  --color-gray-100: #fafaf8;
+  --color-gray-200: #f1f1f1;
+  --color-gray-300: #e2e2e2;
+  --color-gray-400: #d2d2d2;
+  --color-gray-500: #a8a8a8;
+  --color-gray-500-rgb: 168 168 168;
+  --color-gray-600: #7f7f7f;
+  --color-gray-700: #555555;
+  --color-gray-800: #404040;
+  --color-gray-900: #2d2d2d;
+  --color-gray-950: #1c1c1c;
+
+  /* Background */
+  --color-background-1: #f6f2e8;
+  --color-background-2: #ecf0f3;
+  --color-background-3: #ebeef7;
+
+  /* Status */
+  --color-error: #f02326; /* Figma: er1 */
+  --color-error-subtle: #ff5053; /* Figma: er2 */
+  --color-success: #2a5fff; /* Figma: sc1 */
+  --color-success-subtle: #698fff; /* Figma: sc2 */
+
+  /* Tag palette */
+  --color-tag-red-100: #f7cfd3; /* Figma: t1 */
+  --color-tag-red-200: #e39e9c; /* Figma: th1 */
+  --color-tag-red-500: #e15241; /* Figma: T1 */
+
+  --color-tag-yellow-100: #fcecba; /* Figma: t2 */
+  --color-tag-yellow-200: #fae08f; /* Figma: th2 */
+  --color-tag-yellow-500: #f6c244; /* Figma: T2 */
+
+  --color-tag-green-100: #dfeccb; /* Figma: t3 */
+  --color-tag-green-200: #afd4ab; /* Figma: th3 */
+  --color-tag-green-500: #97c05c; /* Figma: T3 */
+
+  --color-tag-blue-100: #c2ddf8; /* Figma: t4 */
+  --color-tag-blue-200: #9cc9f5; /* Figma: th4 */
+  --color-tag-blue-500: #4896ec; /* Figma: T4 */
+
+  --color-tag-purple-100: #dbc0e4; /* Figma: t5 */
+  --color-tag-purple-200: #c597d4; /* Figma: th5 */
+  --color-tag-purple-500: #9f50b6; /* Figma: T5 */
+
+  --color-tag-gray-100: #d1d8dc; /* Figma: t6 */
+  --color-tag-gray-200: #b3bec4; /* Figma: th6 */
+  --color-tag-gray-500: #94a4ad; /* Figma: T6 */
+
+  /* ================================
+     Semantic Tokens
+     ================================ */
+  --color-bg-1: var(--color-background-1);
+  --color-bg-2: var(--color-background-2);
+  --color-bg-3: var(--color-background-3);
+  --color-bg-white: var(--color-gray-50);
+
+  --color-overlay-dim: rgb(0 0 0 / 0.5);
+
+  --color-text: var(--color-gray-950);
+  --color-text-muted: var(--color-gray-500);
+  --color-text-placeholder: var(--color-gray-500);
+  --color-text-error: var(--color-error);
+  --color-text-success: var(--color-success);
+
+  --color-border: var(--color-gray-300);
+
+  --color-sidebar-text: var(--color-gray-700);
+  --color-sidebar-text-active: var(--color-secondary-800);
+  --color-sidebar-icon: var(--color-gray-600);
+  --color-sidebar-icon-active: var(--color-secondary-600);
+  --color-sidebar-bg: var(--color-primary-100);
+  --color-sidebar-bg-active: var(--color-primary-300);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg-white);
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.memo-rich-editor p.is-editor-empty:first-child::before {
+  color: var(--color-gray-500);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.memo-rich-editor p {
+  margin: 0;
+}
+
+.memo-rich-editor img {
+  display: block;
+  max-width: 450px;
+  max-height: 260px;
+  object-fit: cover;
+  margin: 24px 0;
+}
+
+.memo-rich-editor a {
+  color: var(--color-secondary-700);
+  text-decoration: underline;
+}
