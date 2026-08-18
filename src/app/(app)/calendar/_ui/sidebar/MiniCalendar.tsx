@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { isSameCalendarDate, parseCalendarDate } from '../../_lib/date';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
-const GRID_DAYS = 42;
+const MIN_GRID_WEEKS = 5;
 
 type FocusDateDetail = {
   date?: string;
@@ -20,8 +20,13 @@ function getMonthGridStart(date: Date) {
 
 function buildMonthGrid(date: Date) {
   const start = getMonthGridStart(date);
+  const lastDateOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const naturalWeekCount = Math.ceil(
+    (new Date(date.getFullYear(), date.getMonth(), 1).getDay() + lastDateOfMonth.getDate()) / 7,
+  );
+  const gridDays = Math.max(naturalWeekCount, MIN_GRID_WEEKS) * 7;
 
-  return Array.from({ length: GRID_DAYS }, (_, index) => {
+  return Array.from({ length: gridDays }, (_, index) => {
     const current = new Date(start);
     current.setDate(start.getDate() + index);
     return current;
@@ -50,8 +55,8 @@ export function MiniCalendar() {
   const days = useMemo(() => buildMonthGrid(focusedDate), [focusedDate]);
 
   return (
-    <section aria-label="미니 캘린더" className="w-full">
-      <div className="mb-3 text-sm font-semibold text-gray-800">
+    <section aria-label="미니 캘린더" className="w-[216px]">
+      <div className="mb-1 pl-2 text-xs leading-[18px] font-semibold text-gray-700">
         {focusedDate.getFullYear()}년 {focusedDate.getMonth() + 1}월
       </div>
 
@@ -61,7 +66,7 @@ export function MiniCalendar() {
         ))}
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-y-2 text-center">
+      <div className="mt-3 grid grid-cols-7 gap-y-px text-center">
         {days.map((date) => {
           const isCurrentMonth = date.getMonth() === focusedDate.getMonth();
           const isToday = isCurrentMonth && isSameCalendarDate(date, today);
@@ -72,7 +77,7 @@ export function MiniCalendar() {
                 className={[
                   'inline-flex h-5 min-w-5 items-center justify-center rounded-[6px] px-[5px] text-[13px] leading-none font-medium',
                   isToday
-                    ? 'bg-secondary-500 text-bg-white'
+                    ? 'bg-secondary-600 text-bg-white'
                     : isCurrentMonth
                       ? 'text-gray-700'
                       : 'text-gray-400',

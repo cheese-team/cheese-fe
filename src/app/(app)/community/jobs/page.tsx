@@ -1,78 +1,53 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import JobPostCard from '@/components/community/jobs/JobPostCard';
-import ApplyModal from '../_components/ApplyModal/ApplyModal';
 
-import { useLikeToggle } from '@/hooks/useLikeToggle';
-import { getDeadlineTime, isRecruitClosed } from '@/lib/formatDeadline';
+import ApplyModal from '../_components/ApplyModal';
 
-import type { JobPost } from '@/types/community';
+import { isCommunitySort } from '@/app/(app)/community/_constants/community';
 
-import { jobPosts as JOB_POSTS } from '@/mocks/posts';
+import { useJobPosts } from '@/queries/community/useJobPosts';
+import { useToggleJobPostLike } from '@/queries/community/useToggleJobPostLike';
+
+import type { JobPost } from '@/types/community/community';
 
 export default function CommunityJobsPage() {
   const searchParams = useSearchParams();
-  const { posts: jobPosts, toggleLike } = useLikeToggle(JOB_POSTS);
   const [selectedApplyPost, setSelectedApplyPost] = useState<JobPost | null>(null);
 
-  const sort = searchParams.get('sort') ?? 'latest';
+  const sortParam = searchParams.get('sort');
+  const sort = isCommunitySort(sortParam) ? sortParam : 'latest';
   const keyword = searchParams.get('keyword') ?? '';
 
-  const filteredJobPosts = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
+  const { data: jobPosts = [], isPending, isError } = useJobPosts({ sort, keyword });
 
-    return jobPosts
-      .filter((post) => {
-        if (normalizedKeyword.length === 0) {
-          return true;
-        }
+  // TODO: API 연동 후 좋아요 캐시 갱신 방식 최적화
+  const { mutate: toggleJobPostLike } = useToggleJobPostLike();
 
-        return (
-          post.title.toLowerCase().includes(normalizedKeyword) ||
-          post.companyName.toLowerCase().includes(normalizedKeyword) ||
-          post.skills.some((skill) => skill.toLowerCase().includes(normalizedKeyword))
-        );
-      })
-      .sort((a, b) => {
-        if (sort === 'like') {
-          return b.likeCount - a.likeCount;
-        }
+  if (isPending) {
+    return <div>불러오는 중입니다.</div>;
+  }
 
-        if (sort === 'deadline') {
-          const aClosed = isRecruitClosed(a.deadline);
-          const bClosed = isRecruitClosed(b.deadline);
-
-          if (aClosed !== bClosed) {
-            return aClosed ? 1 : -1;
-          }
-
-          return getDeadlineTime(a.deadline) - getDeadlineTime(b.deadline);
-        }
-
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-  }, [jobPosts, keyword, sort]);
+  if (isError) {
+    return <div>채용공고를 불러오지 못했습니다.</div>;
+  }
 
   return (
     <div>
-      {filteredJobPosts?.map((jobPost) => (
+      {jobPosts.map((jobPost) => (
         <JobPostCard
           key={jobPost.id}
           post={jobPost}
           onDirectApply={() => setSelectedApplyPost(jobPost)}
-          onToggleLike={toggleLike}
+          onToggleLike={toggleJobPostLike}
         />
       ))}
 
       {selectedApplyPost && (
-        <ApplyModal
-          post={selectedApplyPost}
-          isOpen={!!selectedApplyPost}
-          onClose={() => setSelectedApplyPost(null)}
-        />
+        <ApplyModal post={selectedApplyPost} isOpen onClose={() => setSelectedApplyPost(null)} />
       )}
     </div>
   );

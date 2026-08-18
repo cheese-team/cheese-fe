@@ -1,22 +1,24 @@
 'use client';
 
-import PersonalProfileCard from '@/app/(app)/community/_components/ProfileCard/PersonalProfileCard';
-import CompanyProfileCard from '@/app/(app)/community/_components/ProfileCard/CompanyProfileCard';
-import { Button } from '@/components/common/Button';
-import { ProfileImage } from '@/components/common/ProfileImage';
 import { useState } from 'react';
-import { UserSummary } from '@/types/community';
+
+import { Button } from '@/components/common/Button';
+import ProfileImage from '@/components/common/ProfileImage';
+
+import { CompanyProfileCardModal, PersonalProfileCardModal } from '../ProfileCardModal';
+
+import type { UserSummary } from '@/types/community/community';
+
 import { getMockCompanyProfile, getMockPersonalProfile } from '@/mocks/profile/userProfiles';
 
 type PostDetailAsideProfileProps = {
   author: UserSummary;
 };
 
-export function PostDetailAsideProfile({ author }: PostDetailAsideProfileProps) {
+export default function PostDetailAsideProfile({ author }: PostDetailAsideProfileProps) {
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
 
-  const isPersonalProfile = author.type === 'personal';
-  // const ProfileCardModal = isPersonalProfile ? PersonalProfileCard : CompanyProfileCard;
+  const isPersonalProfile = author.profileType === 'personal';
 
   const handleProfileButtonClick = () => {
     setIsProfileCardOpen(true);
@@ -40,18 +42,17 @@ export function PostDetailAsideProfile({ author }: PostDetailAsideProfileProps) 
         className="border-gray-400"
         size={44}
       >
-        {/* TODO: 기업 프로필 모달 열기 */}
-        {author.type === 'personal' ? '프로필 보기' : '기업 정보 알아보기'}
+        {author.profileType === 'personal' ? '프로필 보기' : '기업 정보 알아보기'}
       </Button>
 
       {isPersonalProfile ? (
-        <PersonalProfileCard
+        <PersonalProfileCardModal
           isOpen={isProfileCardOpen}
           onClose={() => setIsProfileCardOpen(false)}
           profile={getMockPersonalProfile(author.id)}
         />
       ) : (
-        <CompanyProfileCard
+        <CompanyProfileCardModal
           isOpen={isProfileCardOpen}
           onClose={() => setIsProfileCardOpen(false)}
           profile={getMockCompanyProfile(author.id)}

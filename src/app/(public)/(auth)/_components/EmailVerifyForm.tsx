@@ -1,11 +1,17 @@
 import { useState } from 'react';
+
 import { Input, InputActionButton } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
+
+import { validateEmail } from '@/lib/validation';
+import { AUTH_MESSAGE } from '@/constants/auth';
 
 export type EmailVerifyBaseProps = {
   title?: string;
   description?: React.ReactNode;
-  onNext?: () => void;
+  initialEmail?: string;
+  initialStatus?: EmailVerifyStatus;
+  onNext: (email: string) => void;
 };
 
 export type EmailVerifyStatus =
@@ -14,71 +20,154 @@ export type EmailVerifyStatus =
   | 'SENT'
   | 'SEND_ERROR'
   | 'VERIFYING'
-  | 'VERIFIED'
-  | 'VERIFY_ERROR';
+  | 'VERIFIED';
 
 type EmailVerifyFormProps = EmailVerifyBaseProps;
 
-export default function EmailVerifyForm({ title, description, onNext }: EmailVerifyFormProps) {
-  const [status, setStatus] = useState<EmailVerifyStatus>('IDLE');
+export default function EmailVerifyForm({
+  title,
+  description,
+  initialEmail = '',
+  initialStatus = 'IDLE',
+  onNext,
+}: EmailVerifyFormProps) {
+  const [email, setEmail] = useState(initialEmail);
+  const [sentEmail, setSentEmail] = useState(initialEmail);
+  const [status, setStatus] = useState<EmailVerifyStatus>(initialStatus);
+  const [emailError, setEmailError] = useState<string>();
 
-  const isSent = status === 'SENT' || status === 'VERIFY_ERROR' || status === 'VERIFIED';
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationError, setVerificationError] = useState<string>();
+
+  const isSending = status === 'SENDING';
+  const isVerifying = status === 'VERIFYING';
   const isVerified = status === 'VERIFIED';
 
-  const handleSend = () => {
-    // UI PR 단계: API/비동기 없이 "발송됨" 상태로만 전이
-    setStatus('SENT');
+  const hasSentEmail = status === 'SENT' || isVerifying || isVerified;
+  const isEmailLocked = isSending || isVerifying || isVerified;
+  const isSentEmail = email === sentEmail;
+
+  const handleSend = async () => {
+    const normalizedEmail = email.trim();
+    const validationError = validateEmail(normalizedEmail);
+
+    if (validationError) {
+      setEmailError(validationError);
+      return;
+    }
+
+    setEmailError(undefined);
+    setStatus('SENDING');
+
+    try {
+      // TODO: 이메일 인증번호 발송 API 호출
+      setEmail(normalizedEmail);
+      setSentEmail(normalizedEmail);
+      setVerificationCode('');
+      setVerificationError(undefined);
+      setStatus('SENT');
+    } catch {
+      setStatus('SEND_ERROR');
+      setEmailError(AUTH_MESSAGE.EMAIL.SEND_FAILED);
+    }
   };
 
-  const handleVerify = () => {
-    // UI PR 단계: API/비동기 없이 "인증됨" 상태로만 전이
-    setStatus('VERIFIED');
+  const handleVerify = async () => {
+    if (!isSentEmail) return;
+
+    if (!verificationCode.trim()) {
+      setVerificationError(AUTH_MESSAGE.VERIFICATION.REQUIRED);
+      return;
+    }
+
+    setVerificationError(undefined);
+    setStatus('VERIFYING');
+
+    try {
+      // TODO: 이메일 인증번호 확인 API 호출
+      setStatus('VERIFIED');
+    } catch {
+      setStatus('SENT');
+      setVerificationError(AUTH_MESSAGE.VERIFICATION.INVALID);
+    }
+  };
+
+  const handleNext = () => {
+    if (!isVerified) return;
+
+    onNext(email.trim());
   };
 
   return (
     <div>
-      {title && <h2 className="pb-10 text-[20px] font-bold">{title}</h2>}
+      {title && <h2 className="pb-10 text-[20px] font-bold tracking-normal">{title}</h2>}
 
       <form className="flex flex-col gap-5">
         <Input
-          label="아이디"
-          placeholder="아이디 (이메일) 입력"
-          type="email"
+          autoFocus
+          label="아이디(이메일)"
           name="email"
-          disabled={isSent}
+          type="email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setEmailError(undefined);
+          }}
+          placeholder="아이디 (이메일) 입력"
+          disabled={isEmailLocked}
+          errorMessage={emailError}
+          successMessage={hasSentEmail && isSentEmail ? AUTH_MESSAGE.EMAIL.SEND_SUCCESS : undefined}
           rightAddon={
-            <InputActionButton type="button" onClick={handleSend}>
-              {status === 'IDLE' ? '메일발송' : '재발송'}
+            <InputActionButton
+              onClick={handleSend}
+              disabled={isSending || isVerifying || isVerified}
+            >
+              {hasSentEmail && isSentEmail ? '재발송' : '메일발송'}
             </InputActionButton>
           }
-          errorMessage={status === 'SEND_ERROR' ? '이메일 형식이 올바르지 않습니다' : undefined}
+          className="h-10 px-2 font-medium tracking-normal"
+          showMessageSpace
         />
 
         <Input
-          label="아이디 인증번호"
-          placeholder="인증번호 입력"
+          label="인증번호"
+          name="verificationCode"
           type="text"
           inputMode="numeric"
-          name="verificationCode"
-          disabled={!isSent || isVerified}
+          value={verificationCode}
+          onChange={(event) => {
+            setVerificationCode(event.target.value);
+            setVerificationError(undefined);
+          }}
+          placeholder="인증번호 입력"
+          disabled={!hasSentEmail || !isSentEmail || isVerifying || isVerified}
+          errorMessage={verificationError}
+          successMessage={isVerified ? AUTH_MESSAGE.VERIFICATION.MATCHED : undefined}
           rightAddon={
             <InputActionButton
-              type="button"
-              disabled={!isSent || isVerified}
               onClick={handleVerify}
+              disabled={!hasSentEmail || !isSentEmail || isVerifying || isVerified}
             >
               인증하기
             </InputActionButton>
           }
-          errorMessage={status === 'VERIFY_ERROR' ? '인증번호가 올바르지 않습니다' : undefined}
-          successMessage={status === 'VERIFIED' ? '인증번호가 일치합니다' : undefined}
+          className="h-10 px-2 font-medium tracking-normal"
+          showMessageSpace
         />
 
         {description && (
-          <div className="text-text-muted text-xs leading-relaxed">{description}</div>
+          <div className="text-xs leading-[17px] tracking-[-0.03em] text-gray-500">
+            {description}
+          </div>
         )}
 
-        <Button type="button" aria-label="다음" disabled={!isVerified} onClick={onNext}>
+        <Button
+          variant="light"
+          aria-label="다음"
+          onClick={handleNext}
+          disabled={!isVerified}
+          className="text-[16px]"
+        >
           다음
         </Button>
       </form>

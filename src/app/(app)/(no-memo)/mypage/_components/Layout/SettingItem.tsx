@@ -7,6 +7,7 @@ type SettingItemProps = {
   label: string;
   value?: string;
   document?: ProfileDocument;
+  urlLabel?: string;
   icon?: React.ReactNode;
   buttonIcon?: React.ReactNode;
   buttonIconPosition?: 'left' | 'right';
@@ -19,6 +20,7 @@ export default function SettingItem({
   label,
   value,
   document,
+  urlLabel,
   icon,
   buttonIcon,
   buttonIconPosition = 'left',
@@ -36,7 +38,11 @@ export default function SettingItem({
         <div className="text-[14px] leading-[30px] text-gray-700">
           <h3 className="font-bold">{label}</h3>
 
-          {document ? <DocumentLinkItemList document={document} /> : <span>{value}</span>}
+          {document ? (
+            <DocumentLinkItemList document={document} urlLabel={urlLabel} />
+          ) : (
+            <span>{value}</span>
+          )}
         </div>
       </div>
 
@@ -44,11 +50,11 @@ export default function SettingItem({
         variant="outlineLightGray"
         size={38}
         paddingX={8}
-        className={`gap-[7px] ${buttonClassName ?? ''}`}
+        className={`gap-1 tracking-[-0.02em] ${buttonClassName ?? ''}`}
         onClick={onClick}
       >
         {buttonIcon && buttonIconPosition === 'left' && (
-          <span className="inline-flex items-center justify-center">{buttonIcon}</span>
+          <span className="inline-flex h-[30px] w-5 items-center justify-center">{buttonIcon}</span>
         )}
 
         {buttonText}

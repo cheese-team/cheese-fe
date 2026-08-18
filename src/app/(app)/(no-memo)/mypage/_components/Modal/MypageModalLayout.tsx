@@ -1,4 +1,4 @@
-import { BaseModal } from '@/components/common/Modal';
+import BaseModal from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 
 import { cn } from '@/lib/cn';

@@ -1,61 +1,38 @@
 'use client';
 
-import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import GroupPostCard from '@/components/community/groups/GroupPostCard';
+import GroupPostCard from '@/components/community/groups';
 
-import { useLikeToggle } from '@/hooks/useLikeToggle';
-import { getDeadlineTime, isRecruitClosed } from '@/lib/formatDeadline';
+import { isCommunitySort } from '@/app/(app)/community/_constants/community';
 
-import { groupPosts as GROUP_POSTS } from '@/mocks/posts';
+import { useGroupPosts } from '@/queries/community/useGroupPosts';
+import { useToggleGroupPostLike } from '@/queries/community/useToggleGroupPostLike';
 
 export default function CommunityGroupsPage() {
   const searchParams = useSearchParams();
-  const { posts: groupPosts, toggleLike } = useLikeToggle(GROUP_POSTS);
 
-  const sort = searchParams.get('sort') ?? 'latest';
+  const sortParam = searchParams.get('sort');
+  const sort = isCommunitySort(sortParam) ? sortParam : 'latest';
   const keyword = searchParams.get('keyword') ?? '';
 
-  const filteredGroupPosts = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
+  const { data: groupPosts = [], isPending, isError } = useGroupPosts({ sort, keyword });
 
-    return groupPosts
-      .filter((post) => {
-        if (normalizedKeyword.length === 0) {
-          return true;
-        }
+  // TODO: API 연동 후 좋아요 캐시 갱신 방식 최적화
+  const { mutate: toggleGroupPostLike } = useToggleGroupPostLike();
 
-        return (
-          post.title.toLowerCase().includes(normalizedKeyword) ||
-          post.author.nickname.toLowerCase().includes(normalizedKeyword) ||
-          post.field.toLowerCase().includes(normalizedKeyword)
-        );
-      })
-      .sort((a, b) => {
-        if (sort === 'like') {
-          return b.likeCount - a.likeCount;
-        }
+  if (isPending) {
+    return <div>불러오는 중입니다.</div>;
+  }
 
-        if (sort === 'deadline') {
-          const aClosed = isRecruitClosed(a.deadline);
-          const bClosed = isRecruitClosed(b.deadline);
-
-          if (aClosed !== bClosed) {
-            return aClosed ? 1 : -1;
-          }
-
-          return getDeadlineTime(a.deadline) - getDeadlineTime(b.deadline);
-        }
-
-        return b.id - a.id;
-      });
-  }, [groupPosts, keyword, sort]);
+  if (isError) {
+    return <div>그룹모집을 불러오지 못했습니다.</div>;
+  }
 
   return (
     <div className="mx-auto grid max-w-[976px] grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {filteredGroupPosts.map((groupPost) => (
-        <GroupPostCard key={groupPost.id} post={groupPost} onToggleLike={toggleLike} />
+      {groupPosts.map((groupPost) => (
+        <GroupPostCard key={groupPost.id} post={groupPost} onToggleLike={toggleGroupPostLike} />
       ))}
     </div>
   );

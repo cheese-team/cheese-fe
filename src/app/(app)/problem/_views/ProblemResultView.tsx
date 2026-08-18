@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import ProblemExitConfirmModal from '../_components/ProblemExitConfirmModal';
@@ -8,11 +8,9 @@ import ProblemResultTable from '../_components/ProblemResultTable';
 import ProblemSetSummaryCard from '../_components/ProblemSetSummaryCard';
 import ProblemSideToc from '../_components/ProblemSideToc';
 import ProblemSolvingHeader from '../_components/ProblemSolvingHeader';
-import {
-  mockProblemQuestions,
-  mockProblemResultRows,
-  mockProblemSetSummary,
-} from '../_data/mockProblemSolving';
+import { useProblemSolvingSession } from '../_contexts/ProblemSolvingSessionContext';
+import { mockProblemQuestions, mockProblemSetSummary } from '../_data/mockProblemSolving';
+import { formatElapsedTime } from '../_utils/formatElapsedTime';
 
 type ProblemResultViewProps = {
   problemSetId: string;
@@ -20,20 +18,42 @@ type ProblemResultViewProps = {
 
 export default function ProblemResultView({ problemSetId }: ProblemResultViewProps) {
   const router = useRouter();
-
+  const { totalElapsedSeconds, attempts, isHydrated, pauseSession, finishSession, resetSession } =
+    useProblemSolvingSession();
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
 
   const firstQuestion = mockProblemQuestions[0];
   const lastQuestion = mockProblemQuestions[mockProblemQuestions.length - 1];
-
   const firstQuestionHref = firstQuestion
     ? `/problem/${problemSetId}/questions/${firstQuestion.id}`
     : `/problem/${problemSetId}`;
-
   const lastQuestionHref = lastQuestion
-    ? `/problem/${problemSetId}/questions/${lastQuestion.id}`
+    ? `/problem/${problemSetId}/questions/${lastQuestion.id}?from=result`
     : undefined;
+
+  const resultRows = useMemo(
+    () =>
+      mockProblemQuestions.map((question) => {
+        const attempt = attempts[question.id];
+        return {
+          questionId: question.id,
+          no: question.no,
+          title: question.title,
+          status: attempt?.submitted ? attempt.status : 'pending',
+          elapsedTime:
+            attempt && attempt.elapsedSeconds > 0 ? formatElapsedTime(attempt.elapsedSeconds) : '',
+        } as const;
+      }),
+    [attempts],
+  );
+  const completedCount = Object.values(attempts).filter((attempt) => attempt.submitted).length;
+
+  useEffect(() => {
+    if (isHydrated) {
+      finishSession();
+    }
+  }, [finishSession, isHydrated]);
 
   const handleOpenExitModal = () => {
     setIsTocOpen(false);
@@ -41,6 +61,12 @@ export default function ProblemResultView({ problemSetId }: ProblemResultViewPro
   };
 
   const handleExit = () => {
+    pauseSession();
+    router.push('/problem');
+  };
+
+  const handleExitWithoutSave = () => {
+    resetSession();
     router.push('/problem');
   };
 
@@ -49,8 +75,8 @@ export default function ProblemResultView({ problemSetId }: ProblemResultViewPro
       <ProblemSolvingHeader
         title="문제풀이 홈으로 나가기"
         backHref="/problem"
-        elapsedTime="26:32"
-        current={mockProblemQuestions.length}
+        elapsedTime={formatElapsedTime(totalElapsedSeconds)}
+        current={completedCount}
         total={mockProblemQuestions.length}
         onMenuClick={() => {
           setIsTocOpen(true);
@@ -58,16 +84,17 @@ export default function ProblemResultView({ problemSetId }: ProblemResultViewPro
       />
 
       <div className="h-[calc(100dvh-80px)] overflow-y-auto">
-        <div className="mx-auto w-[1060px] pt-[28px] pb-[68px]">
+        <div className="mx-auto w-[1060px] pt-[28px] pb-[46px]">
           <ProblemSetSummaryCard
             problemSetId={problemSetId}
             summary={mockProblemSetSummary}
             actionLabel="처음부터 시작"
             actionHref={firstQuestionHref}
+            onActionClick={resetSession}
             showProgress={false}
           />
 
-          <ProblemResultTable problemSetId={problemSetId} rows={mockProblemResultRows} />
+          <ProblemResultTable problemSetId={problemSetId} rows={resultRows} />
         </div>
       </div>
 
@@ -78,6 +105,7 @@ export default function ProblemResultView({ problemSetId }: ProblemResultViewPro
         onClose={() => {
           setIsTocOpen(false);
         }}
+        questionHrefSuffix="?from=result"
         navigation={{
           previousHref: lastQuestionHref,
           previousDisabled: !lastQuestion,
@@ -92,7 +120,7 @@ export default function ProblemResultView({ problemSetId }: ProblemResultViewPro
           setIsExitModalOpen(false);
         }}
         onSaveAndExit={handleExit}
-        onExitWithoutSave={handleExit}
+        onExitWithoutSave={handleExitWithoutSave}
       />
     </main>
   );

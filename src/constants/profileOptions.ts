@@ -1,6 +1,9 @@
+import { ContactMethod } from '@/types/profile';
+
 export const FIELD_OPTIONS = [
   { label: 'FE', value: 'FE' },
   { label: 'BE', value: 'BE' },
+  { label: 'FE, BE', value: 'FE_BE' },
 ];
 
 export const EMPLOYMENT_TYPE_OPTIONS = [
@@ -17,6 +20,12 @@ export const EDUCATION_OPTIONS = [
   { label: '학력무관', value: 'none' },
 ];
 
+export const CAREER_OPTIONS = [
+  { label: '신입', value: 'new' },
+  { label: '경력', value: 'experienced' },
+  { label: '경력무관', value: 'any' },
+];
+
 export const WORK_METHOD_OPTIONS = [
   { label: '온라인', value: 'online' },
   { label: '오프라인', value: 'offline' },
@@ -26,5 +35,8 @@ export const WORK_METHOD_OPTIONS = [
 export const CONTACT_METHOD_OPTIONS = [
   { label: '이메일', value: 'email' },
   { label: '오픈 카카오톡', value: 'kakaoOpenChat' },
-  { label: '구글폼', value: 'googleForm' },
-];
+  { label: '구글 폼', value: 'googleForm' },
+] satisfies readonly {
+  label: string;
+  value: ContactMethod;
+}[];

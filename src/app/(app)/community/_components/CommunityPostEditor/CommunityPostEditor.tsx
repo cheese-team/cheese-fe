@@ -19,7 +19,11 @@ type CommunityPostEditorProps = {
   children?: ReactNode;
 };
 
-export function CommunityPostEditor({ value, onChange, children }: CommunityPostEditorProps) {
+export default function CommunityPostEditor({
+  value,
+  onChange,
+  children,
+}: CommunityPostEditorProps) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const editor = useEditor({

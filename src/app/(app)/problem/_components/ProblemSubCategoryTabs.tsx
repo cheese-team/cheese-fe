@@ -32,7 +32,7 @@ export default function ProblemSubCategoryTabs({
             type="button"
             className={cn(
               'h-[30px] text-[14px] leading-[30px] font-medium',
-              isActive ? 'text-secondary-800' : 'text-gray-700',
+              isActive ? 'text-secondary-800 font-bold' : 'text-gray-700',
             )}
             onClick={() => {
               onChange(item.value);

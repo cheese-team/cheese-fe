@@ -1,4 +1,4 @@
-import JobPostForm from '../_components/JobPostForm';
+import { JobPostForm } from '../_components';
 
 export default function JobCreatePage() {
   return <JobPostForm mode="create" />;

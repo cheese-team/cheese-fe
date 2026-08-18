@@ -12,6 +12,17 @@ import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
 import LinkIcon from '@/assets/icons/common/link.svg';
+import {
+  AlignCenterIcon,
+  AlignJustifyIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
+  DropdownArrowIcon,
+  TextBoldIcon,
+  TextItalicIcon,
+  TextStrikeIcon,
+  TextUnderlineIcon,
+} from '@/assets/icons/editor';
 
 type MemoRichEditorProps = {
   value: string;
@@ -28,13 +39,13 @@ type ToolbarButtonProps = {
 };
 
 const TEXT_COLORS = [
-  { label: '검정', hex: '#111111' },
-  { label: '회색', hex: '#6B7280' },
-  { label: '빨강', hex: '#EB5B49' },
-  { label: '노랑', hex: '#F4C340' },
-  { label: '초록', hex: '#9CC04B' },
-  { label: '파랑', hex: '#5B9EF7' },
-  { label: '보라', hex: '#9B59D0' },
+  { label: '검정', hex: 'var(--color-gray-950)' },
+  { label: '회색', hex: 'var(--color-gray-600)' },
+  { label: '빨강', hex: 'var(--color-tag-red-500)' },
+  { label: '노랑', hex: 'var(--color-tag-yellow-500)' },
+  { label: '초록', hex: 'var(--color-tag-green-500)' },
+  { label: '파랑', hex: 'var(--color-tag-blue-500)' },
+  { label: '보라', hex: 'var(--color-tag-purple-500)' },
 ];
 
 function ToolbarButton({ active, disabled, label, children, onClick }: ToolbarButtonProps) {
@@ -54,20 +65,6 @@ function ToolbarButton({ active, disabled, label, children, onClick }: ToolbarBu
     >
       {children}
     </button>
-  );
-}
-
-function DropdownArrowIcon() {
-  return (
-    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true" className="h-[12px] w-[12px]">
-      <path
-        d="M3 4.5L6 7.5L9 4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -111,7 +108,7 @@ function TextColorDropdown({ editor }: { editor: Editor | null }) {
           aria-hidden="true"
         />
 
-        <DropdownArrowIcon />
+        <DropdownArrowIcon className="h-[5px] w-[10px]" aria-hidden="true" />
       </button>
 
       {open ? (
@@ -148,58 +145,6 @@ function TextColorDropdown({ editor }: { editor: Editor | null }) {
   );
 }
 
-function AlignLeftIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-[20px] w-[20px]">
-      <path
-        d="M4 5h12M4 9h8M4 13h12M4 17h8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function AlignCenterIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-[20px] w-[20px]">
-      <path
-        d="M4 5h12M6 9h8M4 13h12M6 17h8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function AlignRightIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-[20px] w-[20px]">
-      <path
-        d="M4 5h12M8 9h8M4 13h12M8 17h8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function AlignJustifyIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="h-[20px] w-[20px]">
-      <path
-        d="M4 5h12M4 9h12M4 13h12M4 17h12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
   const disabled = !editor;
 
@@ -220,14 +165,14 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
   };
 
   return (
-    <div className="flex h-[54px] shrink-0 items-center gap-[8px] border-b border-gray-300 px-[32px]">
+    <div className="flex h-[56px] shrink-0 items-center gap-[8px] border-b border-gray-300 px-[32px]">
       <ToolbarButton
         label="굵게"
         disabled={disabled}
         active={editor?.isActive('bold')}
         onClick={() => editor?.chain().focus().toggleBold().run()}
       >
-        B
+        <TextBoldIcon className="h-[16px] w-[12px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -236,7 +181,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive('italic')}
         onClick={() => editor?.chain().focus().toggleItalic().run()}
       >
-        <span className="italic">I</span>
+        <TextItalicIcon className="h-[16px] w-[16px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -245,7 +190,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive('underline')}
         onClick={() => editor?.chain().focus().toggleUnderline().run()}
       >
-        <span className="underline">U</span>
+        <TextUnderlineIcon className="h-[18px] w-[14px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -254,7 +199,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive('strike')}
         onClick={() => editor?.chain().focus().toggleStrike().run()}
       >
-        <span className="line-through">S</span>
+        <TextStrikeIcon className="h-[16px] w-[18px]" aria-hidden="true" />
       </ToolbarButton>
 
       <TextColorDropdown editor={editor} />
@@ -274,7 +219,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive({ textAlign: 'left' })}
         onClick={() => editor?.chain().focus().setTextAlign('left').run()}
       >
-        <AlignLeftIcon />
+        <AlignLeftIcon className="h-[17px] w-[18px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -283,7 +228,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive({ textAlign: 'center' })}
         onClick={() => editor?.chain().focus().setTextAlign('center').run()}
       >
-        <AlignCenterIcon />
+        <AlignCenterIcon className="h-[17px] w-[16px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -292,7 +237,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive({ textAlign: 'right' })}
         onClick={() => editor?.chain().focus().setTextAlign('right').run()}
       >
-        <AlignRightIcon />
+        <AlignRightIcon className="h-[17px] w-[18px]" aria-hidden="true" />
       </ToolbarButton>
 
       <ToolbarButton
@@ -301,7 +246,7 @@ function MemoEditorToolbar({ editor }: { editor: Editor | null }) {
         active={editor?.isActive({ textAlign: 'justify' })}
         onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
       >
-        <AlignJustifyIcon />
+        <AlignJustifyIcon className="h-[17px] w-[18px]" aria-hidden="true" />
       </ToolbarButton>
     </div>
   );
@@ -355,7 +300,7 @@ export function MemoRichEditor({ value, onChange, children }: MemoRichEditorProp
       <div className="min-h-0 flex-1 overflow-y-auto px-[64px] pt-[48px] pb-[48px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {children}
 
-        <div className="mt-[28px]">
+        <div className="mt-[24px]">
           <EditorContent editor={editor} />
         </div>
       </div>

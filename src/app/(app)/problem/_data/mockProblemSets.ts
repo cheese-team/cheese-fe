@@ -1,16 +1,18 @@
 import type { ProblemSet } from '../_types/problem';
 
-const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
+import { mockProblemQuestions } from './mockProblemSolving';
+
+const baseProblemSets: Omit<
+  ProblemSet,
+  'id' | 'lastProgressDate' | 'solvedCount' | 'totalCount'
+>[] = [
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
     category: 'frontend',
     subCategory: 'html-css',
     badge: 'FE',
     thumbnailType: 'css',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 9,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -18,10 +20,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'java',
     badge: 'BE',
     thumbnailType: 'html',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -29,10 +28,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'network',
     badge: 'CS',
     thumbnailType: 'css',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -40,10 +36,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'javascript',
     badge: 'FE',
     thumbnailType: 'js',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -51,10 +44,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'javascript',
     badge: 'FE',
     thumbnailType: 'js',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -62,10 +52,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'html-css',
     badge: 'FE',
     thumbnailType: 'css',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -73,10 +60,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'html-css',
     badge: 'FE',
     thumbnailType: 'html',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -84,10 +68,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'html-css',
     badge: 'FE',
     thumbnailType: 'html',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -95,10 +76,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'mysql',
     badge: 'BE',
     thumbnailType: 'js',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -106,10 +84,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'nodejs',
     badge: 'BE',
     thumbnailType: 'html',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -117,10 +92,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'react',
     badge: 'FE',
     thumbnailType: 'css',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
   {
     title: 'CSS : 실무 신입 개발자가 알아야할 C언어',
@@ -128,10 +100,7 @@ const baseProblemSets: Omit<ProblemSet, 'id'>[] = [
     subCategory: 'nextjs',
     badge: 'FE',
     thumbnailType: 'css',
-    lastProgressDate: '2026.01.20',
     createdAt: '2026.01.20',
-    solvedCount: 20,
-    totalCount: 20,
   },
 ];
 
@@ -141,5 +110,8 @@ export const mockProblemSets: ProblemSet[] = Array.from({ length: 60 }, (_, inde
   return {
     ...baseProblemSet,
     id: `${baseProblemSet.category}-${baseProblemSet.subCategory}-${index + 1}`,
+    lastProgressDate: null,
+    solvedCount: 0,
+    totalCount: mockProblemQuestions.length,
   };
 });

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import GroupPostForm from '../../_components/GroupPostForm';
+import { GroupPostForm } from '../../_components';
 
 import { groupPosts } from '@/mocks/posts';
 

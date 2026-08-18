@@ -1,14 +1,16 @@
 'use client';
 
-import { cn } from '@/lib/cn';
+import { useId } from 'react';
+
 import { Button } from '@/components/common/Button';
 import BaseModal from '@/components/common/Modal/BaseModal';
 
+import { cn } from '@/lib/cn';
+
 type AuthConfirmModalProps = {
   isOpen: boolean;
-  onClose: () => void;
 
-  title?: string;
+  title: string;
   description?: string;
 
   primaryText: string;
@@ -19,42 +21,50 @@ type AuthConfirmModalProps = {
 
 export default function AuthConfirmModal({
   isOpen,
-  onClose,
   title,
   description,
   primaryText,
   onPrimaryClick,
   children,
 }: AuthConfirmModalProps) {
+  const titleId = useId();
+
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} hasOverlay>
+    <BaseModal isOpen={isOpen} onClose={() => {}} hasOverlay closeOnEscape={false}>
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
         className={cn(
           'bg-bg-white rounded-lg shadow-[0_0_4px_rgba(0,0,0,0.25)]',
           'w-[min(385px,calc(100vw-32px))]',
           'max-h-[calc(100dvh-160px)] md:max-h-[calc(100dvh-316px)]',
-          'flex flex-col overflow-hidden',
+          'flex flex-col items-center gap-6 overflow-hidden',
           'px-[42.5px] py-10',
         )}
       >
-        <div className="flex flex-col items-center text-center">
-          {title ? <h2 className="text-[20px] font-bold text-gray-950">{title}</h2> : null}
+        <div className="flex flex-col gap-3 text-center leading-6">
+          <h2 id={titleId} className="text-[20px] font-bold tracking-normal text-gray-950">
+            {title}
+          </h2>
+
           {description ? (
-            <p className={cn('text-[20px] font-normal text-gray-950', title && 'mt-3')}>
+            <p className="text-[20px] font-medium whitespace-pre-line text-gray-950">
               {description}
             </p>
           ) : null}
 
-          {children ? <div className="mt-[29px] w-full">{children}</div> : null}
-
-          <div className="mt-6 w-full">
-            <Button onClick={onPrimaryClick ?? onClose} paddingX={20} className="font-bold">
-              {primaryText}
-            </Button>
-          </div>
+          {children ? <div className="w-full">{children}</div> : null}
         </div>
+
+        <Button
+          variant="light"
+          onClick={onPrimaryClick}
+          paddingX={20}
+          className="w-fit text-[16px]"
+        >
+          {primaryText}
+        </Button>
       </div>
     </BaseModal>
   );

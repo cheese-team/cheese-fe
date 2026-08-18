@@ -1,3 +1,5 @@
+import type { StaticImageData } from 'next/image';
+
 export type ProblemQuestionType = 'shortAnswer' | 'multipleChoice';
 
 export type ProblemGradingMode = 'auto' | 'self';
@@ -17,15 +19,25 @@ export type ProblemQuestion = {
   type: ProblemQuestionType;
   gradingMode: ProblemGradingMode;
   correctAnswer: string;
+  explanation?: string;
   hint: string;
   choices?: ProblemChoice[];
+};
+
+export type ProblemAttempt = {
+  answer: string;
+  selectedChoiceId: string;
+  status: ProblemSolveStatus;
+  elapsedSeconds: number;
+  submitted: boolean;
+  selfChecked: boolean;
 };
 
 export type ProblemSetSummary = {
   id: string;
   title: string;
   lastProgressDate: string;
-  thumbnailSrc: string;
+  thumbnailSrc: string | StaticImageData;
   solvedCount: number;
   totalCount: number;
 };

@@ -1,20 +1,23 @@
 'use client';
 
 import { useId } from 'react';
+
 import { cn } from '@/lib/cn';
-import type { UnderlinedInputProps } from './type';
+
+import type { InputProps } from './type';
 
 export default function Input({
   label,
   errorMessage,
   successMessage,
   rightAddon,
-  hideMessageSpace = false,
+  showMessageSpace = false,
   id,
   className,
   inputClassName,
+  ref,
   ...rest
-}: UnderlinedInputProps) {
+}: InputProps) {
   const autoId = useId();
   const inputId = id ?? autoId;
 
@@ -35,20 +38,21 @@ export default function Input({
       <div
         className={cn(
           'flex items-center',
-          'gap-2 px-2 py-[5px]',
+          'gap-2',
           'border-b transition-[border-color] duration-150',
           !isDisabled && 'border-gray-400',
-          !isDisabled && 'focus-within:border-gray-800',
+          !isDisabled && 'focus-within:border-secondary-600 focus-within:border-b-2',
           isDisabled && 'border-gray-300',
           className,
         )}
       >
         <input
+          ref={ref}
           id={inputId}
           aria-invalid={hasError}
-          aria-describedby={hasError ? messageId : undefined}
+          aria-describedby={hasError || hasSuccess ? messageId : undefined}
           className={cn(
-            'my-[5.5px] h-[19px] min-w-0 flex-1',
+            'my-[5px] min-w-0 flex-1',
             'border-0 bg-transparent',
             'placeholder:text-text-placeholder',
             'focus:outline-none',
@@ -62,14 +66,16 @@ export default function Input({
       </div>
 
       {/* message (optional) */}
-      {(hasError || hasSuccess || !hideMessageSpace) && (
-        <div className={cn(!hideMessageSpace && 'h-[22px]', 'text-left text-xs font-medium')}>
+      {(hasError || hasSuccess || showMessageSpace) && (
+        <div className="flex h-[22px] items-end text-xs font-medium tracking-[-0.04em]">
           {hasError ? (
-            <p id={messageId} className="text-text-error pt-2">
+            <p id={messageId} className="text-text-error">
               {errorMessage}
             </p>
           ) : hasSuccess ? (
-            <p className="text-text-success mt-2">{successMessage}</p>
+            <p id={messageId} role="status" className="text-text-success">
+              {successMessage}
+            </p>
           ) : null}
         </div>
       )}

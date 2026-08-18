@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import CommunityLayoutContent from './_components/Layout/CommunityLayoutContent';
+import CommunityLayoutContent from './_components/Layout';
 
 export default function CommunityLayout({ children }: { children: React.ReactNode }) {
   return (

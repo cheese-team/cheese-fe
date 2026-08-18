@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+
+import { Input } from '@/components/common/Input';
+import { Select } from '@/components/common/Select';
+import { CollapsibleColorPicker } from '@/components/common/CollapsibleColorPicker';
 
 import { cn } from '@/lib/cn';
 import { getTagColor } from '@/lib/tagPalette';
-
 import {
   addDaysToCalendarDate,
   addHoursToCalendarDateTime,
@@ -15,15 +18,24 @@ import {
   toDateInputValue,
   toTimeInputValue,
 } from '../../_lib/date';
-import {
-  CalendarLineIcon,
-  ChevronIcon,
-  ClockLineIcon,
-  LinkLineIcon,
-  LocationLineIcon,
-} from '../../../../../assets/icons/calendar';
-import { DEFAULT_EVENT_COLOR } from '../../_model/constants';
-import type { CalendarEventDraft, EventColorId, ReminderMinutes } from '../../_model/types';
+
+import CheckboxIcon from '@/assets/icons/calendar/checkbox.svg';
+import DateIcon from '@/assets/icons/calendar/calendar.svg';
+import RangeSeparatorIcon from '@/assets/icons/calendar/range-separator.svg';
+import ThinCloseIcon from '@/assets/icons/calendar/thinclose.svg';
+import WatchIcon from '@/assets/icons/calendar/watch.svg';
+import Watch2Icon from '@/assets/icons/calendar/watch2.svg';
+import LinkIcon from '@/assets/icons/common/link.svg';
+import LocationIcon from '@/assets/icons/settings/location.svg';
+
+import type {
+  CalendarEventCategory,
+  CalendarEventDraft,
+  EventColorId,
+  ReminderMinutes,
+} from '../../_model/types';
+
+import type { Option } from '@/types/option';
 
 type CalendarEventPopoverProps = {
   open: boolean;
@@ -36,26 +48,35 @@ type CalendarEventPopoverProps = {
   onCommit: () => void;
 };
 
-type DropdownOption<T extends string | number> = {
-  label: string;
-  value: T;
-};
-
-const REMINDER_OPTIONS: Array<DropdownOption<ReminderMinutes | ''>> = [
-  { label: '리마인더', value: '' },
-  { label: '5분 전', value: 5 },
-  { label: '10분 전', value: 10 },
-  { label: '30분 전', value: 30 },
-  { label: '1시간 전', value: 60 },
+const REMINDER_OPTIONS: Option[] = [
+  { label: '5분 전', value: '5' },
+  { label: '10분 전', value: '10' },
+  { label: '30분 전', value: '30' },
+  { label: '1시간 전', value: '60' },
 ];
 
-const CATEGORY_OPTIONS: Array<DropdownOption<string>> = [
-  { label: '일정구분', value: '' },
-  { label: '면접', value: 'interview' },
-  { label: '과제', value: 'assignment' },
-  { label: '미팅', value: 'meeting' },
+function isReminderMinutes(value: number): value is ReminderMinutes {
+  return [5, 10, 30, 60].includes(value);
+}
+
+const CATEGORY_OPTIONS: Option[] = [
+  { label: '면접일정', value: 'interview' },
+  { label: '서류접수', value: 'document' },
+  { label: '개인일정', value: 'personal' },
   { label: '기타', value: 'etc' },
 ];
+
+const DATE_TIME_TEXT_CLASS_NAME = 'text-[14px] leading-[17px] font-normal tracking-normal';
+const COMPACT_INPUT_TEXT_CLASS_NAME = 'text-[14px] leading-[17px] font-normal tracking-[-0.02em]';
+const COMPACT_SELECT_TRIGGER_CLASS_NAME = cn(
+  DATE_TIME_TEXT_CLASS_NAME,
+  'h-[29px] rounded-[5px] border-0 bg-white px-2 ring-1 ring-gray-300 ring-inset',
+  'text-gray-700',
+  'data-[placeholder]:text-gray-500',
+  'data-[state=open]:rounded-[5px]',
+  'data-[state=open]:border-0',
+  'data-[state=open]:px-2',
+);
 
 const QUICK_EVENT_COLOR_IDS = [
   'tag-gray',
@@ -71,93 +92,25 @@ const QUICK_EVENT_COLORS = QUICK_EVENT_COLOR_IDS.map((id) => ({
   id,
 }));
 
-const COLOR_SWATCH_SIZE = 20;
-const COLOR_SWATCH_GAP = 8;
+const QUICK_EVENT_COLOR_OPTIONS = QUICK_EVENT_COLORS.map((color) => ({
+  value: color.id,
+  label: color.label,
+  swatchClassName: color.chipClassName,
+}));
 
-function FieldIcon({ children }: { children: React.ReactNode }) {
+function ScheduleFieldIcon({ children }: { children: React.ReactNode }) {
   return (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center text-gray-400">
+    <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center text-gray-400">
       {children}
     </span>
   );
 }
 
-function getLabel<T extends string | number>(options: Array<DropdownOption<T>>, value: T) {
-  return options.find((option) => option.value === value)?.label ?? options[0].label;
-}
-
-type CustomDropdownProps<T extends string | number> = {
-  value: T;
-  options: Array<DropdownOption<T>>;
-  onChange: (value: T) => void;
-};
-
-function CustomDropdown<T extends string | number>({
-  value,
-  options,
-  onChange,
-}: CustomDropdownProps<T>) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!rootRef.current) return;
-      if (rootRef.current.contains(event.target as Node)) return;
-
-      setOpen(false);
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-    };
-  }, []);
-
-  const isPlaceholder = value === '' || value === undefined;
-
+function CompactFieldIcon({ children }: { children: React.ReactNode }) {
   return (
-    <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-[32px] w-full items-center justify-between rounded-[10px] border border-gray-300 bg-white px-2.5 text-[12px] outline-none"
-      >
-        <span className={isPlaceholder ? 'text-gray-500' : 'text-gray-700'}>
-          {getLabel(options, value)}
-        </span>
-
-        <span className="text-gray-500">
-          <ChevronIcon direction="down" width={16} height={16} aria-hidden="true" />
-        </span>
-      </button>
-
-      {open ? (
-        <div className="absolute top-[36px] left-0 z-20 w-full rounded-[12px] border border-gray-300 bg-white py-1 shadow-[0_8px_24px_rgba(15,23,42,0.12)]">
-          {options.map((option) => {
-            const selected = option.value === value;
-
-            return (
-              <button
-                key={String(option.value)}
-                type="button"
-                onClick={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-                className={cn(
-                  'flex h-[30px] w-full items-center px-3 text-left text-[12px] hover:bg-gray-200',
-                  selected ? 'text-gray-900' : 'text-gray-700',
-                )}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+    <span className="flex h-3 w-3 shrink-0 items-center justify-center text-gray-400">
+      {children}
+    </span>
   );
 }
 
@@ -187,9 +140,12 @@ function DisplayDateField({ value, onChange }: DisplayDateFieldProps) {
       <button
         type="button"
         onClick={openPicker}
-        className="flex h-[28px] w-full items-center justify-center rounded-[6px] border border-gray-300 bg-white px-2 text-[12px] leading-[28px] text-gray-700"
+        className={cn(
+          'flex h-[25px] w-full items-center justify-center rounded-[5px] border border-gray-300 bg-white px-5 text-gray-700',
+          DATE_TIME_TEXT_CLASS_NAME,
+        )}
       >
-        <span className="truncate">{displayText}</span>
+        <span className="whitespace-nowrap">{displayText}</span>
       </button>
 
       <input
@@ -208,6 +164,18 @@ type DisplayTimeFieldProps = {
   value?: string;
   onChange: (nextValue: string) => void;
 };
+
+function formatDisplayTime(value?: string) {
+  const inputValue = toTimeInputValue(value);
+  if (!inputValue) return '시간 선택';
+
+  const [hourText = '0', minute = '00'] = inputValue.split(':');
+  const hour = Number(hourText);
+  const period = hour < 12 ? '오전' : '오후';
+  const displayHour = hour % 12 || 12;
+
+  return `${period} ${displayHour}:${minute}`;
+}
 
 function DisplayTimeField({ value, onChange }: DisplayTimeFieldProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -229,9 +197,12 @@ function DisplayTimeField({ value, onChange }: DisplayTimeFieldProps) {
       <button
         type="button"
         onClick={openPicker}
-        className="flex h-[28px] w-full items-center justify-center rounded-[6px] border border-gray-300 bg-white px-2 text-[12px] leading-[28px] text-gray-700"
+        className={cn(
+          'flex h-[25px] w-full items-center justify-center rounded-[5px] border border-gray-300 bg-white px-5 text-gray-700',
+          DATE_TIME_TEXT_CLASS_NAME,
+        )}
       >
-        <span className="truncate">{inputValue || '시간 선택'}</span>
+        <span className="truncate">{formatDisplayTime(value)}</span>
       </button>
 
       <input
@@ -266,26 +237,6 @@ export function CalendarEventPopover({
   onCommit,
 }: CalendarEventPopoverProps) {
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const colorPickerRef = useRef<HTMLDivElement | null>(null);
-  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-
-  const selectedColorId = draft.colorId ?? DEFAULT_EVENT_COLOR;
-  const selectedColor = useMemo(
-    () => QUICK_EVENT_COLORS.find((color) => color.id === selectedColorId) ?? QUICK_EVENT_COLORS[0],
-    [selectedColorId],
-  );
-  const paletteColors = useMemo(
-    () => QUICK_EVENT_COLORS.filter((color) => color.id !== selectedColorId),
-    [selectedColorId],
-  );
-
-  const colorPaletteWidth =
-    COLOR_SWATCH_SIZE +
-    (paletteColors.length > 0
-      ? COLOR_SWATCH_GAP +
-        paletteColors.length * COLOR_SWATCH_SIZE +
-        (paletteColors.length - 1) * COLOR_SWATCH_GAP
-      : 0);
 
   const isAllDay = draft.allDay ?? !hasTimePart(draft.start);
   const showDateOnlyTimedField = hideTimeFields && !isAllDay;
@@ -298,51 +249,21 @@ export function CalendarEventPopover({
   useEffect(() => {
     if (!open) return;
 
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!popoverRef.current) return;
-      if (popoverRef.current.contains(event.target as Node)) return;
-
-      onCommit();
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsColorPaletteOpen(false);
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose, onCommit]);
-
-  useEffect(() => {
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!colorPickerRef.current) return;
-      if (colorPickerRef.current.contains(event.target as Node)) return;
-
-      setIsColorPaletteOpen(false);
-    };
-
-    document.addEventListener('mousedown', handlePointerDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-    };
-  }, []);
+  }, [open, onClose]);
 
   const handleClosePopover = () => {
-    setIsColorPaletteOpen(false);
     onClose();
-  };
-
-  const handleColorTriggerClick = () => {
-    setIsColorPaletteOpen((prev) => !prev);
   };
 
   const handleSelectColor = (colorId: EventColorId) => {
@@ -350,7 +271,6 @@ export function CalendarEventPopover({
       ...draft,
       colorId,
     });
-    setIsColorPaletteOpen(false);
   };
 
   const updateAllDayStart = (nextStart: string) => {
@@ -420,67 +340,78 @@ export function CalendarEventPopover({
     });
   };
 
-  const handleToggleAllDay = (checked: boolean) => {
-    if (checked) {
-      const start = toDateInputValue(draft.start);
-      if (!start) return;
+  const handleToggleAllDay = () => {
+    const nextAllDay = !isAllDay;
+    const dateValue = toDateInputValue(draft.start);
 
-      const displayEnd = toDateInputValue(draft.end) || start;
-      const normalizedDisplayEnd =
-        parseCalendarDate(displayEnd) &&
-        parseCalendarDate(start) &&
-        parseCalendarDate(displayEnd)! >= parseCalendarDate(start)!
-          ? displayEnd
-          : start;
+    if (!dateValue) return;
 
+    if (nextAllDay) {
       onChangeDraft({
         ...draft,
         allDay: true,
-        start,
-        end: addDaysToCalendarDate(normalizedDisplayEnd, 1),
+        start: dateValue,
+        end: addDaysToCalendarDate(dateValue, 1),
       });
       return;
     }
 
-    const baseDate = toDateInputValue(draft.start);
-    if (!baseDate) return;
+    const nextStart = combineDateAndTime(dateValue, '22:00');
+    const nextEnd = combineDateAndTime(dateValue, '23:30');
 
-    const nextStart = combineDateAndTime(baseDate, timedStartTimeValue);
-    const nextEnd = combineDateAndTime(baseDate, timedEndTimeValue || '10:00');
-
-    if (!nextStart) return;
+    if (!nextStart || !nextEnd) return;
 
     onChangeDraft({
       ...draft,
       allDay: false,
       start: nextStart,
-      end: nextEnd || addHoursToCalendarDateTime(nextStart, 1),
+      end: nextEnd,
     });
   };
 
   if (!open) return null;
 
   return (
-    <div
-      ref={popoverRef}
-      className="fixed z-50 min-h-[455px] w-[320px] overflow-visible rounded-[12px] border border-gray-300 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.12)]"
-      style={{ left: x, top: y }}
-    >
-      <div className="flex items-center justify-between px-3 py-[10px]">
-        <span className="text-[12px] leading-[16px] font-semibold text-gray-900">일정</span>
+    <>
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 z-40 bg-transparent"
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onCommit();
+        }}
+      />
 
-        <button
-          type="button"
-          onClick={handleClosePopover}
-          className="text-[18px] leading-none text-gray-400"
-          aria-label="닫기"
-        >
-          ×
-        </button>
-      </div>
+      <div
+        ref={popoverRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="일정"
+        className="fixed z-50 flex w-[301px] flex-col items-start gap-[20px] overflow-visible rounded-[10px] bg-white px-4 py-5 shadow-[0_4px_20px_rgba(85,85,85,0.2)] ring-1 ring-gray-400 ring-inset"
+        style={{ left: x, top: y }}
+      >
+        <div className="flex h-[14px] w-full items-center justify-between">
+          <span className="text-[12px] leading-[14px] font-medium tracking-normal text-gray-950">
+            일정
+          </span>
 
-      <div className="space-y-3 px-3 pb-3">
-        <input
+          <button
+            type="button"
+            onClick={handleClosePopover}
+            className="flex h-3 w-3 items-center justify-center"
+            aria-label="닫기"
+          >
+            <ThinCloseIcon width={10} height={10} aria-hidden="true" />
+          </button>
+        </div>
+
+        <Input
+          label="일정 제목"
           value={draft.title ?? ''}
           onChange={(event) =>
             onChangeDraft({
@@ -489,68 +420,102 @@ export function CalendarEventPopover({
             })
           }
           placeholder="제목"
-          className="h-[28px] w-full border-0 bg-transparent px-0 text-[12px] text-gray-900 outline-none placeholder:text-gray-500"
+          // TODO: Input 스타일 확인
+          // 기존 스타일 코드
+          // className="h-[29px] gap-0 border-b-0 px-[10px] py-0 shadow-[inset_0_-1px_0_var(--color-gray-400)]"
+          // inputClassName="my-0 h-[17px] text-[14px] leading-[17px] font-medium tracking-normal text-gray-950 placeholder:text-gray-500"
+          className="h-[29px] border-b-0 px-[10px] tracking-normal"
+          inputClassName="text-[14px] font-medium"
         />
 
-        {isAllDay ? (
-          <div className="grid grid-cols-[14px_1fr_10px_1fr] items-center gap-2">
-            <FieldIcon>
-              <CalendarLineIcon width={16} height={16} />
-            </FieldIcon>
+        <div className="flex w-full flex-col gap-2">
+          {isAllDay ? (
+            <div className="flex h-[26px] w-full items-center gap-2">
+              <ScheduleFieldIcon>
+                <DateIcon width={15} height={16} aria-hidden />
+              </ScheduleFieldIcon>
 
-            <DisplayDateField value={draft.start} onChange={updateAllDayStart} />
+              <div className="flex min-w-0 flex-1 items-center gap-1">
+                <div className="min-w-0 flex-1">
+                  <DisplayDateField value={draft.start} onChange={updateAllDayStart} />
+                </div>
 
-            <span className="text-center text-[12px] text-gray-500">-</span>
+                <RangeSeparatorIcon width={10.5} height={1} className="shrink-0" aria-hidden />
 
-            <DisplayDateField value={allDayDisplayEndValue} onChange={updateAllDayEnd} />
-          </div>
-        ) : showDateOnlyTimedField ? (
-          <div className="grid grid-cols-[14px_1fr] items-center gap-2">
-            <FieldIcon>
-              <CalendarLineIcon width={16} height={16} />
-            </FieldIcon>
-
-            <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <div className="grid grid-cols-[14px_1fr_10px_1fr] items-center gap-2">
-              <FieldIcon>
-                <ClockLineIcon width={16} height={16} />
-              </FieldIcon>
-
-              <DisplayTimeField
-                value={draft.start}
-                onChange={(nextValue) => updateTimedStart(timedStartDateValue, nextValue)}
-              />
-
-              <span className="text-center text-[12px] text-gray-500">-</span>
-
-              <DisplayTimeField
-                value={draft.end}
-                onChange={(nextValue) => updateTimedEnd(nextValue)}
-              />
+                <div className="min-w-0 flex-1">
+                  <DisplayDateField value={allDayDisplayEndValue} onChange={updateAllDayEnd} />
+                </div>
+              </div>
             </div>
+          ) : showDateOnlyTimedField ? (
+            <div className="flex h-[26px] w-full items-center gap-2">
+              <ScheduleFieldIcon>
+                <DateIcon width={15} height={16} aria-hidden />
+              </ScheduleFieldIcon>
 
-            <div className="grid grid-cols-[14px_1fr] items-center gap-2">
-              <FieldIcon>
-                <CalendarLineIcon width={16} height={16} />
-              </FieldIcon>
-
-              <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
+              <div className="w-[106.75px] shrink-0">
+                <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <>
+              <div className="flex h-[26px] w-full items-center gap-2">
+                <ScheduleFieldIcon>
+                  <WatchIcon width={16} height={16} aria-hidden />
+                </ScheduleFieldIcon>
 
-        <label className="flex items-center gap-2 text-[12px] leading-[14px] text-gray-700">
-          <input
-            type="checkbox"
-            checked={isAllDay}
-            onChange={(event) => handleToggleAllDay(event.target.checked)}
-            className="accent-secondary-700 h-[14px] w-[14px] rounded-[4px] border border-gray-300"
-          />
-          <span>종일</span>
-        </label>
+                <div className="flex min-w-0 flex-1 items-center gap-1">
+                  <div className="min-w-0 flex-1">
+                    <DisplayTimeField
+                      value={draft.start}
+                      onChange={(nextValue) => updateTimedStart(timedStartDateValue, nextValue)}
+                    />
+                  </div>
+
+                  <RangeSeparatorIcon width={10.5} height={1} className="shrink-0" aria-hidden />
+
+                  <div className="min-w-0 flex-1">
+                    <DisplayTimeField
+                      value={draft.end}
+                      onChange={(nextValue) => updateTimedEnd(nextValue)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex h-[26px] w-full items-center gap-2">
+                <ScheduleFieldIcon>
+                  <DateIcon width={15} height={16} aria-hidden />
+                </ScheduleFieldIcon>
+
+                <div className="w-[106.75px] shrink-0">
+                  <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
+                </div>
+              </div>
+            </>
+          )}
+
+          <label className="flex h-[26px] w-fit cursor-pointer items-center gap-2 text-[12px] leading-[14px] font-normal tracking-normal text-gray-700">
+            <input
+              type="checkbox"
+              checked={isAllDay}
+              onChange={handleToggleAllDay}
+              className="sr-only"
+            />
+            <ScheduleFieldIcon>
+              <CheckboxIcon
+                width={16}
+                height={16}
+                data-calendar-all-day-checkbox-icon="true"
+                aria-hidden="true"
+                className={cn('calendar-all-day-checkbox-icon', {
+                  'calendar-all-day-checkbox-icon--checked': isAllDay,
+                })}
+              />
+            </ScheduleFieldIcon>
+            <span>종일</span>
+          </label>
+        </div>
 
         <textarea
           value={draft.memo ?? ''}
@@ -560,73 +525,29 @@ export function CalendarEventPopover({
               memo: event.target.value,
             })
           }
-          className="h-[96px] w-full resize-none rounded-[8px] border border-gray-300 px-2.5 py-2 text-[11px] leading-[15px] text-gray-700 outline-none focus:border-gray-400"
+          placeholder="메모"
+          className="ring-tag-gray-200 focus:ring-tag-gray-200 h-[100px] w-full shrink-0 resize-none overflow-y-auto rounded-[5px] px-3 py-[10px] text-[12px] leading-[16px] font-medium tracking-[-0.02em] text-gray-950 ring-1 outline-none ring-inset placeholder:text-gray-500"
         />
 
-        <div>
-          <div className="mb-2 text-[11px] leading-[14px] font-medium text-gray-700">일정 색상</div>
-
-          <div ref={colorPickerRef} className="flex items-center">
-            <div
-              className="overflow-hidden"
-              style={{
-                width: `${isColorPaletteOpen ? colorPaletteWidth : COLOR_SWATCH_SIZE}px`,
-                transition: 'width 240ms cubic-bezier(0.22, 1, 0.36, 1)',
-              }}
-            >
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={handleColorTriggerClick}
-                  className={cn(
-                    'flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-[6px] border border-gray-300 transition-transform duration-200',
-                    selectedColor.chipClassName,
-                  )}
-                  style={{
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.68)',
-                    transform: isColorPaletteOpen ? 'scale(1.04)' : 'scale(1)',
-                  }}
-                  aria-label="색상 팔레트 열기"
-                  aria-expanded={isColorPaletteOpen}
-                />
-
-                <div
-                  className="flex min-w-0 items-center gap-[8px]"
-                  style={{
-                    marginLeft: `${COLOR_SWATCH_GAP}px`,
-                    opacity: isColorPaletteOpen ? 1 : 0,
-                    transform: `translateX(${isColorPaletteOpen ? '0px' : '-10px'})`,
-                    pointerEvents: isColorPaletteOpen ? 'auto' : 'none',
-                    transition:
-                      'opacity 180ms ease, transform 240ms cubic-bezier(0.22, 1, 0.36, 1)',
-                  }}
-                >
-                  {paletteColors.map((color) => (
-                    <button
-                      key={color.id}
-                      type="button"
-                      onClick={() => handleSelectColor(color.id)}
-                      className={cn(
-                        'h-[20px] w-[20px] shrink-0 rounded-[6px] border border-transparent transition-transform duration-150 hover:scale-105 hover:border-gray-300',
-                        color.chipClassName,
-                      )}
-                      style={{
-                        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.52)',
-                      }}
-                      aria-label={color.label}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+        <div className="flex flex-col items-start gap-2">
+          <div className="h-[14px] text-[12px] leading-[14px] font-medium tracking-normal text-gray-600">
+            일정 색상
           </div>
+
+          <CollapsibleColorPicker
+            value={draft.colorId}
+            options={QUICK_EVENT_COLOR_OPTIONS}
+            onChange={handleSelectColor}
+            swatchSlotSize={24}
+            swatchGap={4}
+          />
         </div>
 
-        <div className="space-y-1.5">
-          <div className="grid grid-cols-[14px_1fr] items-center gap-2 rounded-[8px] border border-gray-300 px-2.5">
-            <FieldIcon>
-              <LocationLineIcon width={16} height={16} />
-            </FieldIcon>
+        <div className="flex w-full flex-col gap-1">
+          <div className="flex h-[29px] w-full items-center gap-2 rounded-[5px] px-2 ring-1 ring-gray-300 ring-inset">
+            <CompactFieldIcon>
+              <LocationIcon width={8.4} height={12} aria-hidden />
+            </CompactFieldIcon>
 
             <input
               value={draft.location ?? ''}
@@ -637,53 +558,77 @@ export function CalendarEventPopover({
                 })
               }
               placeholder="장소"
-              className="h-[31px] w-full border-0 bg-transparent px-0 text-[12px] outline-none placeholder:text-gray-500"
+              className={cn(
+                'h-[17px] min-w-0 flex-1 border-0 bg-transparent px-0 text-gray-700 outline-none placeholder:font-normal placeholder:text-gray-500',
+                COMPACT_INPUT_TEXT_CLASS_NAME,
+              )}
             />
           </div>
 
-          <div className="grid grid-cols-[14px_1fr] items-center gap-2 rounded-[8px] border border-gray-300 px-2.5">
-            <FieldIcon>
-              <LinkLineIcon width={16} height={16} />
-            </FieldIcon>
+          <div className="flex h-[29px] w-full items-center gap-2 rounded-[5px] px-2 ring-1 ring-gray-300 ring-inset">
+            <CompactFieldIcon>
+              <LinkIcon width={12} height={6} aria-hidden />
+            </CompactFieldIcon>
 
             <input
-              value={(draft as CalendarEventDraft & { url?: string }).url ?? ''}
+              value={draft.url ?? ''}
               onChange={(event) =>
                 onChangeDraft({
                   ...draft,
                   url: event.target.value,
-                } as CalendarEventDraft)
+                })
               }
               placeholder="채용정보 URL"
-              className="h-[31px] w-full border-0 bg-transparent px-0 text-[12px] outline-none placeholder:text-gray-500"
+              className={cn(
+                'h-[17px] min-w-0 flex-1 border-0 bg-transparent px-0 text-gray-700 outline-none placeholder:font-normal placeholder:text-gray-500',
+                COMPACT_INPUT_TEXT_CLASS_NAME,
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* TODO: 리마인더 해제 시 reminderMinutes 전달값(null/0 등) 확인 필요 */}
+            <Select
+              value={draft.reminderMinutes?.toString() ?? ''}
+              options={REMINDER_OPTIONS}
+              placeholder="리마인더"
+              leadingIcon={
+                <CompactFieldIcon>
+                  <Watch2Icon className="h-3 w-3" aria-hidden />
+                </CompactFieldIcon>
+              }
+              onChange={(value) => {
+                const reminderMinutes = Number(value);
+
+                if (!isReminderMinutes(reminderMinutes)) return;
+
+                onChangeDraft({
+                  ...draft,
+                  reminderMinutes,
+                });
+              }}
+              triggerClassName={COMPACT_SELECT_TRIGGER_CLASS_NAME}
+              contentClassName="shadow-[0_8px_24px_rgba(15,23,42,0.12)]"
+              arrowIconClassName="text-gray-400"
+            />
+
+            <Select
+              value={draft.category ?? ''}
+              options={CATEGORY_OPTIONS}
+              placeholder="일정구분"
+              onChange={(value) =>
+                onChangeDraft({
+                  ...draft,
+                  category: value as CalendarEventCategory,
+                })
+              }
+              triggerClassName={COMPACT_SELECT_TRIGGER_CLASS_NAME}
+              contentClassName="shadow-[0_8px_24px_rgba(15,23,42,0.12)]"
+              arrowIconClassName="text-gray-400"
             />
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <CustomDropdown
-            value={draft.reminderMinutes !== undefined ? draft.reminderMinutes : ''}
-            options={REMINDER_OPTIONS}
-            onChange={(nextValue) => {
-              onChangeDraft({
-                ...draft,
-                reminderMinutes: nextValue === '' ? undefined : (nextValue as ReminderMinutes),
-              });
-            }}
-          />
-
-          <CustomDropdown
-            value={(draft as CalendarEventDraft & { category?: string }).category ?? ''}
-            options={CATEGORY_OPTIONS}
-            onChange={(nextValue) =>
-              onChangeDraft({
-                ...draft,
-                category: nextValue || undefined,
-              } as CalendarEventDraft)
-            }
-          />
-        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -8,7 +8,9 @@ import ProblemSetSummaryCard from '../_components/ProblemSetSummaryCard';
 import ProblemSideToc from '../_components/ProblemSideToc';
 import ProblemSolvingHeader from '../_components/ProblemSolvingHeader';
 import ProblemTocCard from '../_components/ProblemTocCard';
+import { useProblemSolvingSession } from '../_contexts/ProblemSolvingSessionContext';
 import { mockProblemQuestions, mockProblemSetSummary } from '../_data/mockProblemSolving';
+import { formatElapsedTime } from '../_utils/formatElapsedTime';
 
 type ProblemSetIntroViewProps = {
   problemSetId: string;
@@ -16,6 +18,7 @@ type ProblemSetIntroViewProps = {
 
 export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroViewProps) {
   const router = useRouter();
+  const { totalElapsedSeconds, attempts, pauseSession, resetSession } = useProblemSolvingSession();
 
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
@@ -25,6 +28,12 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
   const firstQuestionHref = firstQuestion
     ? `/problem/${problemSetId}/questions/${firstQuestion.id}`
     : `/problem/${problemSetId}`;
+  const solvedCount = Object.values(attempts).filter((attempt) => attempt.submitted).length;
+  const problemSetSummary = {
+    ...mockProblemSetSummary,
+    solvedCount,
+    totalCount: mockProblemQuestions.length,
+  };
 
   const handleOpenExitModal = () => {
     setIsTocOpen(false);
@@ -32,6 +41,12 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
   };
 
   const handleExit = () => {
+    pauseSession();
+    router.push('/problem');
+  };
+
+  const handleExitWithoutSave = () => {
+    resetSession();
     router.push('/problem');
   };
 
@@ -40,19 +55,19 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
       <ProblemSolvingHeader
         title="문제풀이 홈으로 나가기"
         backHref="/problem"
-        elapsedTime="00:00"
-        current={0}
+        elapsedTime={formatElapsedTime(totalElapsedSeconds)}
+        current={solvedCount}
         total={mockProblemQuestions.length}
         onMenuClick={() => {
           setIsTocOpen(true);
         }}
       />
 
-      <div className="h-[calc(100dvh-80px)] overflow-y-auto">
+      <div className="h-[calc(100dvh-80px)] overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="mx-auto w-[1060px] pt-[28px] pb-[68px]">
           <ProblemSetSummaryCard
             problemSetId={problemSetId}
-            summary={mockProblemSetSummary}
+            summary={problemSetSummary}
             actionLabel="이어서 시작"
             actionHref={firstQuestionHref}
           />
@@ -82,7 +97,7 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
           setIsExitModalOpen(false);
         }}
         onSaveAndExit={handleExit}
-        onExitWithoutSave={handleExit}
+        onExitWithoutSave={handleExitWithoutSave}
       />
     </main>
   );

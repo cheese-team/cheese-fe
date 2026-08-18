@@ -12,6 +12,7 @@ type TextEditModalProps = {
   value?: string;
   isOpen: boolean;
   onClose: () => void;
+  onSave: (value: string) => void;
 };
 
 export default function TextEditModal({
@@ -21,6 +22,7 @@ export default function TextEditModal({
   value,
   isOpen,
   onClose,
+  onSave,
 }: TextEditModalProps) {
   const [inputValue, setInputValue] = useState(value ?? '');
 
@@ -30,8 +32,7 @@ export default function TextEditModal({
     e.preventDefault();
 
     // TODO: API 요청
-
-    onClose();
+    onSave(inputValue);
   };
 
   return (
@@ -41,8 +42,7 @@ export default function TextEditModal({
           label={inputLabel}
           value={inputValue}
           placeholder={`${inputLabel} 입력`}
-          inputClassName="my-[5.5px]"
-          hideMessageSpace
+          className="h-10 px-2"
           onChange={(e) => setInputValue(e.target.value)}
         />
 

@@ -3,21 +3,21 @@
 import { useState } from 'react';
 
 import { Input } from '@/components/common/Input';
-
-import { CommunityPostForm } from '../../_components/CommunityPostForm';
-import { FormField, FormDropdown, POST_INPUT_CLASS } from '../../_components/CommunityPostForm';
-
-import { INFO_SORT_OPTIONS } from '../../_constants/community';
-import { cn } from '@/lib/cn';
+import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 
-import UploadIcon from '@/assets/icons/common/upload.svg';
-import CloseIcon from '@/assets/icons/common/close.svg';
+import { CommunityPostForm } from '../../_components/CommunityPostForm';
+import { FormField } from '../../_components/CommunityPostForm';
 
 import useFileUpload from '@/hooks/useFileUpload';
 import useTagInput from '@/hooks/useTagInput';
 
-import type { InfoPost } from '@/types/community';
+import { INFO_SORT_OPTIONS } from '../../_constants/community';
+
+import UploadIcon from '@/assets/icons/common/upload.svg';
+import CloseIcon from '@/assets/icons/common/close.svg';
+
+import type { InfoPost } from '@/types/community/community';
 
 const INFO_CATEGORY_OPTIONS = INFO_SORT_OPTIONS.filter((option) => option.value !== 'all');
 
@@ -75,13 +75,13 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
           name="title"
           placeholder="제목"
           defaultValue={initialValues?.title ?? ''}
-          className={cn(POST_INPUT_CLASS, 'h-16 border-0 text-[24px]')}
-          inputClassName="font-medium leading-16 h-16"
+          className="h-16 border-0 text-[24px] tracking-normal"
+          inputClassName="font-medium leading-16"
         />
 
         <div className="flex flex-col gap-y-6">
           <FormField label="분류" labelClassName="text-[14px]" className="w-full max-w-[300px]">
-            <FormDropdown value={category} options={INFO_CATEGORY_OPTIONS} onChange={setCategory} />
+            <Select value={category} options={INFO_CATEGORY_OPTIONS} onChange={setCategory} />
           </FormField>
 
           <div className="flex flex-col gap-2">
@@ -96,16 +96,16 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                   >
                     <button
                       type="button"
-                      className="text-success max-w-[280px] truncate text-left underline"
                       onClick={() => openFile(file)}
+                      className="text-success max-w-[280px] truncate text-left underline"
                     >
                       {file.name}
                     </button>
                     <button
                       type="button"
                       aria-label={`${file.name} 삭제`}
-                      className="text-gray-600 hover:text-gray-800"
                       onClick={() => removeFile(index)}
+                      className="text-gray-600 hover:text-gray-800"
                     >
                       <CloseIcon className="h-3 w-3" aria-hidden="true" />
                     </button>
@@ -117,11 +117,11 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
             <input ref={fileInputRef} multiple type="file" className="hidden" onChange={addFiles} />
             <Button
               type="button"
+              onClick={openFilePicker}
               width={90}
               size={46}
               variant="outlineLightGray"
               className="gap-3 border-gray-300"
-              onClick={openFilePicker}
             >
               <UploadIcon className="w-3" aria-hidden="true" />
               업로드
@@ -134,14 +134,13 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
             className="w-full max-w-[624px]"
           >
             <Input
-              hideMessageSpace
               label="태그 등록"
               name="tags"
+              placeholder="# 최대 5개의 태그를 설정할 수 있습니다"
               value={tagInput}
               onChange={(event) => setTagInput(event.target.value)}
               onKeyDown={handleTagKeyDown}
-              placeholder="# 최대 5개의 태그를 설정할 수 있습니다"
-              className={POST_INPUT_CLASS}
+              className="h-[30px]"
               inputClassName="font-medium"
             />
 
@@ -151,8 +150,8 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                   <button
                     key={tag}
                     type="button"
-                    className="bg-tag-yellow-100 hover:bg-tag-yellow-200 rounded-full px-3 py-1 transition-colors duration-200"
                     onClick={() => removeTag(tag)}
+                    className="bg-tag-yellow-100 hover:bg-tag-yellow-200 rounded-full px-3 py-1 transition-colors duration-200"
                   >
                     # {tag}
                   </button>

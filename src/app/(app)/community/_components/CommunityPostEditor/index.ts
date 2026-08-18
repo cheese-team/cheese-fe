@@ -1,1 +1,1 @@
-export { CommunityPostEditor } from './CommunityPostEditor';
+export { default } from './CommunityPostEditor';

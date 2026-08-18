@@ -28,8 +28,6 @@ export const ALL_DAY_CHIP_GAP = 4;
 export const ALL_DAY_SECTION_VERTICAL_PADDING = 8;
 export const ALL_DAY_SECTION_MIN_ROWS = 1;
 export const ALL_DAY_SECTION_MAX_ROWS = 3;
-export const MONTH_MAX_VISIBLE_EVENT_ROWS = 5;
-
 /**
  * 칩 스택 영역의 실제 높이를 계산한다.
  * 월간 칩 간격과 종일 영역 높이 계산에서 함께 사용한다.

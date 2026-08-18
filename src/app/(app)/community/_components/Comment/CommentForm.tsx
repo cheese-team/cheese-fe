@@ -2,13 +2,14 @@
 
 import { useRef } from 'react';
 
-import { ProfileImage } from '@/components/common/ProfileImage';
+import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
 
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
 import { resizeTextarea } from './utils';
 
 import type { CommentFormProps } from './types';
+
+import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
 
 export default function CommentForm({ value, onValueChange, onSubmit }: CommentFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);

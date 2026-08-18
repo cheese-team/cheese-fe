@@ -24,10 +24,12 @@ export default function CompanyProfiles({ profile, onOpenModal }: CompanyProfile
                 if (!item.modalType) return;
 
                 onOpenModal({
+                  section: item.section,
+                  field: item.field,
                   label: item.label,
-                  buttonText: item.buttonText,
                   value: item.value,
                   document: item.document,
+                  buttonText: item.buttonText,
                   options: item.options,
                   modalType: item.modalType,
                 });

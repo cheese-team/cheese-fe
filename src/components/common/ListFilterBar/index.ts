@@ -1,1 +1,1 @@
-export { ListFilterBar, ListFilterBar as default, type ListFilterOption } from './ListFilterBar';
+export { ListFilterBar, ListFilterBar as default } from './ListFilterBar';

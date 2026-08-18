@@ -1,4 +1,4 @@
-import { ProfileImage } from '@/components/common/ProfileImage';
+import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
 
 import { resizeTextarea } from './utils';
@@ -32,7 +32,7 @@ export default function CommentItem({
           <h3 className="font-medium">{comment.author.nickname}</h3>
 
           {isEditing ? (
-            <div className="flex flex-col gap-3 rounded-[5px] border border-gray-400 px-3 py-3">
+            <div className="flex flex-col gap-3">
               <textarea
                 ref={textareaRef}
                 value={editingValue}
@@ -46,7 +46,7 @@ export default function CommentItem({
                     onUpdate(comment.id);
                   }
                 }}
-                className="focus:outline-secondary-600 max-h-60 min-h-20 resize-none overflow-y-auto px-2 py-2"
+                className="focus:outline-secondary-600 max-h-60 min-h-20 resize-none overflow-y-auto rounded-[5px] border border-gray-400 px-2 py-2"
               />
 
               <div className="flex gap-1 self-end">

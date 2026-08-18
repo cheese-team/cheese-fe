@@ -1,4 +1,4 @@
-import { DocumentLinkItem } from '@/components/common/DocumentLink';
+import DocumentLinkItem from './DocumentLinkItem';
 
 import { cn } from '@/lib/cn';
 
@@ -9,12 +9,14 @@ import type { ProfileDocument } from '@/types/profile';
 
 type DocumentLinkItemListProps = {
   document: ProfileDocument;
+  urlLabel?: string;
   className?: string;
   labelClassName?: string;
 };
 
 export default function DocumentLinkItemList({
   document,
+  urlLabel,
   className,
   labelClassName,
 }: DocumentLinkItemListProps) {
@@ -32,7 +34,7 @@ export default function DocumentLinkItemList({
       {document.url && (
         <DocumentLinkItem
           href={document.url}
-          label={document.urlLabel ?? document.url}
+          label={urlLabel ?? document.url}
           icon={<LinkIcon className="h-3 w-3 text-gray-500" />}
           labelClassName={labelClassName}
         />

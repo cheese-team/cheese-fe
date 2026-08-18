@@ -1,3 +1,14 @@
+export type ProfileType = 'personal' | 'company';
+
+export type ContactMethod = 'email' | 'kakaoOpenChat' | 'googleForm';
+
+export type ProfileDocument = {
+  fileName: string;
+  fileUrl?: string;
+  url: string;
+  urlLabel?: string;
+};
+
 export type PersonalProfile = {
   id: number;
   nickname: string;
@@ -16,7 +27,7 @@ export type PersonalProfile = {
 
 export type CompanyProfile = {
   id: number;
-  nickname: string;
+  companyName: string;
   email: string;
   profileImageUrl?: string;
 
@@ -32,17 +43,18 @@ export type CompanyProfile = {
 };
 
 export type AccountSettings = {
-  contact: ContactMethod;
+  contactMethod: ContactMethod;
+  contactUrl?: string;
   email: string;
   passwordUpdatedAt: string;
   address: string;
 };
 
-export type ProfileDocument = {
-  fileName: string;
-  fileUrl?: string;
-  url: string;
-  urlLabel?: string;
-};
+export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUrl'>;
 
-export type ContactMethod = 'email' | 'kakaoOpenChat' | 'googleForm';
+export type Mypage = {
+  activeProfileType: ProfileType;
+  personalProfile: PersonalProfile;
+  companyProfile: CompanyProfile;
+  accountSettings: AccountSettings;
+};

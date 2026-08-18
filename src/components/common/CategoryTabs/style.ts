@@ -1,5 +1,7 @@
 import type { CategoryTabsSize } from './type';
 
+// TODO: style.ts 파일 사용 확인
+
 export const categoryTabsClassNames = {
   list: 'flex flex-wrap items-center gap-[10px]',
 
@@ -8,7 +10,7 @@ export const categoryTabsClassNames = {
 
   buttonSize: {
     sm: 'h-[44px] px-[18px] text-[14px] leading-[24px]',
-    md: 'h-[54px] px-[20px] text-[16px] leading-[30px]',
+    md: 'h-[54px] px-[28px] text-[16px] leading-[24px]',
   } satisfies Record<CategoryTabsSize, string>,
 
   active:

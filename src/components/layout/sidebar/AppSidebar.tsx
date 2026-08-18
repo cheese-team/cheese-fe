@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+// 반영 확인주석
 import {
   AlarmIcon,
   CalendarIcon,
@@ -15,6 +15,7 @@ import {
 } from '@/assets/icons/sidebar';
 import { MiniCalendar } from '@/app/(app)/calendar/_ui/sidebar/MiniCalendar';
 
+import ProfileImage from '@/components/common/ProfileImage';
 import { NotificationSidebar } from './NotificationSidebar';
 
 import { cn } from '@/lib/cn';
@@ -23,8 +24,8 @@ import {
   getSidebarItemClassName,
   isSidebarItemActive,
 } from '@/components/layout/sidebar/utils';
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
-import { ProfileImage } from '@/components/common/ProfileImage';
+
+import { mockMypage } from '@/mocks/profile/userProfiles';
 
 type NavigationIconType = 'bell' | 'calendar' | 'memo' | 'pencil' | 'community';
 
@@ -62,21 +63,29 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const [isNotificationSidebarOpen, setIsNotificationSidebarOpen] = useState(false);
 
-  const profile = getMockPersonalProfile(1);
-
   const isMyPageActive = !isNotificationSidebarOpen && isSidebarItemActive(pathname, '/mypage');
+
+  const mypage = mockMypage;
+
+  const profile =
+    mypage.activeProfileType === 'personal' ? mypage.personalProfile : mypage.companyProfile;
+
+  const profileName =
+    mypage.activeProfileType === 'personal'
+      ? mypage.personalProfile.nickname
+      : mypage.companyProfile.companyName;
 
   return (
     <>
       <aside className="border-border bg-sidebar-bg z-50 flex h-dvh w-[260px] shrink-0 flex-col border-r-2">
-        <div className="px-4 pt-[33px] pb-20">
+        <div className="flex px-4 pt-[33px] pb-20">
           <Link
-            href="/calendar"
+            href="/dashboard"
             aria-label="Cheese 홈"
             className="inline-flex"
             onClick={() => setIsNotificationSidebarOpen(false)}
           >
-            <Image src="/brands/cheese-logo.svg" alt="CHEESE" width={137} height={38} priority />
+            <Image src="/brands/cheese-logo.svg" alt="CHEESE" width={150} height={41} priority />
           </Link>
         </div>
 
@@ -93,7 +102,7 @@ export default function AppSidebar() {
                 <ProfileImage src={profile.profileImageUrl} size={25} />
               </div>
 
-              <span>{profile.nickname} 님</span>
+              <span>{profileName} 님</span>
             </Link>
           </div>
 
@@ -151,14 +160,16 @@ export default function AppSidebar() {
           </nav>
         </div>
 
-        <div className="mt-9 px-5">
+        <div className="mt-[29px] px-4">
           <MiniCalendar />
         </div>
       </aside>
 
       {isNotificationSidebarOpen ? (
-        <div className="fixed top-0 left-[260px] z-40 h-dvh">
-          <NotificationSidebar onClose={() => setIsNotificationSidebarOpen(false)} />
+        <div className="fixed top-0 left-[260px] z-40 h-dvh overflow-visible">
+          <div className="h-full translate-x-0 transition-transform duration-200 ease-out">
+            <NotificationSidebar onClose={() => setIsNotificationSidebarOpen(false)} />
+          </div>
         </div>
       ) : null}
     </>

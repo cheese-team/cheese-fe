@@ -1,60 +1,41 @@
 'use client';
 
-import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import InfoPostCard from '@/components/community/info/InfoPostCard';
+import InfoPostCard from '@/components/community/info';
 
-import { useLikeToggle } from '@/hooks/useLikeToggle';
-import { getOptionLabel } from '@/lib/getOptionLabel';
-import { INFO_SORT_OPTIONS } from '../_constants/community';
+import { isInfoSort } from '../_constants/community';
 
-import { infoPosts as INFO_POSTS } from '@/mocks/posts';
-
-type InfoCategoryValue = (typeof INFO_SORT_OPTIONS)[number]['value'];
+import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
+import { useInfoPosts } from '@/queries/community/useInfoPosts';
 
 export default function CommunityInfoPage() {
   const searchParams = useSearchParams();
-  const { posts: infoPosts, toggleLike } = useLikeToggle(INFO_POSTS);
 
-  const category = (searchParams.get('sort') ?? 'all') as InfoCategoryValue;
+  const sortParam = searchParams.get('sort');
+  const sort = isInfoSort(sortParam) ? sortParam : 'all';
   const keyword = searchParams.get('keyword') ?? '';
 
-  const filteredInfoPosts = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
+  const { data: infoPosts = [], isPending, isError } = useInfoPosts({ sort, keyword });
 
-    return infoPosts
-      .filter((post) => {
-        const matchesCategory = category === 'all' || post.category === category;
+  // TODO: API 연동 후 좋아요 캐시 갱신 방식 최적화
+  const { mutate: toggleInfoPostLike } = useToggleInfoPostLike();
 
-        if (!matchesCategory) {
-          return false;
-        }
+  if (isPending) {
+    return <div>불러오는 중입니다.</div>;
+  }
 
-        if (normalizedKeyword.length === 0) {
-          return true;
-        }
-
-        return (
-          post.title.toLowerCase().includes(normalizedKeyword) ||
-          post.content.toLowerCase().includes(normalizedKeyword) ||
-          post.author.nickname.toLowerCase().includes(normalizedKeyword) ||
-          getOptionLabel(INFO_SORT_OPTIONS, post.category)
-            .toLowerCase()
-            .includes(normalizedKeyword) ||
-          post.tags.some((tag) => tag.toLowerCase().includes(normalizedKeyword))
-        );
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [infoPosts, keyword, category]);
+  if (isError) {
+    return <div>정보/자료공유 게시글을 불러오지 못했습니다.</div>;
+  }
 
   return (
-    <div className="mx-auto flex flex-col px-[50px]">
-      {filteredInfoPosts.map((infoPost) => (
+    <div className="mx-auto flex w-full flex-col px-[50px]">
+      {infoPosts.map((infoPost) => (
         <InfoPostCard
           key={infoPost.id}
           post={infoPost}
-          onToggleLike={toggleLike}
+          onToggleLike={toggleInfoPostLike}
           wrapperClassName="py-8"
         />
       ))}

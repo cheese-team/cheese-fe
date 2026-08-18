@@ -3,15 +3,15 @@
 import { useState } from 'react';
 
 import { Input } from '@/components/common/Input';
+import { Select } from '@/components/common/Select';
 import DatePicker from '@/components/common/DatePicker/DatePicker';
 
-import { CommunityPostForm } from '../../_components/CommunityPostForm';
-import { FormField, FormDropdown, POST_INPUT_CLASS } from '../../_components/CommunityPostForm';
+import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
 
+import { toFieldArray, toFieldSelectValue, type FieldSelectValue } from '@/lib/jobField';
 import { FIELD_OPTIONS, WORK_METHOD_OPTIONS } from '@/constants/profileOptions';
-import { cn } from '@/lib/cn';
 
-import type { GroupPost } from '@/types/community';
+import type { GroupPost } from '@/types/community/community';
 
 type GroupPostFormProps = {
   mode: 'create' | 'edit';
@@ -19,12 +19,9 @@ type GroupPostFormProps = {
 };
 
 export default function GroupPostForm({ mode, initialValues }: GroupPostFormProps) {
-  const [field, setField] = useState(initialValues?.field ?? '');
+  const [field, setField] = useState(toFieldSelectValue(initialValues?.field));
   const [progressType, setProgressType] = useState(initialValues?.progressType ?? '');
-  {
-    /* TODO: 학력 필드 추가 여부 확인 */
-  }
-  // const [education, setEducation] = useState(initialValues?.education ?? '');
+
   const [date, setDate] = useState(initialValues?.deadline ?? '');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
@@ -34,21 +31,20 @@ export default function GroupPostForm({ mode, initialValues }: GroupPostFormProp
 
     const title = String(formData.get('title') ?? '');
     const expectedPeriod = String(formData.get('period') ?? '');
-    const recruitCount = Number(formData.get('recruit') ?? 0);
-    // const applyUrl = String(formData.get('url') ?? '');
+    const skills = String(formData.get('skills') ?? '')
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+    const recruitCount = Number(formData.get('recruitCount') ?? 0);
 
     const groupPostPayload = {
       title,
-      field,
+      field: toFieldArray(field),
       progressType,
       expectedPeriod,
-      // education,
+      skills,
       recruitCount,
       deadline: date,
-      // apply: {
-      //   type: 'homepage',
-      //   url: applyUrl,
-      // },
       content,
     };
 
@@ -75,23 +71,22 @@ export default function GroupPostForm({ mode, initialValues }: GroupPostFormProp
             name="title"
             placeholder="제목 입력"
             defaultValue={initialValues?.title ?? ''}
-            className={POST_INPUT_CLASS}
+            className="h-[30px]"
             inputClassName="font-medium"
-            hideMessageSpace
           />
         </FormField>
 
         <div className="grid grid-cols-2 gap-x-15 gap-y-6">
           <FormField label="모집분야" labelClassName="text-[14px]">
-            <FormDropdown value={field} options={FIELD_OPTIONS} onChange={setField} />
+            <Select
+              value={field}
+              options={FIELD_OPTIONS}
+              onChange={(value) => setField(value as FieldSelectValue)}
+            />
           </FormField>
 
           <FormField label="진행방식" labelClassName="text-[14px]">
-            <FormDropdown
-              value={progressType}
-              options={WORK_METHOD_OPTIONS}
-              onChange={setProgressType}
-            />
+            <Select value={progressType} options={WORK_METHOD_OPTIONS} onChange={setProgressType} />
           </FormField>
 
           <FormField label="예상 기간" labelClassName="text-[14px]">
@@ -100,49 +95,43 @@ export default function GroupPostForm({ mode, initialValues }: GroupPostFormProp
               name="period"
               placeholder="예상 기간 입력"
               defaultValue={initialValues?.expectedPeriod ?? ''}
-              className={POST_INPUT_CLASS}
+              className="h-[30px]"
               inputClassName="font-medium"
-              hideMessageSpace
             />
           </FormField>
 
-          {/* <FormField label="학력" labelClassName="text-[14px]">
-            <FormDropdown value={education} options={EDUCATION_OPTIONS} onChange={setEducation} />
-          </FormField> */}
+          <FormField label="필요스킬" labelClassName="text-[14px]">
+            <Input
+              label="필요스킬"
+              name="skills"
+              placeholder="예) React, TypeScript"
+              defaultValue={initialValues?.skills?.join(', ') ?? ''}
+              className="h-[30px]"
+              inputClassName="font-medium"
+            />
+          </FormField>
 
           <FormField label="모집 인원" labelClassName="text-[14px]">
             <Input
               label="모집 인원"
               name="recruitCount"
+              type="number"
+              min={1}
               placeholder="모집 인원 입력"
               defaultValue={initialValues?.recruitCount ?? ''}
-              className={POST_INPUT_CLASS}
+              className="h-[30px]"
               inputClassName="font-medium"
-              hideMessageSpace
             />
           </FormField>
 
           <FormField label="지원 마감일" labelClassName="text-[14px]">
             <DatePicker
               value={date}
-              onChange={setDate}
               formatDisplayValue={(value) => value.replaceAll('-', '. ')}
-              buttonClassName={cn('border-b border-gray-400', POST_INPUT_CLASS)}
+              onChange={setDate}
+              buttonClassName="border-b border-gray-400 h-[30px] focus-within:border-secondary-600 focus-within:border-b-2"
             />
           </FormField>
-
-          {/* TODO: URL 필요 여부 확인 */}
-          {/* <FormField label="공고 URL" labelClassName="text-[14px]" className="col-span-2" required>
-            <Input
-              label="공고 URL"
-              name="url"
-              type="url"
-              placeholder="URL 입력"
-              defaultValue={initialValues?.applyUrl ?? ''}
-              className={POST_INPUT_CLASS}
-              hideMessageSpace
-            />
-          </FormField> */}
         </div>
       </section>
     </CommunityPostForm>

@@ -17,7 +17,7 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
           <MyPageSidebar />
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10">
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className={isMyPageMain ? 'mb-8' : 'mb-5'}>
             <MypageHeaderTitle />
           </div>

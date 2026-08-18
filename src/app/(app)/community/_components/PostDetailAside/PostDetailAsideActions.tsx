@@ -3,13 +3,14 @@
 import { useState } from 'react';
 
 import { Button } from '@/components/common/Button';
-import ApplyModal from '../ApplyModal/ApplyModal';
+
+import ApplyModal from '../ApplyModal';
 
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
 import ShareIcon from '@/assets/icons/common/contact.svg';
 
-import type { JobPost, GroupPost } from '@/types/community';
+import type { JobPost, GroupPost } from '@/types/community/community';
 
 type PostDetailAsideActionsProps = {
   post: JobPost | GroupPost;
@@ -17,7 +18,7 @@ type PostDetailAsideActionsProps = {
   buttonText?: string;
 };
 
-export function PostDetailAsideActions({
+export default function PostDetailAsideActions({
   post,
   isClosed,
   buttonText = '지원하기',

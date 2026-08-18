@@ -8,10 +8,9 @@ import EditIcon from '@/assets/icons/common/edit.svg';
 import FileIcon from '@/assets/icons/common/file.svg';
 import LinkIcon from '@/assets/icons/common/link.svg';
 
-import type { JobPost, GroupPost } from '@/types/community';
+import type { JobPost, GroupPost } from '@/types/community/community';
 
-import { mockAccountSettings } from '@/mocks/profile/userProfiles';
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
+import { mockMypage } from '@/mocks/profile/userProfiles';
 
 type ApplyFormContentProps = {
   post: JobPost | GroupPost;
@@ -22,8 +21,7 @@ type ApplyFormContentProps = {
 export default function ApplyFormContent({ post, onClose, onApply }: ApplyFormContentProps) {
   const router = useRouter();
 
-  const personalProfile = getMockPersonalProfile(1);
-  const accountSettings = mockAccountSettings;
+  const { personalProfile, accountSettings } = mockMypage;
 
   const documentLinks = [
     {
@@ -95,7 +93,7 @@ export default function ApplyFormContent({ post, onClose, onApply }: ApplyFormCo
             <h3 className="font-bold">내 이메일, 주소</h3>
             <div className="flex justify-between px-3">
               <ul className="flex flex-col gap-2 text-[14px] leading-[30px] text-gray-700">
-                <li>{accountSettings.email}</li>
+                <li>{personalProfile.email}</li>
                 <li>{accountSettings.address}</li>
               </ul>
               <Button

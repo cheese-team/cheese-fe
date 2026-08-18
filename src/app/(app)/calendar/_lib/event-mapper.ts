@@ -158,6 +158,8 @@ export function createCalendarEventFromDraft(draft: CalendarEventDraft, eventId:
     colorId: normalizedDraft.colorId ?? DEFAULT_EVENT_COLOR,
     reminderMinutes: normalizedDraft.reminderMinutes,
     location: normalizedDraft.location,
+    category: normalizedDraft.category,
+    url: normalizedDraft.url,
   } satisfies CalendarEvent;
 }
 
@@ -180,5 +182,7 @@ export function applyDraftToEvent(event: CalendarEvent, draft: CalendarEventDraf
     colorId: normalizedDraft.colorId ?? DEFAULT_EVENT_COLOR,
     reminderMinutes: normalizedDraft.reminderMinutes,
     location: normalizedDraft.location,
+    category: normalizedDraft.category ?? event.category,
+    url: normalizedDraft.url ?? event.url,
   } satisfies CalendarEvent;
 }

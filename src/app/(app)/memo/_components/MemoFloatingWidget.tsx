@@ -132,7 +132,7 @@ function WidgetCircleButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="hover:border-secondary-700 hover:text-secondary-700 flex h-[70px] w-[70px] items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 shadow-[0_4px_14px_rgba(0,0,0,0.08)] transition-colors"
+      className="hover:border-secondary-700 hover:text-secondary-700 flex h-[70px] w-[70px] items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors"
     >
       <span className="flex h-[16px] w-[16px] items-center justify-center [&>svg]:block [&>svg]:h-[16px] [&>svg]:w-[16px] [&>svg]:shrink-0">
         {children}
@@ -409,7 +409,7 @@ export function MemoFloatingWidget() {
   return (
     <>
       {open ? (
-        <aside className="fixed right-[32px] bottom-[32px] z-40 box-border flex h-[702px] w-[450px] flex-col rounded-[20px] border border-gray-300 bg-white p-[20px] shadow-[0_12px_36px_rgba(0,0,0,0.16)]">
+        <aside className="fixed right-[15px] bottom-[15px] z-40 box-border flex h-[702px] w-[450px] flex-col rounded-[20px] border border-gray-300 bg-white p-[20px]">
           <header className="mb-[18px] flex h-[28px] shrink-0 items-center">
             <Link
               href="/memo"
@@ -490,7 +490,7 @@ export function MemoFloatingWidget() {
           type="button"
           aria-label="메모 위젯 열기"
           onClick={() => setOpen(true)}
-          className="hover:border-secondary-700 hover:text-secondary-700 fixed right-[36px] bottom-[36px] z-40 flex h-[70px] w-[70px] items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-colors"
+          className="hover:border-secondary-700 hover:text-secondary-700 fixed right-[36px] bottom-[36px] z-40 flex h-[70px] w-[70px] items-center justify-center rounded-full border border-gray-300 bg-white text-gray-600 transition-colors"
         >
           <MemoWidgetIcon className="block h-[24px] w-[24px] shrink-0" aria-hidden="true" />
         </button>

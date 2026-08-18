@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import InfoPostForm from '../../_components/InfoPostForm';
+import { InfoPostForm } from '../../_components';
 
 import { infoPosts } from '@/mocks/posts';
 

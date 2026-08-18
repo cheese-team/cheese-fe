@@ -12,13 +12,10 @@ import {
 import type { CalendarEvent, CalendarView } from '../../_model/types';
 import {
   ALL_DAY_CHIP_GAP,
-  DEFAULT_MONTH_LAYOUT,
   MONTH_CHIP_GAP,
   MONTH_LAYOUT_EPSILON,
-  MONTH_MAX_VISIBLE_EVENT_ROWS,
   MONTH_MIN_ROW_HEIGHT,
   TIMEGRID_SLOT_HEIGHT,
-  getVisibleChipStackHeight,
 } from './calendar-core.constants';
 import type {
   CalendarRenderEventExtendedProps,
@@ -326,7 +323,22 @@ export function measureMonthLayout(containerEl: HTMLElement) {
     return null;
   }
 
-  const weekCount = weekRows.length;
+  const currentMonthCell = monthViewEl.querySelector(
+    '.fc-daygrid-day:not(.fc-day-other)[data-date]',
+  );
+  const currentMonthDate =
+    currentMonthCell instanceof HTMLElement
+      ? parseCalendarDate(currentMonthCell.dataset.date)
+      : null;
+
+  const naturalWeekCount = currentMonthDate
+    ? Math.ceil(
+        (new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth(), 1).getDay() +
+          new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() + 1, 0).getDate()) /
+          7,
+      )
+    : weekRows.length;
+  const weekCount = Math.max(Math.min(naturalWeekCount, 6), 5);
   const monthViewHeight = monthViewEl.getBoundingClientRect().height;
   const scrollGridHeight =
     monthScrollGrid instanceof HTMLElement ? monthScrollGrid.getBoundingClientRect().height : 0;
@@ -336,7 +348,7 @@ export function measureMonthLayout(containerEl: HTMLElement) {
 
   if (bodyViewportHeight <= 0) return null;
 
-  const rowHeight = Math.round((bodyViewportHeight / 4) * 100) / 100;
+  const rowHeight = Math.round((bodyViewportHeight / weekCount) * 100) / 100;
   const density = rowHeight >= MONTH_MIN_ROW_HEIGHT.comfortable ? 'comfortable' : 'compact';
   const scrollbarWidth = Math.max(monthBodyScroller.offsetWidth - monthBodyScroller.clientWidth, 0);
 
@@ -382,6 +394,5 @@ export function buildCalendarStyleVariables(options: {
     '--calendar-time-slot-height': `${TIMEGRID_SLOT_HEIGHT}px`,
     '--calendar-timegrid-scrollbar-width': `${timeGridScrollbarWidth}px`,
     '--calendar-allday-section-height': `${allDaySectionHeight}px`,
-    '--calendar-month-max-visible-events-height': `${getVisibleChipStackHeight(MONTH_MAX_VISIBLE_EVENT_ROWS, MONTH_CHIP_GAP)}px`,
   } as CSSProperties;
 }

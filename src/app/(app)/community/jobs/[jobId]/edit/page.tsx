@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import JobPostForm from '../../_components/JobPostForm';
+import { JobPostForm } from '../../_components';
 
 import { jobPosts } from '@/mocks/posts';
 

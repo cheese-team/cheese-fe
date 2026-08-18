@@ -3,7 +3,15 @@ import { Button } from '@/components/common/Button';
 import CheckCircleIcon from '@/assets/icons/common/CheckCircleIcon';
 import ArrowIcon from '@/assets/icons/common/arrow.svg';
 
-export default function ApplyCompleteContent({ title }: { title: string }) {
+type ApplyCompleteContentProps = {
+  title: string;
+  onMoveApplications?: () => void;
+};
+
+export default function ApplyCompleteContent({
+  title,
+  onMoveApplications,
+}: ApplyCompleteContentProps) {
   return (
     <section className="flex flex-col items-center gap-8">
       <div className="flex w-full flex-col items-center gap-5 leading-6">
@@ -19,7 +27,7 @@ export default function ApplyCompleteContent({ title }: { title: string }) {
         </div>
       </div>
 
-      <Button width={182} size={54} className="gap-2 leading-[30px]">
+      <Button onClick={onMoveApplications} width={182} size={54} className="gap-2 leading-[30px]">
         내 지원현황
         <ArrowIcon className="h-3 rotate-180" />
       </Button>

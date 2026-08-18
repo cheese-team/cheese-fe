@@ -1,4 +1,4 @@
-import type { ApplyInfo } from '@/types/community';
+import type { ApplyInfo } from '@/types/community/community';
 
 export const APPLY_LABEL: Record<ApplyInfo['type'], string> = {
   homepage: '홈페이지 지원',

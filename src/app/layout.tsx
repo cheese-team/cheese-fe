@@ -1,5 +1,7 @@
-import type { Metadata, Viewport } from 'next';
+import QueryProvider from '@/providers/QueryProvider';
 import './globals.css';
+
+import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
   title: 'Cheese',
@@ -15,7 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
-        <main className="min-h-dvh">{children}</main>
+        <QueryProvider>
+          <main className="min-h-dvh">{children}</main>
+        </QueryProvider>
       </body>
     </html>
   );

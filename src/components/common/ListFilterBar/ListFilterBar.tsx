@@ -2,15 +2,21 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
+import {
+  dropdownContentStyle,
+  dropdownOptionInteractiveStyle,
+  dropdownOptionStyle,
+} from '@/components/common/styles/dropdown';
+
+import { cn } from '@/lib/cn';
+
 import ChevronIcon from '@/assets/icons/common/chevron.svg';
 import CloseIcon from '@/assets/icons/common/close.svg';
 import CreateIcon from '@/assets/icons/common/create.svg';
-import { cn } from '@/lib/cn';
+import FilterChevronIcon from '@/assets/icons/memo/filter-chevron.svg';
+import MemoFilterIcon from '@/assets/icons/memo/filter.svg';
 
-export type ListFilterOption<TValue extends string = string> = {
-  label: string;
-  value: TValue;
-};
+import type { Option } from '@/types/option';
 
 type ListFilterActionButton = {
   label: string;
@@ -18,7 +24,7 @@ type ListFilterActionButton = {
 };
 
 type ListFilterBarProps<TSort extends string = string> = {
-  sortOptions: readonly ListFilterOption<TSort>[];
+  sortOptions: readonly Option<TSort>[];
   selectedSort: TSort;
   onSortChange: (value: TSort) => void;
 
@@ -36,26 +42,6 @@ type ListFilterBarProps<TSort extends string = string> = {
   className?: string;
   searchClassName?: string;
 };
-
-function SortIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className={className}>
-      <path
-        d="M4 5h8M4 10h6M4 15h4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-      <path
-        d="M15 4v10M15 14l-2.5-2.5M15 14l2.5-2.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -88,7 +74,8 @@ function DropdownContainer({ children, className }: { children: ReactNode; class
   return (
     <div
       className={cn(
-        'absolute top-[52px] left-0 z-40 overflow-hidden rounded-[10px] border border-gray-300 bg-white py-[8px] shadow-[0_8px_24px_rgba(0,0,0,0.12)]',
+        dropdownContentStyle,
+        'absolute top-[52px] left-0 z-40 overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.12)]',
         className,
       )}
     >
@@ -102,7 +89,7 @@ function SortDropdown<TSort extends string>({
   value,
   onChange,
 }: {
-  options: readonly ListFilterOption<TSort>[];
+  options: readonly Option<TSort>[];
   value: TSort;
   onChange: (value: TSort) => void;
 }) {
@@ -142,13 +129,18 @@ function SortDropdown<TSort extends string>({
             : 'hover:border-secondary-700 hover:text-secondary-700 border-gray-300 text-gray-500',
         )}
       >
-        <SortIcon className="h-[20px] w-[20px]" />
-
-        <DropdownChevron open={open} />
+        <MemoFilterIcon className="h-6 w-4 shrink-0 [&_path]:fill-current" aria-hidden="true" />
+        <FilterChevronIcon
+          className={cn(
+            'h-6 w-2.5 shrink-0 transition-transform [&_path]:fill-current',
+            open && 'rotate-180',
+          )}
+          aria-hidden="true"
+        />
       </button>
 
       {open ? (
-        <DropdownContainer className="w-[110px]">
+        <DropdownContainer className={cn('flex w-[200px] flex-col gap-2')}>
           {options.map((option) => {
             const selected = option.value === value;
 
@@ -161,8 +153,9 @@ function SortDropdown<TSort extends string>({
                   setOpen(false);
                 }}
                 className={cn(
-                  'flex h-[32px] w-full items-center px-[12px] text-left text-[13px] font-medium transition-colors hover:bg-gray-100',
-                  selected ? 'text-secondary-700' : 'text-gray-700',
+                  dropdownOptionStyle,
+                  dropdownOptionInteractiveStyle,
+                  selected && 'bg-gray-200',
                 )}
               >
                 {option.label}
@@ -183,7 +176,7 @@ function SearchHistoryDropdown({
   onSelect: (value: string) => void;
 }) {
   return (
-    <DropdownContainer className="w-full">
+    <DropdownContainer className="w-full px-0">
       <div className="px-[14px] pb-[6px] text-[12px] font-medium text-gray-500">최근 검색어</div>
 
       {histories.length > 0 ? (

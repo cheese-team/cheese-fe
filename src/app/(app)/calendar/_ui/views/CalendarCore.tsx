@@ -18,6 +18,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import {
   addDaysToCalendarDate,
   addHoursToCalendarDateTime,
+  combineDateAndTime,
   formatCalendarTitle,
   formatEnglishHourLabel,
   formatKoreanWeekday,
@@ -61,6 +62,8 @@ export function CalendarCore({
   view,
   events,
   selectedEventId,
+  selectedCreateDraft,
+  interactionLocked = false,
   onTitleChange,
   onSelectSlot,
   onClickEvent,
@@ -79,11 +82,19 @@ export function CalendarCore({
   const [timeGridScrollbarWidth, setTimeGridScrollbarWidth] = useState(0);
   const [visibleRange, setVisibleRange] = useState<VisibleDateRange | null>(null);
   const today = now;
+  const selectedCreateDate = useMemo(() => {
+    return normalizeCalendarValue(selectedCreateDraft?.start, { allDay: true });
+  }, [selectedCreateDraft?.start]);
+  const selectedTimedStart = useMemo(() => {
+    if (selectedCreateDraft?.allDay) return '';
+    return normalizeCalendarValue(selectedCreateDraft?.start);
+  }, [selectedCreateDraft?.allDay, selectedCreateDraft?.start]);
 
   // FullCalendar에 전달할 이벤트 배열을 현재 뷰 기준으로 변환한다.
   const fcEvents = useMemo(() => {
     return buildFullCalendarEvents(events, view, visibleRange);
   }, [events, view, visibleRange]);
+  const showsAllDaySection = view !== 'month';
 
   // 주간/일간의 종일 영역 높이는 실제 보이는 일정 개수에 따라 달라진다.
   const allDaySectionHeight = useMemo(() => {
@@ -183,6 +194,8 @@ export function CalendarCore({
 
   const handleSelect = useCallback(
     (arg: DateSelectArg) => {
+      if (interactionLocked) return;
+
       onSelectSlot?.({
         start: arg.startStr,
         end: arg.endStr,
@@ -191,7 +204,7 @@ export function CalendarCore({
 
       arg.view.calendar.unselect();
     },
-    [onSelectSlot],
+    [interactionLocked, onSelectSlot],
   );
 
   /**
@@ -199,6 +212,8 @@ export function CalendarCore({
    */
   const handleEventClick = useCallback(
     (arg: EventClickArg) => {
+      if (interactionLocked) return;
+
       const clickTarget = arg.jsEvent.target as HTMLElement | null;
       if (clickTarget?.closest('[data-calendar-event-delete]')) return;
 
@@ -221,7 +236,7 @@ export function CalendarCore({
         },
       });
     },
-    [onClickEvent],
+    [interactionLocked, onClickEvent],
   );
 
   /**
@@ -229,23 +244,43 @@ export function CalendarCore({
    */
   const handleDateClick = useCallback(
     (arg: DateClickArg) => {
+      if (interactionLocked) return;
+
       const rect = resolveDateClickRect(arg);
       const dateKey = normalizeCalendarValue(arg.date, { allDay: true });
 
       if (!dateKey) return;
       if (view !== 'month' && !arg.allDay) return;
 
+      if (view !== 'month') {
+        onClickDateCell?.({
+          rect,
+          draft: {
+            title: '',
+            start: dateKey,
+            end: addDaysToCalendarDate(dateKey, 1),
+            allDay: true,
+          },
+        });
+        return;
+      }
+
+      const start = combineDateAndTime(dateKey, '22:00');
+      const end = combineDateAndTime(dateKey, '23:30');
+
+      if (!start || !end) return;
+
       onClickDateCell?.({
         rect,
         draft: {
           title: '',
-          start: dateKey,
-          end: addDaysToCalendarDate(dateKey, 1),
-          allDay: true,
+          start,
+          end,
+          allDay: false,
         },
       });
     },
-    [onClickDateCell, view],
+    [interactionLocked, onClickDateCell, view],
   );
 
   /**
@@ -253,6 +288,8 @@ export function CalendarCore({
    */
   const openTimedSlotPopover = useCallback(
     (date: Date, slotEl: HTMLElement) => {
+      if (interactionLocked) return;
+
       const start = normalizeCalendarValue(date);
       const end = addHoursToCalendarDateTime(start, 1);
 
@@ -267,14 +304,37 @@ export function CalendarCore({
         },
       });
     },
-    [onClickDateCell, view],
+    [interactionLocked, onClickDateCell, view],
   );
 
   const renderTimeGridSlotOverlay = useCallback(
     (arg: DayCellContentArg) => {
-      return <CalendarTimeGridSlotOverlay date={arg.date} onClickSlot={openTimedSlotPopover} />;
+      return (
+        <CalendarTimeGridSlotOverlay
+          date={arg.date}
+          selectedStart={selectedTimedStart}
+          disabled={interactionLocked}
+          onClickSlot={openTimedSlotPopover}
+        />
+      );
     },
-    [openTimedSlotPopover],
+    [interactionLocked, openTimedSlotPopover, selectedTimedStart],
+  );
+
+  const getDayCellClassNames = useCallback(
+    (date: Date) => {
+      if (!selectedCreateDate) return [];
+
+      const dateKey = normalizeCalendarValue(date, { allDay: true });
+      if (dateKey !== selectedCreateDate) return [];
+
+      if (view === 'month') {
+        return ['calendar-month-cell--selected'];
+      }
+
+      return selectedCreateDraft?.allDay ? ['calendar-allday-cell--selected'] : [];
+    },
+    [selectedCreateDate, selectedCreateDraft?.allDay, view],
   );
 
   const handleDatesSet = useCallback(
@@ -310,6 +370,8 @@ export function CalendarCore({
 
       return (
         <span
+          aria-label={isActive ? `${date.getDate()}일, 오늘` : `${date.getDate()}일`}
+          title={isActive ? '오늘' : undefined}
           className={
             isActive
               ? 'calendar-month-day-number calendar-month-day-number--active'
@@ -534,7 +596,7 @@ export function CalendarCore({
         contentHeight="100%"
         now={now}
         expandRows={view !== 'month'}
-        fixedWeekCount={false}
+        fixedWeekCount={true}
         nowIndicator={view !== 'month'}
         nowIndicatorSnap={false}
         selectable={Boolean(onSelectSlot)}
@@ -552,6 +614,7 @@ export function CalendarCore({
         eventDisplay="block"
         displayEventTime={false}
         events={fcEvents}
+        dayCellClassNames={(arg) => getDayCellClassNames(arg.date)}
         dayCellContent={
           view === 'month'
             ? (arg) => {
@@ -573,7 +636,7 @@ export function CalendarCore({
         datesSet={handleDatesSet}
         slotMinTime="00:00:00"
         slotMaxTime="24:00:00"
-        scrollTime="01:00:00"
+        scrollTime="00:00:00"
         scrollTimeReset={false}
         slotDuration="01:00:00"
         slotLabelInterval="01:00:00"
@@ -581,6 +644,8 @@ export function CalendarCore({
           view === 'month'
             ? undefined
             : (arg) => {
+                if (arg.date.getHours() === 0) return null;
+
                 const isActiveHour =
                   isCalendarDateWithinRange(now, arg.view.activeStart, arg.view.activeEnd) &&
                   arg.date.getHours() === now.getHours();
@@ -598,23 +663,23 @@ export function CalendarCore({
                 );
               }
         }
-        allDaySlot={view !== 'month'}
+        allDaySlot={showsAllDaySection}
         allDayText="종일 일정"
         allDayClassNames={
-          view === 'month'
+          !showsAllDaySection
             ? undefined
             : () => {
                 return ['calendar-timegrid-allday-axis-cell'];
               }
         }
         allDayContent={
-          view === 'month'
+          !showsAllDaySection
             ? undefined
             : (arg) => {
                 return <span className="calendar-timegrid-allday-label">{arg.text}</span>;
               }
         }
-        allDayDidMount={view === 'month' ? undefined : handleAllDayDidMount}
+        allDayDidMount={showsAllDaySection ? handleAllDayDidMount : undefined}
         dayMaxEvents={false}
         dayMaxEventRows={false}
         slotEventOverlap={false}

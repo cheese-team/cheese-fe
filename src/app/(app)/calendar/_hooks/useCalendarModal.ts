@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from 'react';
 
-import { DEFAULT_EVENT_COLOR } from '@/app/(app)/calendar/_model/constants';
 import type { CalendarEventDraft } from '@/app/(app)/calendar/_model/types';
 
 export type CalendarPopoverPlacement = 'auto' | 'cell-center';
@@ -29,9 +28,9 @@ type OpenEditPopoverPayload = {
   placement?: CalendarPopoverPlacement;
 };
 
-const CREATE_POPOVER_WIDTH = 320;
-const CREATE_POPOVER_HEIGHT = 455;
-const CREATE_POPOVER_GAP = 8;
+const CREATE_POPOVER_WIDTH = 301;
+const CREATE_POPOVER_HEIGHT = 518;
+const CREATE_POPOVER_GAP = 0;
 const VIEWPORT_PADDING = 12;
 const CELL_CENTER_BOTTOM_OFFSET = 12;
 
@@ -48,10 +47,12 @@ function toEditableDraft(draft: Partial<CalendarEventDraft>): CalendarEventDraft
     title: draft.title ?? '',
     start: draft.start ?? '',
     end: draft.end ?? draft.start ?? '',
-    allDay: draft.allDay ?? true,
-    colorId: draft.colorId ?? DEFAULT_EVENT_COLOR,
+    allDay: draft.allDay ?? false,
+    colorId: draft.colorId,
     memo: draft.memo ?? '',
     location: draft.location ?? '',
+    url: draft.url ?? '',
+    category: draft.category,
     reminderMinutes: draft.reminderMinutes,
     spaceId: draft.spaceId,
   };
@@ -96,7 +97,7 @@ export function getPopoverPosition(
   }
 
   let x = rect.right + CREATE_POPOVER_GAP;
-  let y = rect.top;
+  let y = rect.top - 6;
 
   if (x + CREATE_POPOVER_WIDTH > (boundsRect?.right ?? window.innerWidth) - VIEWPORT_PADDING) {
     x = rect.left - CREATE_POPOVER_WIDTH - CREATE_POPOVER_GAP;

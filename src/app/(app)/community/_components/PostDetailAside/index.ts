@@ -1,4 +1,4 @@
-export { PostDetailAside } from './PostDetailAside';
-export { PostDetailAsideActions } from './PostDetailAsideActions';
-export { PostDetailAsideInfoItem } from './PostDetailAsideInfoItem';
-export { PostDetailAsideProfile } from './PostDetailAsideProfile';
+export { default as PostDetailAside } from './PostDetailAside';
+export { default as PostDetailAsideActions } from './PostDetailAsideActions';
+export { default as PostDetailAsideInfoItem } from './PostDetailAsideInfoItem';
+export { default as PostDetailAsideProfile } from './PostDetailAsideProfile';

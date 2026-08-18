@@ -42,6 +42,7 @@ export function MemoPageView() {
   const [searchValue, setSearchValue] = useState('');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingMemo, setEditingMemo] = useState<Memo | null>(null);
+  const [isDeleteSelectedWarningVisible, setIsDeleteSelectedWarningVisible] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
@@ -88,6 +89,8 @@ export function MemoPageView() {
       .map(({ memo }) => memo);
   }, [filter, memos, searchValue, sortOrder]);
 
+  const selectModeActive = filteredMemos.length > 0 && filteredMemos.every((memo) => memo.selected);
+
   const visibleMemos = filteredMemos.slice(0, visibleCount);
   const hasMoreMemos = visibleCount < filteredMemos.length;
 
@@ -103,16 +106,19 @@ export function MemoPageView() {
   };
 
   const handleChangeFilter = (nextFilter: MemoFilter) => {
+    setIsDeleteSelectedWarningVisible(false);
     setFilter(nextFilter);
     resetVisibleMemos();
   };
 
   const handleChangeSortOrder = (nextSortOrder: MemoSortOrder) => {
+    setIsDeleteSelectedWarningVisible(false);
     setSortOrder(nextSortOrder);
     resetVisibleMemos();
   };
 
   const handleChangeSearchValue = (value: string) => {
+    setIsDeleteSelectedWarningVisible(false);
     setSearchValue(value);
     resetVisibleMemos();
   };
@@ -121,10 +127,12 @@ export function MemoPageView() {
     const visibleIds = filteredMemos.map((memo) => memo.id);
     const hasUnselectedVisibleMemo = filteredMemos.some((memo) => !memo.selected);
 
+    setIsDeleteSelectedWarningVisible(false);
     selectMemos(visibleIds, hasUnselectedVisibleMemo);
   };
 
   const handleToggleSelect = (id: string) => {
+    setIsDeleteSelectedWarningVisible(false);
     toggleSelectMemo(id);
   };
 
@@ -133,11 +141,18 @@ export function MemoPageView() {
   };
 
   const handleDelete = (id: string) => {
+    setIsDeleteSelectedWarningVisible(false);
     deleteMemo(id);
     resetVisibleMemos();
   };
 
   const handleDeleteSelected = () => {
+    if (!isDeleteSelectedWarningVisible) {
+      setIsDeleteSelectedWarningVisible(true);
+      return;
+    }
+
+    setIsDeleteSelectedWarningVisible(false);
     deleteSelectedMemos();
     resetVisibleMemos();
   };
@@ -153,11 +168,13 @@ export function MemoPageView() {
   };
 
   const handleOpenCreateEditor = () => {
+    setIsDeleteSelectedWarningVisible(false);
     setEditingMemo(null);
     setIsEditorOpen(true);
   };
 
   const handleOpenEditEditor = (memo: Memo) => {
+    setIsDeleteSelectedWarningVisible(false);
     setEditingMemo(memo);
     setIsEditorOpen(true);
   };
@@ -197,12 +214,23 @@ export function MemoPageView() {
 
   return (
     <main className="relative flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-white">
+      {isDeleteSelectedWarningVisible ? (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="bg-tag-red-100 text-error pointer-events-none absolute top-[20px] left-1/2 z-[60] flex min-h-[44px] -translate-x-1/2 items-center rounded-[8px] px-[18px] py-[10px] text-[14px] leading-[20px] font-medium whitespace-nowrap shadow-[0_6px_20px_rgba(15,23,42,0.14)]"
+        >
+          선택한 메모를 삭제하시겠습니까? 삭제 버튼을 한 번 더 눌러주세요.
+        </div>
+      ) : null}
+
       <div className="shrink-0 px-[56px] pt-[40px]">
         <MemoToolbar
           filter={filter}
           sortOrder={sortOrder}
           searchValue={searchValue}
           selectedCount={selectedCount}
+          selectModeActive={selectModeActive}
           onChangeFilter={handleChangeFilter}
           onChangeSortOrder={handleChangeSortOrder}
           onChangeSearchValue={handleChangeSearchValue}
@@ -214,7 +242,7 @@ export function MemoPageView() {
 
       <div
         ref={scrollAreaRef}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[56px] pb-[80px]"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-[56px] pb-[80px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {filteredMemos.length === 0 ? (
           <section className="mx-auto flex h-[320px] max-w-[1320px] items-center justify-center rounded-[10px] border border-gray-300 bg-white">
@@ -222,7 +250,7 @@ export function MemoPageView() {
           </section>
         ) : (
           <>
-            <section className="mx-auto grid max-w-[1320px] grid-cols-[repeat(5,250px)] gap-x-[34px] gap-y-[20px]">
+            <section className="mx-auto grid w-fit grid-cols-[repeat(5,240px)] gap-x-8 gap-y-5">
               {visibleMemos.map((memo) => (
                 <MemoCard
                   key={memo.id}
@@ -254,6 +282,7 @@ export function MemoPageView() {
         memo={editingMemo}
         onClose={() => setIsEditorOpen(false)}
         onSubmit={handleSubmitMemo}
+        onDelete={handleDelete}
       />
     </main>
   );

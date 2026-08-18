@@ -42,7 +42,7 @@ export function filterProblemSets({
     }
 
     if (sort === 'progressDate') {
-      return b.lastProgressDate.localeCompare(a.lastProgressDate);
+      return (b.lastProgressDate ?? '').localeCompare(a.lastProgressDate ?? '');
     }
 
     return b.createdAt.localeCompare(a.createdAt);

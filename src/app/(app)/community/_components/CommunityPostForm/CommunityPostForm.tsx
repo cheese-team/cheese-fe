@@ -3,12 +3,14 @@
 import { useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
-import EditIcon from '@/assets/icons/common/edit.svg';
 import { BackButton } from '@/components/common/BackButton';
 import { Button } from '@/components/common/Button';
 
-import { CommunityPostEditor } from '../CommunityPostEditor';
+import CommunityPostEditor from '../CommunityPostEditor';
+
 import { COMMUNITY_CATEGORY_TABS } from '../../_constants/community';
+
+import EditIcon from '@/assets/icons/common/edit.svg';
 
 type CommunityPostFormProps = {
   mode?: 'create' | 'edit';
@@ -29,7 +31,9 @@ export default function CommunityPostForm({
   const pathname = usePathname();
 
   const currentCategory = COMMUNITY_CATEGORY_TABS.find((tab) => pathname.startsWith(tab.value));
+
   const listPageHref = currentCategory?.value ?? '/community/jobs';
+  const detailPageHref = pathname.replace(/\/edit$/, '');
 
   const actionLabel = mode === 'edit' ? '수정' : '생성';
   const title = `${currentCategory?.label ?? '게시글'} ${actionLabel}`;
@@ -43,7 +47,9 @@ export default function CommunityPostForm({
 
     if (!isConfirmed) return;
 
-    router.push(listPageHref);
+    const backHref = mode === 'edit' ? detailPageHref : listPageHref;
+
+    router.push(backHref);
   };
 
   return (

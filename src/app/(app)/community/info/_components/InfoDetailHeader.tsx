@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import PostDetailHeader from '../../_components/PostDetail/PostDetailHeader';
+import PostDetailHeader from '../../_components/PostDetail';
 
-import type { InfoPost } from '@/types/community';
+import type { InfoPost } from '@/types/community/community';
 
 const currentUserId = 1;
 
@@ -27,6 +27,7 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
       isMine={infoPost.author.id === currentUserId}
       isMenuOpen={isMenuOpen}
       onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
+      onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={() => router.push(`/community/info/${infoPost.id}/edit`)}
       onDelete={() => {
         // TODO: 삭제 API

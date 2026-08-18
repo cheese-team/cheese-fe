@@ -19,9 +19,9 @@ export default function InputActionButton({
         'h-[30px] px-3 py-2',
         'whitespace-nowrap',
         'rounded-[5px]',
-        'bg-primary-700',
-        'text-[12px] font-medium text-gray-950',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'bg-secondary-400',
+        'text-[12px] font-medium tracking-[-0.04em] text-gray-50',
+        'disabled:bg-secondary-100 disabled:cursor-not-allowed',
         className,
       )}
       {...rest}

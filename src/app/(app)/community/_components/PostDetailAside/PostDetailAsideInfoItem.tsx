@@ -3,7 +3,7 @@ type PostDetailAsideInfoItemProps = {
   value: React.ReactNode;
 };
 
-export function PostDetailAsideInfoItem({ label, value }: PostDetailAsideInfoItemProps) {
+export default function PostDetailAsideInfoItem({ label, value }: PostDetailAsideInfoItemProps) {
   return (
     <div className="flex gap-8 leading-[24px]">
       <span className="w-[68px] text-gray-600">{label}</span>

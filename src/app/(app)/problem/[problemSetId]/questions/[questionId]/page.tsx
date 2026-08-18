@@ -11,10 +11,17 @@ type ProblemQuestionPageProps = {
     problemSetId: string;
     questionId: string;
   }>;
+  searchParams: Promise<{
+    from?: string;
+  }>;
 };
 
-export default async function ProblemQuestionPage({ params }: ProblemQuestionPageProps) {
+export default async function ProblemQuestionPage({
+  params,
+  searchParams,
+}: ProblemQuestionPageProps) {
   const { problemSetId, questionId } = await params;
+  const { from } = await searchParams;
 
   const question = getProblemQuestion(questionId);
   const questionIndex = getProblemQuestionIndex(questionId);
@@ -29,6 +36,7 @@ export default async function ProblemQuestionPage({ params }: ProblemQuestionPag
       problemSetId={problemSetId}
       question={question}
       questionIndex={questionIndex}
+      isReviewMode={from === 'result'}
     />
   );
 }

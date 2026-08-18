@@ -16,11 +16,10 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="terms-modal-title"
-        className="bg-bg-white flex max-h-[calc(100dvh-160px)] w-[min(640px,calc(100vw-32px))] flex-col overflow-hidden px-10 py-[30px] shadow-[0_0_4px_rgba(0,0,0,0.25)] sm:w-[min(630px,calc(100vw-48px))] md:max-h-[calc(100dvh-316px)]"
+        className="bg-bg-white flex max-h-[75dvh] w-[min(640px,calc(100vw-32px))] flex-col gap-10 overflow-hidden px-10 py-[30px] shadow-[0_0_4px_rgba(0,0,0,0.25)]"
       >
-        {/* Header */}
-        <div className="flex shrink-0 items-center justify-between gap-3 pb-10">
-          <div className="h-6 w-6 shrink-0" aria-hidden="true" />
+        <div className="flex shrink-0 items-center justify-between">
+          <div className="h-[30px] w-[30px] shrink-0" aria-hidden="true" />
           <h2 id="terms-modal-title" className="flex-1 text-center text-[24px] font-bold">
             치즈 이용약관
           </h2>
@@ -29,14 +28,18 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
             type="button"
             aria-label="닫기"
             onClick={onClose}
-            className="inline-flex h-6 w-6 shrink-0 items-center justify-center"
+            className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center"
           >
-            <CloseIcon className="h-3.5 w-3.5" />
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="이용약관 내용"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           <TermsContent />
         </div>
       </div>

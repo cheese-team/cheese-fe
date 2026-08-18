@@ -27,6 +27,6 @@ export const SETTINGS_ITEMS = [
     label: '쿠키 설정',
     value: '쿠키를 설정해주세요',
     icon: <CookieIcon className="h-6" />,
-    options: ['쿠키 허용', '쿠키 거부'],
+    options: ['모든 쿠키 허용', '필수 쿠키만 허용'],
   },
 ] as const;

@@ -2,7 +2,7 @@
 @import 'pretendard/dist/web/variable/pretendardvariable.css';
 
 @theme {
-  --font-sans: 'Pretendard', system-ui, sans-serif;
+  --font-sans: 'Pretendard Variable', 'Pretendard', system-ui, sans-serif;
 
   /* ================================
      Palette

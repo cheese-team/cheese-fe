@@ -15,6 +15,8 @@ export type CalendarCoreProps = {
   view: CalendarView;
   events: CalendarEvent[];
   selectedEventId?: string;
+  selectedCreateDraft?: CalendarEventDraft;
+  interactionLocked?: boolean;
   onTitleChange?: (title: string) => void;
   onSelectSlot?: (slot: CalendarSlot) => void;
   onClickEvent?: (payload: { event: Partial<CalendarEventDraft>; rect: DOMRect }) => void;

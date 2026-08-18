@@ -6,6 +6,7 @@ export type ButtonVariant =
   | 'default'
   | 'light'
   | 'outline'
+  | 'outlinePrimary'
   | 'outlineGray'
   | 'outlineLightGray'
   | 'gray'
