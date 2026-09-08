@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import CategoryTabs from '@/components/common/CategoryTabs';
-import ListFilterBar from '@/components/common/ListFilterBar';
+import MypageListFilterBar from '../_components/MypageListFilterBar';
 
 import { useSearchHistories } from '@/hooks/useSearchHistories';
+import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 
 import { GroupBookmarkList, InfoBookmarkList, JobBookmarkList } from './_components';
 
@@ -23,34 +24,25 @@ const MYPAGE_BOOKMARK_CATEGORY_TABS = [
 const BOOKMARK_SEARCH_HISTORIES = ['프론트엔드', '스터디 모집', '포트폴리오', '채용공고'] as const;
 
 type BookmarkCategory = (typeof MYPAGE_BOOKMARK_CATEGORY_TABS)[number]['value'];
-type CommunitySort = (typeof COMMUNITY_SORT_OPTIONS)[number]['value'];
-type InfoSort = (typeof INFO_SORT_OPTIONS)[number]['value'];
 
 export default function BookmarksPage() {
-  const [activeBookmarkTab, setActiveBookmarkTab] = useState<BookmarkCategory>(
-    MYPAGE_BOOKMARK_CATEGORY_TABS[0].value,
-  );
-  const [communitySort, setCommunitySort] = useState<CommunitySort>('latest');
-  const [infoSort, setInfoSort] = useState<InfoSort>('all');
-  const [bookmarkKeyword, setBookmarkKeyword] = useState('');
+  const searchParams = useSearchParams();
+  const updateSearchParams = useUpdateSearchParams();
+  const activeBookmarkTab =
+    MYPAGE_BOOKMARK_CATEGORY_TABS.find((tab) => tab.value === searchParams.get('type'))?.value ??
+    'jobs';
+  const communitySort =
+    COMMUNITY_SORT_OPTIONS.find((option) => option.value === searchParams.get('sort'))?.value ??
+    'latest';
+  const infoSort =
+    INFO_SORT_OPTIONS.find((option) => option.value === searchParams.get('sort'))?.value ?? 'all';
+  const bookmarkKeyword = searchParams.get('q') ?? '';
 
   const { histories: bookmarkSearchHistories, addHistory: addBookmarkSearchHistory } =
     useSearchHistories('bookmark', BOOKMARK_SEARCH_HISTORIES);
 
   const handleBookmarkTabChange = (value: BookmarkCategory) => {
-    setActiveBookmarkTab(value);
-    setBookmarkKeyword('');
-
-    if (value === 'info') {
-      setInfoSort('all');
-      return;
-    }
-
-    setCommunitySort('latest');
-  };
-
-  const handleKeywordChange = (value: string) => {
-    setBookmarkKeyword(value);
+    updateSearchParams({ type: value, sort: value === 'info' ? 'all' : 'latest', q: null });
   };
 
   const handleSearchSubmit = (value: string) => {
@@ -60,11 +52,11 @@ export default function BookmarksPage() {
       addBookmarkSearchHistory(normalizedValue);
     }
 
-    setBookmarkKeyword(normalizedValue);
+    updateSearchParams('q', normalizedValue);
   };
 
   const handleSearchClear = () => {
-    setBookmarkKeyword('');
+    updateSearchParams('q', '');
   };
 
   const handleSearchHistorySelect = (value: string) => {
@@ -74,7 +66,7 @@ export default function BookmarksPage() {
       addBookmarkSearchHistory(normalizedValue);
     }
 
-    setBookmarkKeyword(normalizedValue);
+    updateSearchParams('q', normalizedValue);
   };
 
   return (
@@ -87,28 +79,26 @@ export default function BookmarksPage() {
         />
 
         {activeBookmarkTab === 'info' ? (
-          <ListFilterBar
+          <MypageListFilterBar
             sortOptions={INFO_SORT_OPTIONS}
             selectedSort={infoSort}
             searchValue={bookmarkKeyword}
             searchPlaceholder="검색"
             searchHistories={bookmarkSearchHistories}
-            onSortChange={setInfoSort}
-            onSearchChange={handleKeywordChange}
+            onSortChange={(value) => updateSearchParams('sort', value)}
             onSearchSubmit={handleSearchSubmit}
             onSearchClear={handleSearchClear}
             onSearchHistorySelect={handleSearchHistorySelect}
             className="gap-3"
           />
         ) : (
-          <ListFilterBar
+          <MypageListFilterBar
             sortOptions={COMMUNITY_SORT_OPTIONS}
             selectedSort={communitySort}
             searchValue={bookmarkKeyword}
             searchPlaceholder="검색"
             searchHistories={bookmarkSearchHistories}
-            onSortChange={setCommunitySort}
-            onSearchChange={handleKeywordChange}
+            onSortChange={(value) => updateSearchParams('sort', value)}
             onSearchSubmit={handleSearchSubmit}
             onSearchClear={handleSearchClear}
             onSearchHistorySelect={handleSearchHistorySelect}
