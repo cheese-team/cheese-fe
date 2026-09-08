@@ -120,7 +120,7 @@ function NotificationAvatar({ item, onClick }: { item: NotificationItem; onClick
   ) : (
     <span
       className={cn(
-        'h-[25px] w-[25px] shrink-0 rounded-full',
+        'block h-[25px] w-[25px] shrink-0 rounded-full',
         item.avatarClassName ?? 'bg-gray-300',
       )}
       aria-hidden="true"
@@ -225,7 +225,7 @@ function NotificationActionMenu({
 
       {open ? (
         <div className="absolute top-[40px] right-0 z-30 box-border flex w-[157px] flex-col gap-[8px] overflow-hidden rounded-[5px] border border-gray-400 bg-gray-50 p-[12px]">
-          <p className="text-[12px] leading-[20px] font-medium tracking-[-0.24px] whitespace-nowrap text-gray-700">
+          <p className="text-[12px] leading-[20px] font-medium whitespace-nowrap text-gray-700">
             <span className="block">삭제하면 복구할 수 없습니다.</span>
             <span className="block">정말 삭제하시겠습니까?</span>
           </p>
@@ -234,7 +234,7 @@ function NotificationActionMenu({
             <button
               type="button"
               onClick={onConfirmDelete}
-              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium tracking-[-0.24px] text-gray-950 transition-colors hover:bg-gray-200"
+              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium text-gray-950 transition-colors hover:bg-gray-200"
             >
               네
             </button>
@@ -242,7 +242,7 @@ function NotificationActionMenu({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium tracking-[-0.24px] text-gray-950 transition-colors hover:bg-gray-200"
+              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium text-gray-950 transition-colors hover:bg-gray-200"
             >
               아니오
             </button>
@@ -292,20 +292,22 @@ function NotificationCard({
         showMarkAsRead={Boolean(item.unread)}
       />
 
-      <div className="flex h-full w-full min-w-0 items-start gap-[12px] text-left">
-        <NotificationAvatar item={item} onClick={onOpenProfile} />
+      <div className="relative h-full w-full min-w-0 text-left">
+        <div className="absolute top-0 left-0 z-10 flex">
+          <NotificationAvatar item={item} onClick={onOpenProfile} />
+        </div>
 
         <button
           type="button"
           aria-expanded={expanded}
           onClick={onToggleExpand}
           className={cn(
-            'focus-visible:ring-secondary-600 flex min-w-0 flex-1 flex-col items-stretch text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+            'focus-visible:ring-secondary-600 flex w-full min-w-0 flex-col items-stretch text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
             expanded ? 'gap-[4px]' : 'gap-[14px]',
           )}
         >
-          <div className="flex w-full min-w-0 items-center justify-between gap-[8px]">
-            <p className="min-w-0 truncate text-[14px] leading-[24px] font-normal tracking-[-0.28px] text-gray-700">
+          <div className="flex min-h-[25px] w-full min-w-0 items-center justify-between gap-[8px] pl-[37px]">
+            <p className="min-w-0 truncate text-[14px] leading-[24px] font-normal text-gray-700">
               <span className="font-medium text-gray-950">{item.sender}</span>
               {item.message}
             </p>
@@ -313,7 +315,7 @@ function NotificationCard({
             <div className="flex shrink-0 items-center gap-[8px]">
               <span
                 className={cn(
-                  'text-[12px] leading-[24px] font-normal tracking-[-0.24px] text-black transition-opacity',
+                  'text-[12px] leading-[24px] font-normal text-black transition-opacity',
                   'group-hover:opacity-0',
                   isDeleteConfirmOpen && 'opacity-0',
                 )}
@@ -324,14 +326,14 @@ function NotificationCard({
               <span
                 className={cn(
                   'h-[8px] w-[8px] rounded-full',
-                  item.unread ? 'bg-secondary-600' : 'bg-gray-300',
+                  item.unread ? 'bg-secondary-600' : 'bg-gray-400',
                 )}
                 aria-hidden="true"
               />
             </div>
           </div>
 
-          <div className="flex w-full min-w-0 items-start gap-[4px] text-[14px] leading-[24px] tracking-[-0.28px]">
+          <div className="flex w-full min-w-0 items-start gap-[4px] text-[14px] leading-[24px]">
             <span className="shrink-0 font-medium text-gray-950">[{item.category}]</span>
 
             <p
@@ -388,9 +390,7 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
 
   const renderSection = (title: string, items: NotificationItem[], hasContentGap = false) => (
     <section className={cn('flex w-full min-w-0 flex-col', hasContentGap && 'gap-[8px]')}>
-      <h3 className="px-[20px] text-[14px] leading-[30px] font-medium tracking-[-0.28px] text-gray-500">
-        {title}
-      </h3>
+      <h3 className="px-[20px] text-[14px] leading-[30px] font-medium text-gray-500">{title}</h3>
 
       <div className="flex w-full min-w-0 flex-col">
         {items.map((item) => (
@@ -419,9 +419,7 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
   return (
     <aside className="box-border flex h-dvh w-[388px] shrink-0 flex-col gap-[20px] overflow-x-hidden overflow-y-auto border-r-2 border-gray-300 bg-gray-50 p-[20px] shadow-[0_4px_25px_rgba(85,85,85,0.1)]">
       <header className="flex min-h-[30px] w-full shrink-0 items-center justify-between">
-        <h2 className="text-[16px] leading-[30px] font-bold tracking-[-0.32px] text-gray-950">
-          알림
-        </h2>
+        <h2 className="text-[16px] leading-[30px] font-bold text-gray-950">알림</h2>
 
         <button
           type="button"
