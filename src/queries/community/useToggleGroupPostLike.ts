@@ -7,6 +7,7 @@ import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 import type { GroupPost, ToggleGroupPostLikeParams } from '@/types/community/community';
 import type { InfiniteData } from '@tanstack/react-query';
+import type { GroupBookmarksResponse } from '@/api/mypage.api';
 
 export function useToggleGroupPostLike() {
   const queryClient = useQueryClient();
@@ -24,11 +25,7 @@ export function useToggleGroupPostLike() {
       return { isLiked: !isLiked, userId: currentUser.id };
     },
 
-    onSuccess: (response, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.bookmarks(response.userId, 'groups'),
-      });
-
+    onSuccess: async (response, variables) => {
       const updateLike = (post: GroupPost): GroupPost => ({
         ...post,
         isLiked: response.isLiked,
@@ -71,6 +68,26 @@ export function useToggleGroupPostLike() {
           };
         },
       );
+      queryClient.setQueriesData<InfiniteData<GroupBookmarksResponse>>(
+        { queryKey: mypageQueryKeys.bookmarks(response.userId, 'groups') },
+        (current) => {
+          if (!current) return current;
+
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              items: page.items.map((post) =>
+                post.id === variables.postId ? updateLike(post) : post,
+              ),
+            })),
+          };
+        },
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: mypageQueryKeys.groupApplications(response.userId),
+      });
     },
   });
 }

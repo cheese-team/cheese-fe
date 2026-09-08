@@ -1,5 +1,5 @@
 import { apiClient } from '@/api/client';
-import type { JobPost } from '@/types/community/community';
+import type { GroupPost, JobPost } from '@/types/community/community';
 import type { ApplicationSort } from '@/app/(app)/(no-memo)/mypage/applications/_constants/applications';
 
 import type {
@@ -73,7 +73,7 @@ export async function updateAccountSettings({ userId, data }: UpdateAccountSetti
   });
 }
 
-export type JobApplicationsParams = {
+export type ApplicationsParams = {
   userId: string;
   cursor?: string;
   limit?: number;
@@ -81,9 +81,47 @@ export type JobApplicationsParams = {
   sort?: ApplicationSort;
 };
 
+export type JobApplicationsResponse = {
+  items: JobPost[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+export function getJobApplications(
+  { userId, cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
+  signal?: AbortSignal,
+) {
+  return apiClient<JobApplicationsResponse>('/backend-api/mypage/applications', {
+    method: 'GET',
+    cache: 'no-store',
+    query: { userId, type: 'jobs', cursor, limit: String(limit), q, sort },
+    signal,
+  });
+}
+
+export type GroupApplicationsResponse = {
+  items: GroupPost[];
+  nextCursor: string | null;
+  hasMore: boolean;
+};
+
+export function getGroupApplications(
+  { userId, cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
+  signal?: AbortSignal,
+) {
+  return apiClient<GroupApplicationsResponse>('/backend-api/mypage/applications', {
+    method: 'GET',
+    cache: 'no-store',
+    query: { userId, type: 'groups', cursor, limit: String(limit), q, sort },
+    signal,
+  });
+}
+
 export type BookmarkType = 'jobs' | 'groups' | 'info';
 
 export type BookmarkListParams = {
+  userId: string;
+  cursor?: string;
   limit?: number;
 };
 
@@ -94,7 +132,7 @@ export type JobBookmarksResponse = {
 };
 
 export function getJobBookmarks(
-  { userId, cursor, limit = 20 }: BookmarkListParams & { userId: string; cursor?: string },
+  { userId, cursor, limit = 20 }: BookmarkListParams,
   signal?: AbortSignal,
 ) {
   return apiClient<JobBookmarksResponse>('/backend-api/mypage/bookmarks', {
@@ -105,20 +143,20 @@ export function getJobBookmarks(
   });
 }
 
-export type JobApplicationsResponse = {
-  items: JobPost[];
+export type GroupBookmarksResponse = {
+  items: GroupPost[];
   nextCursor: string | null;
   hasMore: boolean;
 };
 
-export function getJobApplications(
-  { userId, cursor, limit = 20, q, sort = 'latest' }: JobApplicationsParams,
+export function getGroupBookmarks(
+  { userId, cursor, limit = 20 }: BookmarkListParams,
   signal?: AbortSignal,
 ) {
-  return apiClient<JobApplicationsResponse>('/backend-api/mypage/applications', {
+  return apiClient<GroupBookmarksResponse>('/backend-api/mypage/bookmarks', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, type: 'jobs', cursor, limit: String(limit), q, sort },
+    query: { userId, type: 'groups', cursor, limit: String(limit) },
     signal,
   });
 }
