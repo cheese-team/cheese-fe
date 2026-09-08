@@ -49,7 +49,7 @@ export default function CommunityGroupsPage() {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
 
-  const { mutate: toggleGroupPostLike } = useToggleGroupPostLike();
+  const { mutate: toggleGroupPostLike, isPending: isLikePending } = useToggleGroupPostLike();
 
   if (isPending) {
     return <CommunityListState type="loading" message="로딩 중..." />;
@@ -80,7 +80,12 @@ export default function CommunityGroupsPage() {
     <div>
       <div className="mx-auto grid max-w-[976px] grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         {groupPosts.map((groupPost) => (
-          <GroupPostCard key={groupPost.id} post={groupPost} onToggleLike={toggleGroupPostLike} />
+          <GroupPostCard
+            key={groupPost.id}
+            post={groupPost}
+            isLikePending={isLikePending}
+            onToggleLike={toggleGroupPostLike}
+          />
         ))}
       </div>
 

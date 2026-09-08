@@ -12,6 +12,8 @@ import { GroupDetailHeader } from '../_components';
 
 import { ApiError } from '@/api/client';
 import { useGroupPost } from '@/queries/community/useGroupPost';
+import { useApplyGroupPost } from '@/queries/community/useApplyGroupPost';
+import { useToggleGroupPostLike } from '@/queries/community/useToggleGroupPostLike';
 import CommunityListState from '../../_components/CommunityListState';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
@@ -34,6 +36,8 @@ function formatField(fields: Field[]) {
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const { data: groupPost, error, isPending, refetch } = useGroupPost(groupId);
+  const { mutateAsync: applyGroupPost, isPending: isApplyPending } = useApplyGroupPost();
+  const { mutate: toggleGroupPostLike, isPending: isLikePending } = useToggleGroupPostLike();
 
   if (error instanceof ApiError && error.status === 404) {
     notFound();
@@ -91,7 +95,23 @@ export default function GroupDetailPage() {
         actions={
           <div className="flex w-full flex-col gap-5 px-3 py-5">
             <PostDetailAsideInfoItem label="지원자수" value={`${groupPost.applicantCount}명`} />
-            <PostDetailAsideActions post={groupPost} isClosed={isClosed} />
+            <PostDetailAsideActions
+              post={groupPost}
+              isClosed={isClosed}
+              isApplyPending={isApplyPending}
+              isLikePending={isLikePending}
+              onApply={async () => {
+                if (isApplyPending || groupPost.isApplied || isClosed) return;
+                const response = await applyGroupPost(groupId);
+                if (!response.isApplied) {
+                  throw new Error('지원이 완료되지 않았습니다. 다시 시도해주세요.');
+                }
+              }}
+              onToggleLike={() => {
+                if (isLikePending) return;
+                toggleGroupPostLike({ postId: groupId, isLiked: groupPost.isLiked });
+              }}
+            />
           </div>
         }
       >

@@ -6,6 +6,8 @@ export const mypageQueryKeys = {
   user: (userId: string | undefined) => [...mypageQueryKeys.all, userId] as const,
   jobApplications: (userId: string | undefined) =>
     [...mypageQueryKeys.user(userId), 'applications', 'jobs'] as const,
+  groupApplications: (userId: string | undefined) =>
+    [...mypageQueryKeys.user(userId), 'applications', 'groups'] as const,
   jobApplicationList: (
     userId: string | undefined,
     params: Omit<JobApplicationsParams, 'userId' | 'cursor'>,

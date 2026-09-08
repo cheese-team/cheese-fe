@@ -255,3 +255,42 @@ export async function deleteGroupPost({
 
   return mapGroupPost(response);
 }
+
+export type GroupPostLikeRequest = {
+  groupId: string;
+  userId: string;
+};
+
+export type GroupPostLikeResponse = {
+  isLiked: boolean;
+};
+
+export function likeGroupPost({ groupId, userId }: GroupPostLikeRequest) {
+  return apiClient<GroupPostLikeResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/like`,
+    { method: 'POST', query: { userId } },
+  );
+}
+
+export function unlikeGroupPost({ groupId, userId }: GroupPostLikeRequest) {
+  return apiClient<GroupPostLikeResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/like`,
+    { method: 'DELETE', query: { userId } },
+  );
+}
+
+export type GroupPostApplyRequest = {
+  groupId: string;
+  userId: string;
+};
+
+export type GroupPostApplyResponse = {
+  isApplied: boolean;
+};
+
+export function applyGroupPost({ groupId, userId }: GroupPostApplyRequest) {
+  return apiClient<GroupPostApplyResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/apply`,
+    { method: 'POST', query: { userId } },
+  );
+}

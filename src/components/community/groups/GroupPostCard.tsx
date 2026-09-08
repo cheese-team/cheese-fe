@@ -18,6 +18,7 @@ import type { ToggleGroupPostLikeParams } from '@/types/community/community';
 type GroupPostCardProps = {
   post: GroupPost;
   onToggleLike: (variables: ToggleGroupPostLikeParams) => void;
+  isLikePending?: boolean;
 };
 
 const FIELD_ORDER: Field[] = ['FE', 'BE'];
@@ -26,7 +27,11 @@ function sortFields(fields: Field[]) {
   return FIELD_ORDER.filter((field) => fields.includes(field));
 }
 
-export default function GroupPostCard({ post, onToggleLike }: GroupPostCardProps) {
+export default function GroupPostCard({
+  post,
+  onToggleLike,
+  isLikePending = false,
+}: GroupPostCardProps) {
   const isClosed = isRecruitClosed(post.deadline);
 
   const sortedFields = sortFields(post.field);
@@ -71,8 +76,11 @@ export default function GroupPostCard({ post, onToggleLike }: GroupPostCardProps
 
         <div className="flex gap-2">
           <button
+            type="button"
+            disabled={isLikePending}
             onClick={(e) => {
               e.stopPropagation();
+              if (isLikePending) return;
               onToggleLike({
                 postId: post.id,
                 isLiked: post.isLiked,
