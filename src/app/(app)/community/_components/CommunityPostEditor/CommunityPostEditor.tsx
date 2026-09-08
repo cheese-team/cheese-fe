@@ -62,6 +62,8 @@ export default function CommunityPostEditor({
     imageInputRef.current?.click();
   }, []);
 
+  // TODO: 이미지 삽입 시 base64 대신 파일 업로드 API를 통해 이미지 URL을 사용하도록 변경
+  // 현재 base64 이미지가 content에 포함되면 게시글 등록 API에서 500 오류가 발생함
   const readImageAsDataUrl = (file: File) => {
     return new Promise<string>((resolve) => {
       const reader = new FileReader();

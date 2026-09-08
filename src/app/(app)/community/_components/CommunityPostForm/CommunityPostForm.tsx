@@ -80,7 +80,7 @@ export default function CommunityPostForm({
         <form
           id={formId}
           onSubmit={(event) => onSubmit(event, content)}
-          className="flex flex-col gap-[30px] px-25 py-8"
+          className="flex flex-col gap-2 px-25 py-8"
         >
           {children}
 

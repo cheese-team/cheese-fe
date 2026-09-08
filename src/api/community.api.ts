@@ -191,3 +191,67 @@ export async function getGroupPost({
 
   return mapGroupPost(response);
 }
+
+export type CreateGroupPostRequest = Pick<
+  GroupPost,
+  | 'field'
+  | 'title'
+  | 'recruitCount'
+  | 'expectedPeriod'
+  | 'progressType'
+  | 'skills'
+  | 'deadline'
+  | 'content'
+> & { userId: string };
+
+export async function createGroupPost(request: CreateGroupPostRequest): Promise<GroupPost> {
+  const response = await apiClient<GroupPostResponse>('/backend-api/community/groups', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+
+  return mapGroupPost(response);
+}
+
+export type UpdateGroupPostRequest = {
+  groupId: string;
+  userId: string;
+  data: Omit<CreateGroupPostRequest, 'userId'>;
+};
+
+export async function updateGroupPost({
+  groupId,
+  userId,
+  data,
+}: UpdateGroupPostRequest): Promise<GroupPost> {
+  const response = await apiClient<GroupPostResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
+    {
+      method: 'PATCH',
+      query: { userId },
+      body: JSON.stringify(data),
+    },
+  );
+
+  return mapGroupPost(response);
+}
+
+export type DeleteGroupPostRequest = {
+  groupId: string;
+  userId: string;
+};
+
+export async function deleteGroupPost({
+  groupId,
+  userId,
+}: DeleteGroupPostRequest): Promise<GroupPost> {
+  const response = await apiClient<GroupPostResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
+    {
+      method: 'DELETE',
+      query: { userId },
+    },
+  );
+
+  return mapGroupPost(response);
+}
