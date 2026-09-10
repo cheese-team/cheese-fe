@@ -10,19 +10,27 @@ export function useUpdateSearchParams() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const updateSearchParams = (key: string, value: string) => {
+  function updateSearchParams(key: string, value: string): void;
+  function updateSearchParams(updates: Record<string, string | null>): void;
+  function updateSearchParams(
+    keyOrUpdates: string | Record<string, string | null>,
+    value?: string,
+  ) {
     const params = new URLSearchParams(searchParams.toString());
+    const updates = typeof keyOrUpdates === 'string' ? { [keyOrUpdates]: value } : keyOrUpdates;
 
-    if (value.trim() === '') {
-      params.delete(key);
-    } else {
-      params.set(key, value);
+    for (const [key, nextValue] of Object.entries(updates)) {
+      if (nextValue == null || nextValue.trim() === '') {
+        params.delete(key);
+      } else {
+        params.set(key, nextValue);
+      }
     }
 
     const queryString = params.toString();
 
     router.push(queryString ? `${pathname}?${queryString}` : pathname);
-  };
+  }
 
   return updateSearchParams;
 }

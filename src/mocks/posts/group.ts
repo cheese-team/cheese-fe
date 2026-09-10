@@ -5,7 +5,7 @@ import getMockDeadline from '@/mocks/getMockDeadline';
 
 export const groupPosts: GroupPost[] = [
   {
-    id: 1,
+    id: '1',
     field: ['FE', 'BE'],
     title: '취업 포트폴리오 스터디 함께하실 분 모집합니다',
 
@@ -36,7 +36,7 @@ export const groupPosts: GroupPost[] = [
   },
 
   {
-    id: 2,
+    id: '2',
     field: ['BE'],
     title: 'Spring Boot 사이드 프로젝트 팀원 모집',
 
@@ -65,7 +65,7 @@ export const groupPosts: GroupPost[] = [
   },
 
   {
-    id: 3,
+    id: '3',
     field: ['BE', 'FE'],
     title: 'React 기반 토이 프로젝트 같이 하실 분 구해요',
 
@@ -95,7 +95,7 @@ export const groupPosts: GroupPost[] = [
   },
 
   {
-    id: 4,
+    id: '4',
     field: ['BE'],
     title: 'Node.js + Express 서버 스터디 인원 모집합니다',
 
@@ -124,7 +124,7 @@ export const groupPosts: GroupPost[] = [
   },
 
   {
-    id: 5,
+    id: '5',
     field: ['FE'],
     title: 'UI/UX 개선 중심 프론트 협업 프로젝트 참여자 모집',
 
@@ -152,7 +152,7 @@ export const groupPosts: GroupPost[] = [
     isApplied: false,
   },
   {
-    id: 6,
+    id: '6',
     field: ['BE'],
     title: '대규모 트래픽 처리 경험을 위한 백엔드 프로젝트',
 

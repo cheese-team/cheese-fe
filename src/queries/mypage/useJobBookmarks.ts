@@ -4,7 +4,9 @@ import { getJobBookmarks, type BookmarkListParams } from '@/api/mypage.api';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { mypageQueryKeys } from './mypageQueryKeys';
 
-export function useJobBookmarks({ limit = 20 }: BookmarkListParams = {}) {
+export function useJobBookmarks({
+  limit = 20,
+}: Omit<BookmarkListParams, 'userId' | 'cursor'> = {}) {
   const { data: currentUser } = useCurrentUser();
   const userId = currentUser?.id;
 

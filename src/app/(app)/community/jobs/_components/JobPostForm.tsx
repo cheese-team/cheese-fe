@@ -102,7 +102,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
         { userId: user.id, ...jobPostData },
         {
           onSuccess: (createdJobPost) => {
-            router.push(`/community/jobs/${createdJobPost.id}`);
+            router.replace(`/community/jobs/${createdJobPost.id}`);
           },
         },
       );
@@ -119,7 +119,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
       },
       {
         onSuccess: () => {
-          router.push(`/community/jobs/${jobId}`);
+          router.replace(`/community/jobs/${jobId}`);
         },
       },
     );

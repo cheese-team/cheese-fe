@@ -6,8 +6,22 @@ import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 import type { JobPost, ToggleJobPostLikeParams } from '@/types/community/community';
-import type { InfiniteData } from '@tanstack/react-query';
+import type { InfiniteData, QueryFilters } from '@tanstack/react-query';
 import type { JobBookmarksResponse } from '@/api/mypage.api';
+
+const getJobListFilters = (userId: string): QueryFilters => ({
+  queryKey: communityQueryKeys.jobLists(),
+  predicate: (query) => {
+    const params = query.queryKey[3];
+
+    return (
+      typeof params === 'object' &&
+      params !== null &&
+      'userId' in params &&
+      params.userId === userId
+    );
+  },
+});
 
 export function useToggleJobPostLike() {
   const queryClient = useQueryClient();
@@ -24,8 +38,27 @@ export function useToggleJobPostLike() {
       return isLiked ? unlikeJobPost(request) : likeJobPost(request);
     },
 
+    onMutate: async (variables) => {
+      if (!currentUser) return;
+
+      const listFilters = getJobListFilters(currentUser.id);
+
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: communityQueryKeys.jobDetail(variables.jobId, currentUser.id),
+          exact: true,
+        }),
+        queryClient.cancelQueries(listFilters),
+        queryClient.cancelQueries({
+          queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'jobs'),
+        }),
+      ]);
+    },
+
     onSuccess: (response, variables) => {
       if (!currentUser) return;
+
+      const listFilters = getJobListFilters(currentUser.id);
 
       void queryClient.invalidateQueries({
         queryKey: mypageQueryKeys.jobApplications(currentUser.id),
@@ -43,34 +76,19 @@ export function useToggleJobPostLike() {
         (current) => (current ? updateLike(current) : current),
       );
 
-      queryClient.setQueriesData<InfiniteData<JobPostsResponse>>(
-        {
-          queryKey: communityQueryKeys.jobLists(),
-          predicate: (query) => {
-            const params = query.queryKey[3];
+      queryClient.setQueriesData<InfiniteData<JobPostsResponse>>(listFilters, (current) => {
+        if (!current) return current;
 
-            return (
-              typeof params === 'object' &&
-              params !== null &&
-              'userId' in params &&
-              params.userId === currentUser.id
-            );
-          },
-        },
-        (current) => {
-          if (!current) return current;
-
-          return {
-            ...current,
-            pages: current.pages.map((page) => ({
-              ...page,
-              items: page.items.map((post) =>
-                post.id === variables.jobId ? updateLike(post) : post,
-              ),
-            })),
-          };
-        },
-      );
+        return {
+          ...current,
+          pages: current.pages.map((page) => ({
+            ...page,
+            items: page.items.map((post) =>
+              post.id === variables.jobId ? updateLike(post) : post,
+            ),
+          })),
+        };
+      });
 
       queryClient.setQueriesData<InfiniteData<JobBookmarksResponse>>(
         { queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'jobs') },

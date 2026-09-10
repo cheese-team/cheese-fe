@@ -17,3 +17,11 @@ export type InfoPostsListParams = {
   sort?: InfoSort;
   keyword?: string;
 };
+
+export type GroupPostsListParams = {
+  userId?: string;
+  sort?: CommunitySort;
+  keyword?: string;
+  cursor?: string;
+  limit?: number;
+};

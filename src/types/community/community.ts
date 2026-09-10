@@ -46,7 +46,7 @@ export type JobPost = {
 };
 
 export type GroupPost = {
-  id: number;
+  id: string;
   field: Field[];
   title: string;
 
@@ -102,6 +102,11 @@ export type InfoPost = {
 
 export type TogglePostLikeParams = {
   postId: number;
+  isLiked: boolean;
+};
+
+export type ToggleGroupPostLikeParams = {
+  postId: string;
   isLiked: boolean;
 };
 

@@ -99,12 +99,16 @@ export async function getInfoPosts({
    ================================ */
 
 type LikeablePost = {
-  id: number;
+  id: string | number;
   isLiked: boolean;
   likeCount: number;
 };
 
-function updatePostLike(posts: LikeablePost[], postId: number, nextIsLiked: boolean): void {
+function updatePostLike(
+  posts: LikeablePost[],
+  postId: string | number,
+  nextIsLiked: boolean,
+): void {
   const postIndex = posts.findIndex((post) => post.id === postId);
 
   if (postIndex === -1) {
@@ -124,11 +128,11 @@ function updatePostLike(posts: LikeablePost[], postId: number, nextIsLiked: bool
   };
 }
 
-export async function likeGroupPost(postId: number): Promise<void> {
+export async function likeGroupPost(postId: string): Promise<void> {
   updatePostLike(groupPosts, postId, true);
 }
 
-export async function unlikeGroupPost(postId: number): Promise<void> {
+export async function unlikeGroupPost(postId: string): Promise<void> {
   updatePostLike(groupPosts, postId, false);
 }
 

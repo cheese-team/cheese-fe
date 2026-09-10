@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import CategoryTabs from '@/components/common/CategoryTabs';
-import ListFilterBar from '@/components/common/ListFilterBar';
+import MypageListFilterBar from '../_components/MypageListFilterBar';
 import AppliedJobList from './_components/AppliedJobList';
 import AppliedGroupList from './_components/AppliedGroupList';
 
-import { APPLICATION_SORT_OPTIONS, type ApplicationSort } from './_constants/applications';
+import { APPLICATION_SORT_OPTIONS } from './_constants/applications';
 
 import { useSearchHistories } from '@/hooks/useSearchHistories';
+import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 
 const MYPAGE_APPLICATIONS_CATEGORY_TABS = [
   { label: '채용공고', value: 'jobs' },
@@ -27,11 +28,16 @@ type MypageApplicationsCategoryTabValue =
   (typeof MYPAGE_APPLICATIONS_CATEGORY_TABS)[number]['value'];
 
 export default function ApplicationsPage() {
-  const [activeApplicationsTab, setActiveApplicationsTab] =
-    useState<MypageApplicationsCategoryTabValue>('jobs');
+  const searchParams = useSearchParams();
+  const updateSearchParams = useUpdateSearchParams();
+  const activeApplicationsTab =
+    MYPAGE_APPLICATIONS_CATEGORY_TABS.find((tab) => tab.value === searchParams.get('type'))
+      ?.value ?? 'jobs';
 
-  const [sort, setSort] = useState<ApplicationSort>('latest');
-  const [keyword, setKeyword] = useState('');
+  const sort =
+    APPLICATION_SORT_OPTIONS.find((option) => option.value === searchParams.get('sort'))?.value ??
+    'latest';
+  const keyword = searchParams.get('q') ?? '';
 
   const { histories: applicationSearchHistories, addHistory: addApplicationSearchHistory } =
     useSearchHistories('application', APPLICATIONS_SEARCH_HISTORIES);
@@ -43,13 +49,11 @@ export default function ApplicationsPage() {
       addApplicationSearchHistory(normalizedValue);
     }
 
-    setKeyword(normalizedValue);
+    updateSearchParams('q', normalizedValue);
   };
 
   const handleApplicationsTabChange = (value: MypageApplicationsCategoryTabValue) => {
-    setActiveApplicationsTab(value);
-    setSort('latest');
-    setKeyword('');
+    updateSearchParams({ type: value, sort: 'latest', q: null });
   };
 
   return (
@@ -61,16 +65,17 @@ export default function ApplicationsPage() {
           onChange={handleApplicationsTabChange}
         />
 
-        <ListFilterBar
+        <MypageListFilterBar
           sortOptions={APPLICATION_SORT_OPTIONS}
           selectedSort={sort}
           searchValue={keyword}
           searchPlaceholder="검색"
           searchHistories={applicationSearchHistories}
-          onSortChange={setSort}
-          onSearchChange={setKeyword}
+          onSortChange={(value) => updateSearchParams('sort', value)}
           onSearchSubmit={applySearchKeyword}
-          onSearchClear={() => setKeyword('')}
+          onSearchClear={() => {
+            updateSearchParams('q', '');
+          }}
           onSearchHistorySelect={applySearchKeyword}
           className="gap-3"
         />
