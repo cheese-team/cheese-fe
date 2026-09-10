@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, type ComponentProps } from 'react';
+import { useState, type ComponentProps } from 'react';
+
 import ListFilterBar from '@/components/common/ListFilterBar';
 
 type MypageListFilterBarProps<TSort extends string> = Omit<
@@ -8,7 +9,13 @@ type MypageListFilterBarProps<TSort extends string> = Omit<
   'onSearchChange'
 >;
 
-export default function MypageListFilterBar<TSort extends string>({
+export default function MypageListFilterBar<TSort extends string>(
+  props: MypageListFilterBarProps<TSort>,
+) {
+  return <MypageListFilterBarContent key={props.searchValue} {...props} />;
+}
+
+function MypageListFilterBarContent<TSort extends string>({
   searchValue,
   onSearchSubmit,
   onSearchClear,
@@ -16,10 +23,6 @@ export default function MypageListFilterBar<TSort extends string>({
   ...props
 }: MypageListFilterBarProps<TSort>) {
   const [draft, setDraft] = useState(searchValue);
-
-  useEffect(() => {
-    setDraft(searchValue);
-  }, [searchValue]);
 
   return (
     <ListFilterBar
