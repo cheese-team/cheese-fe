@@ -43,14 +43,17 @@ export function useApplyGroupPost() {
         queryClient.cancelQueries({ queryKey, exact: true }),
         queryClient.cancelQueries(listFilters),
       ]);
+
       const updateApplied = (post: GroupPost): GroupPost => ({
         ...post,
         isApplied: response.isApplied,
         applicantCount: post.applicantCount + (!post.isApplied && response.isApplied ? 1 : 0),
       });
+
       queryClient.setQueryData<GroupPost>(queryKey, (current) =>
         current ? updateApplied(current) : current,
       );
+
       queryClient.setQueriesData<InfiniteData<GroupPostsResponse>>(listFilters, (current) => {
         if (!current) return current;
 
@@ -62,6 +65,7 @@ export function useApplyGroupPost() {
           })),
         };
       });
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey, exact: true }),
         queryClient.invalidateQueries(listFilters),

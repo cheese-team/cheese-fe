@@ -6,8 +6,22 @@ import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 import type { GroupPost, ToggleGroupPostLikeParams } from '@/types/community/community';
-import type { InfiniteData } from '@tanstack/react-query';
+import type { InfiniteData, QueryFilters } from '@tanstack/react-query';
 import type { GroupBookmarksResponse } from '@/api/mypage.api';
+
+const getGroupListFilters = (userId: string): QueryFilters => ({
+  queryKey: communityQueryKeys.groupLists(),
+  predicate: (query) => {
+    const params = query.queryKey[3];
+
+    return (
+      typeof params === 'object' &&
+      params !== null &&
+      'userId' in params &&
+      params.userId === userId
+    );
+  },
+});
 
 export function useToggleGroupPostLike() {
   const queryClient = useQueryClient();
@@ -22,10 +36,30 @@ export function useToggleGroupPostLike() {
       const request = { groupId: postId, userId: currentUser.id };
 
       await (isLiked ? unlikeGroupPost(request) : likeGroupPost(request));
+
       return { isLiked: !isLiked, userId: currentUser.id };
     },
 
+    onMutate: async (variables) => {
+      if (!currentUser) return;
+
+      const listFilters = getGroupListFilters(currentUser.id);
+
+      await Promise.all([
+        queryClient.cancelQueries({
+          queryKey: communityQueryKeys.groupDetail(variables.postId, currentUser.id),
+          exact: true,
+        }),
+        queryClient.cancelQueries(listFilters),
+        queryClient.cancelQueries({
+          queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'groups'),
+        }),
+      ]);
+    },
+
     onSuccess: async (response, variables) => {
+      const listFilters = getGroupListFilters(response.userId);
+
       const updateLike = (post: GroupPost): GroupPost => ({
         ...post,
         isLiked: response.isLiked,
@@ -40,34 +74,19 @@ export function useToggleGroupPostLike() {
         (current) => (current ? updateLike(current) : current),
       );
 
-      queryClient.setQueriesData<InfiniteData<GroupPostsResponse>>(
-        {
-          queryKey: communityQueryKeys.groupLists(),
-          predicate: (query) => {
-            const params = query.queryKey[3];
+      queryClient.setQueriesData<InfiniteData<GroupPostsResponse>>(listFilters, (current) => {
+        if (!current) return current;
 
-            return (
-              typeof params === 'object' &&
-              params !== null &&
-              'userId' in params &&
-              params.userId === response.userId
-            );
-          },
-        },
-        (current) => {
-          if (!current) return current;
-
-          return {
-            ...current,
-            pages: current.pages.map((page) => ({
-              ...page,
-              items: page.items.map((post) =>
-                post.id === variables.postId ? updateLike(post) : post,
-              ),
-            })),
-          };
-        },
-      );
+        return {
+          ...current,
+          pages: current.pages.map((page) => ({
+            ...page,
+            items: page.items.map((post) =>
+              post.id === variables.postId ? updateLike(post) : post,
+            ),
+          })),
+        };
+      });
       queryClient.setQueriesData<InfiniteData<GroupBookmarksResponse>>(
         { queryKey: mypageQueryKeys.bookmarks(response.userId, 'groups') },
         (current) => {
