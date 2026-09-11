@@ -1,12 +1,14 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+import { Button } from '@/components/common/Button';
 import InfoPostCard from '@/components/community/info';
+import CommunityListState from '../_components/CommunityListState';
 
-import { isInfoSort } from '../_constants/community';
+import { COMMUNITY_LIST_LIMIT, isInfoSort } from '@/app/(app)/community/_constants/community';
 
-import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
 import { useInfoPosts } from '@/queries/community/useInfoPosts';
 
 export default function CommunityInfoPage() {
@@ -16,29 +18,86 @@ export default function CommunityInfoPage() {
   const sort = isInfoSort(sortParam) ? sortParam : 'all';
   const keyword = searchParams.get('keyword') ?? '';
 
-  const { data: infoPosts = [], isPending, isError } = useInfoPosts({ sort, keyword });
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfoPosts({ sort, keyword, limit: COMMUNITY_LIST_LIMIT });
 
-  // TODO: API 연동 후 좋아요 캐시 갱신 방식 최적화
-  const { mutate: toggleInfoPostLike } = useToggleInfoPostLike();
+  const infoPosts = data?.pages.flatMap((page) => page.items) ?? [];
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+
+    if (!target || !hasNextPage || isFetchNextPageError) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && !isFetchingNextPage) {
+        void fetchNextPage();
+      }
+    });
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
 
   if (isPending) {
-    return <div>불러오는 중입니다.</div>;
+    return <CommunityListState type="loading" message="로딩 중..." />;
   }
 
-  if (isError) {
-    return <div>정보/자료공유 게시글을 불러오지 못했습니다.</div>;
+  if (isError && !isFetchNextPageError) {
+    return (
+      <CommunityListState
+        type="error"
+        message="정보/자료공유 게시글을 불러오지 못했습니다."
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
+  if (infoPosts.length === 0) {
+    return (
+      <CommunityListState
+        type="empty"
+        message={keyword ? '검색 결과가 없습니다.' : '등록된 정보/자료공유 게시글이 없습니다.'}
+      />
+    );
   }
 
   return (
-    <div className="mx-auto flex w-full flex-col px-[50px]">
-      {infoPosts.map((infoPost) => (
-        <InfoPostCard
-          key={infoPost.id}
-          post={infoPost}
-          onToggleLike={toggleInfoPostLike}
-          wrapperClassName="py-8"
-        />
-      ))}
+    <div>
+      <div className="mx-auto flex w-full flex-col px-[50px]">
+        {infoPosts.map((infoPost) => (
+          <InfoPostCard key={infoPost.id} post={infoPost} wrapperClassName="py-8" />
+        ))}
+      </div>
+
+      <div ref={loadMoreRef} className="h-px" />
+
+      {isFetchingNextPage && <CommunityListState type="loading" message="로딩 중..." />}
+      {isFetchNextPageError && (
+        <div className="flex justify-center py-5">
+          <Button
+            width={120}
+            variant="outlineGray"
+            onClick={() => {
+              if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+            }}
+            disabled={isFetchingNextPage}
+          >
+            다시 시도
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

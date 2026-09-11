@@ -28,12 +28,12 @@ export function useToggleGroupPostLike() {
   const { data: currentUser } = useCurrentUser();
 
   return useMutation({
-    mutationFn: async ({ postId, isLiked }: ToggleGroupPostLikeParams) => {
+    mutationFn: async ({ groupId, isLiked }: ToggleGroupPostLikeParams) => {
       if (!currentUser) {
         throw new Error('로그인 사용자 정보가 필요합니다.');
       }
 
-      const request = { groupId: postId, userId: currentUser.id };
+      const request = { groupId, userId: currentUser.id };
 
       await (isLiked ? unlikeGroupPost(request) : likeGroupPost(request));
 
@@ -47,7 +47,7 @@ export function useToggleGroupPostLike() {
 
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: communityQueryKeys.groupDetail(variables.postId, currentUser.id),
+          queryKey: communityQueryKeys.groupDetail(variables.groupId, currentUser.id),
           exact: true,
         }),
         queryClient.cancelQueries(listFilters),
@@ -70,7 +70,7 @@ export function useToggleGroupPostLike() {
       });
 
       queryClient.setQueryData<GroupPost>(
-        communityQueryKeys.groupDetail(variables.postId, response.userId),
+        communityQueryKeys.groupDetail(variables.groupId, response.userId),
         (current) => (current ? updateLike(current) : current),
       );
 
@@ -82,7 +82,7 @@ export function useToggleGroupPostLike() {
           pages: current.pages.map((page) => ({
             ...page,
             items: page.items.map((post) =>
-              post.id === variables.postId ? updateLike(post) : post,
+              post.id === variables.groupId ? updateLike(post) : post,
             ),
           })),
         };
@@ -97,7 +97,7 @@ export function useToggleGroupPostLike() {
             pages: current.pages.map((page) => ({
               ...page,
               items: page.items.map((post) =>
-                post.id === variables.postId ? updateLike(post) : post,
+                post.id === variables.groupId ? updateLike(post) : post,
               ),
             })),
           };

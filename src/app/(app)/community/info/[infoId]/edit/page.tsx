@@ -7,7 +7,7 @@ import { infoPosts } from '@/mocks/posts';
 export default async function InfoEditPage({ params }: { params: Promise<{ infoId: string }> }) {
   const { infoId } = await params;
 
-  const infoPost = infoPosts.find((post) => post.id === Number(infoId));
+  const infoPost = infoPosts.find((post) => post.id === infoId);
 
   if (!infoPost) {
     notFound();

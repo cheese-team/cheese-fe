@@ -5,7 +5,7 @@ import { getMockUserSummary } from '@/mocks/profile/userSummaries';
 
 export const infoPosts: InfoPost[] = [
   {
-    id: 1,
+    id: '1',
     category: 'info',
     title: '신입 프론트엔드 포트폴리오 구성 팁 정리',
 
@@ -39,7 +39,7 @@ export const infoPosts: InfoPost[] = [
   },
 
   {
-    id: 2,
+    id: '2',
     category: 'question',
     title: 'Next.js App Router에서 인증 처리 어떻게 하시나요?',
 
@@ -63,7 +63,7 @@ export const infoPosts: InfoPost[] = [
   },
 
   {
-    id: 3,
+    id: '3',
     category: 'info',
     title: 'React Query와 Zustand 함께 사용할 때 상태 분리 기준',
 
@@ -95,7 +95,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 4,
+    id: '4',
     category: 'question',
     title: 'Tailwind CSS에서 디자인 시스템 컬러 관리 어떻게 하세요?',
 
@@ -119,7 +119,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 5,
+    id: '5',
     category: 'info',
     title: '면접에서 자주 나오는 CS 질문 정리 (프론트엔드)',
 
@@ -150,7 +150,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 6,
+    id: '6',
     category: 'question',
     title: 'Next.js에서 이미지 최적화 전략 어떻게 가져가시나요?',
 

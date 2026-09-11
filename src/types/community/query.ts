@@ -14,8 +14,11 @@ export type JobPostsListParams = {
 };
 
 export type InfoPostsListParams = {
+  userId?: string;
   sort?: InfoSort;
   keyword?: string;
+  cursor?: string;
+  limit?: number;
 };
 
 export type GroupPostsListParams = {

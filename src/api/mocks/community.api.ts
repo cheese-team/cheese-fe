@@ -136,10 +136,10 @@ export async function unlikeGroupPost(postId: string): Promise<void> {
   updatePostLike(groupPosts, postId, false);
 }
 
-export async function likeInfoPost(postId: number): Promise<void> {
+export async function likeInfoPost(postId: InfoPost['id']): Promise<void> {
   updatePostLike(infoPosts, postId, true);
 }
 
-export async function unlikeInfoPost(postId: number): Promise<void> {
+export async function unlikeInfoPost(postId: InfoPost['id']): Promise<void> {
   updatePostLike(infoPosts, postId, false);
 }
