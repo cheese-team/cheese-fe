@@ -344,3 +344,17 @@ export async function getInfoPosts({
 
   return { ...response, items: response.items.map(mapInfoPost) };
 }
+
+export type CreateInfoPostRequest = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
+  userId: string;
+  attachmentFileId?: string;
+};
+
+export async function createInfoPost(request: CreateInfoPostRequest): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>('/backend-api/community/info', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+
+  return mapInfoPost(response);
+}

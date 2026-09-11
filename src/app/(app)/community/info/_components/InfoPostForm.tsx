@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
@@ -11,6 +12,10 @@ import { FormField } from '../../_components/CommunityPostForm';
 
 import useFileUpload from '@/hooks/useFileUpload';
 import useTagInput from '@/hooks/useTagInput';
+import { ApiError } from '@/api/client';
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { useCreateInfoPost } from '@/queries/community/useCreateInfoPost';
+import { useUploadFile } from '@/queries/files/useUploadFile';
 
 import { INFO_SORT_OPTIONS } from '../../_constants/community';
 
@@ -27,35 +32,56 @@ type InfoPostFormProps = {
 };
 
 export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps) {
+  const router = useRouter();
+  const { data: user } = useCurrentUser();
+  const { mutateAsync: createInfoPost, isPending: isCreatePending } = useCreateInfoPost();
+  const { mutateAsync: uploadFile, isPending: isUploadPending } = useUploadFile();
   const [category, setCategory] = useState(initialValues?.category ?? '');
 
   // TODO: 수정 페이지에서는 기존 첨부파일과 새로 업로드한 파일을 함께 관리하도록 개선
   // (기존 파일 조회/삭제, 신규 파일 추가)
-  const { files, fileInputRef, openFilePicker, addFiles, removeFile, openFile } = useFileUpload();
+  const { files, fileInputRef, openFilePicker, addFiles, removeFile, openFile } = useFileUpload({
+    multiple: false,
+  });
 
   const { tagInput, tags, setTagInput, removeTag, handleTagKeyDown } = useTagInput({
     initialTags: initialValues?.tags ?? [],
     maxTags: 5,
   });
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
+
+    if (isCreatePending || isUploadPending) return;
 
     const formData = new FormData(event.currentTarget);
 
     const title = String(formData.get('title') ?? '');
 
-    // TODO: API 연동 시 기존 첨부파일(existingFiles)과 신규 첨부파일(files)을 구분하여 전송
-    const infoPostPayload = {
-      title,
-      category,
-      tags,
-      files,
-      content,
-    };
-
     if (mode === 'create') {
-      // TODO: 생성 API + 게시글 상세 페이지로 이동
-      alert('게시글이 등록되었습니다.');
+      if (!user) return;
+
+      if (category !== 'question' && category !== 'info' && category !== 'resource') {
+        alert('분류를 선택해주세요.');
+        return;
+      }
+
+      try {
+        const file = files[0];
+        const uploadedFile = file ? await uploadFile({ userId: user.id, file }) : undefined;
+        const createdInfoPost = await createInfoPost({
+          userId: user.id,
+          category,
+          title,
+          content,
+          tags,
+          ...(uploadedFile ? { attachmentFileId: uploadedFile.id } : {}),
+        });
+        router.replace(`/community/info/${createdInfoPost.id}`);
+      } catch (error) {
+        alert(
+          error instanceof ApiError ? error.message : '정보/자료공유 게시글 등록에 실패했습니다.',
+        );
+      }
       return;
     }
 
@@ -68,9 +94,11 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
       mode={mode}
       onSubmit={handleSubmit}
       initialContent={initialValues?.content ?? ''}
+      isSubmitting={isCreatePending || isUploadPending}
     >
       <section className="flex flex-col gap-[30px]">
         <Input
+          required
           label="제목"
           name="title"
           placeholder="제목"
@@ -114,7 +142,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
               </div>
             )}
 
-            <input ref={fileInputRef} multiple type="file" className="hidden" onChange={addFiles} />
+            <input ref={fileInputRef} type="file" className="hidden" onChange={addFiles} />
             <Button
               type="button"
               onClick={openFilePicker}
