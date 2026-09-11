@@ -161,7 +161,7 @@ export function applyJobPost({ jobId, userId }: JobPostApplyRequest) {
       Group
    ================================ */
 
-type GroupPostResponse = Omit<GroupPost, 'author'> & {
+export type GroupPostResponse = Omit<GroupPost, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
 };
 
@@ -171,7 +171,7 @@ export type GroupPostsResponse = {
   items: GroupPost[];
 };
 
-function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost {
+export function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost {
   const { type, ...profile } = author;
   return { ...post, author: { ...profile, profileType: type } };
 }
@@ -317,7 +317,7 @@ export function applyGroupPost({ groupId, userId }: GroupPostApplyRequest) {
       Info
    ================================ */
 
-type InfoPostResponse = Omit<InfoPost, 'author'> & {
+export type InfoPostResponse = Omit<InfoPost, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & {
     type: UserSummary['profileType'];
   };
@@ -329,7 +329,7 @@ export type InfoPostsResponse = {
   items: InfoPost[];
 };
 
-function mapInfoPost({ author, ...post }: InfoPostResponse): InfoPost {
+export function mapInfoPost({ author, ...post }: InfoPostResponse): InfoPost {
   const { type, ...profile } = author;
   return { ...post, author: { ...profile, profileType: type } };
 }

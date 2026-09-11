@@ -10,10 +10,7 @@ import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 
 import { GroupBookmarkList, InfoBookmarkList, JobBookmarkList } from './_components';
 
-import {
-  COMMUNITY_SORT_OPTIONS,
-  INFO_SORT_OPTIONS,
-} from '@/app/(app)/community/_constants/community';
+import { COMMUNITY_SORT_OPTIONS } from '@/app/(app)/community/_constants/community';
 
 const MYPAGE_BOOKMARK_CATEGORY_TABS = [
   { label: '채용공고', value: 'jobs' },
@@ -34,8 +31,6 @@ export default function BookmarksPage() {
   const communitySort =
     COMMUNITY_SORT_OPTIONS.find((option) => option.value === searchParams.get('sort'))?.value ??
     'latest';
-  const infoSort =
-    INFO_SORT_OPTIONS.find((option) => option.value === searchParams.get('sort'))?.value ?? 'all';
   const bookmarkKeyword = searchParams.get('q') ?? '';
 
   const { histories: bookmarkSearchHistories, addHistory: addBookmarkSearchHistory } =
@@ -78,20 +73,7 @@ export default function BookmarksPage() {
           onChange={handleBookmarkTabChange}
         />
 
-        {activeBookmarkTab === 'info' ? (
-          <MypageListFilterBar
-            sortOptions={INFO_SORT_OPTIONS}
-            selectedSort={infoSort}
-            searchValue={bookmarkKeyword}
-            searchPlaceholder="검색"
-            searchHistories={bookmarkSearchHistories}
-            onSortChange={(value) => updateSearchParams('sort', value)}
-            onSearchSubmit={handleSearchSubmit}
-            onSearchClear={handleSearchClear}
-            onSearchHistorySelect={handleSearchHistorySelect}
-            className="gap-3"
-          />
-        ) : (
+        {activeBookmarkTab !== 'info' && (
           <MypageListFilterBar
             sortOptions={COMMUNITY_SORT_OPTIONS}
             selectedSort={communitySort}
@@ -120,7 +102,7 @@ export default function BookmarksPage() {
 
         {activeBookmarkTab === 'info' && (
           <div className="">
-            <InfoBookmarkList sort={infoSort} keyword={bookmarkKeyword} />
+            <InfoBookmarkList />
           </div>
         )}
       </section>
