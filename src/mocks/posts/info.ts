@@ -1,4 +1,3 @@
-import type { Comment } from '@/app/(app)/community/_components/Comment/types';
 import type { InfoPost } from '@/types/community/community';
 
 import { getMockUserSummary } from '@/mocks/profile/userSummaries';
@@ -174,45 +173,5 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
     commentCount: 7,
 
     isLiked: true,
-  },
-];
-
-export const infoComments: Comment[] = [
-  {
-    id: 1,
-    author: getMockUserSummary(2, 'company'),
-    content: '잘 보고 갑니다',
-    createdAt: '2026-07-01T09:30:00',
-  },
-  {
-    id: 2,
-    author: getMockUserSummary(3, 'personal'),
-    content: '좋은 글 감사합니다',
-    createdAt: '2026-07-02T09:30:00',
-  },
-  {
-    id: 3,
-    author: getMockUserSummary(4, 'company'),
-    content: '좋아요',
-    createdAt: '2026-07-03T09:30:00',
-  },
-  {
-    id: 4,
-    author: getMockUserSummary(5, 'personal'),
-    content: '좋네요 수고요',
-    createdAt: '2026-07-04T10:15:00',
-  },
-  {
-    id: 5,
-    author: getMockUserSummary(10, 'company'),
-    content:
-      '좋은 글 감사합니다!\n\n실제 프로젝트를 진행하면서 비슷한 고민을 많이 했는데, 정리해주신 내용이 정말 도움이 됐어요. 특히 예시를 함께 설명해주셔서 이해하기 쉬웠습니다. 다음에도 좋은 글 기대하겠습니다 😊',
-    createdAt: '2026-07-05T10:15:00',
-  },
-  {
-    id: 6,
-    author: getMockUserSummary(1, 'personal'),
-    content: '감사합니다 ^^',
-    createdAt: '2026-07-06T10:15:00',
   },
 ];

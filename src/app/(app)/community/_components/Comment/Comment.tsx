@@ -1,103 +1,170 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-
+import { Fragment, useEffect, useRef, useState } from 'react';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
+import CommunityListState from '../CommunityListState';
+import { Button } from '@/components/common/Button';
+import { ApiError } from '@/api/client';
+import { useComments } from '@/queries/community/useComments';
+import { useCommentMutations } from '@/queries/community/useCommentMutations';
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { useMypage } from '@/queries/mypage/useMypage';
+import type { CommunityCommentCategory, CommunityCommentResult } from '@/types/community/comment';
 
-import { infoComments } from '@/mocks/posts';
-import { getMockUserSummary } from '@/mocks/profile/userSummaries';
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
+type CommentProps = { category: CommunityCommentCategory; postId: string };
 
-export default function Comment() {
-  const [openCommentId, setOpenCommentId] = useState<number | null>(null);
-
-  const [commentList, setCommentList] = useState(infoComments);
+export default function Comment({ category, postId }: CommentProps) {
+  const {
+    data,
+    isPending,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useComments({ category, postId });
+  const { create, update, remove } = useCommentMutations({ category, postId });
+  const { data: user } = useCurrentUser();
+  const { data: mypage } = useMypage(user?.id);
+  const [openCommentId, setOpenCommentId] = useState<string | null>(null);
   const [commentValue, setCommentValue] = useState('');
-
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
-
-  const personalProfile = getMockPersonalProfile(1);
-
-  const handleSubmitComment = () => {
-    const trimmedComment = commentValue.trim();
-
-    if (!trimmedComment) return;
-
-    setCommentList((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        // TODO: 현재 로그인한 프로필 모드(personal/company)에 따라 작성자 정보 설정
-        author: getMockUserSummary(1, 'personal'),
-        content: trimmedComment,
-      },
-    ]);
-
-    setCommentValue('');
-  };
-
-  const handleUpdateComment = (commentId: number) => {
-    const trimmedValue = editingValue.trim();
-
-    if (!trimmedValue) return;
-
-    setCommentList((prev) =>
-      prev.map((item) => (item.id === commentId ? { ...item, content: trimmedValue } : item)),
-    );
-
-    setEditingCommentId(null);
-    setEditingValue('');
-  };
-
   const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const busy = create.isPending || update.isPending || remove.isPending;
+  const disabled = busy || !user;
+  const comments = data?.pages.flatMap((page) => page.items) ?? [];
+  const profile =
+    user?.activeProfileType === 'company' ? mypage?.companyProfile : mypage?.personalProfile;
 
   useEffect(() => {
-    if (editingCommentId !== null) {
-      editingTextareaRef.current?.focus();
-    }
+    if (editingCommentId) editingTextareaRef.current?.focus();
   }, [editingCommentId]);
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetchNextPageError) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !isFetchingNextPage) void fetchNextPage();
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+
+  const onError = (error: Error) => {
+    alert(error instanceof ApiError ? error.message : '댓글 요청에 실패했습니다.');
+  };
+  const submit = () => {
+    const content = commentValue.trim();
+    if (disabled || !content) return;
+    create.mutate(
+      { content },
+      {
+        onSuccess: () => {
+          setCommentValue('');
+        },
+        onError,
+      },
+    );
+  };
+  const renderItem = (comment: CommunityCommentResult) => (
+    <CommentItem
+      key={comment.id}
+      comment={comment}
+      disabled={disabled}
+      isMine={
+        (comment.author.profileType === 'personal' &&
+          comment.author.id === mypage?.personalProfile.id) ||
+        (comment.author.profileType === 'company' &&
+          comment.author.id === mypage?.companyProfile.id)
+      }
+      isEditing={editingCommentId === comment.id}
+      isMenuOpen={openCommentId === comment.id}
+      editingValue={editingValue}
+      textareaRef={editingTextareaRef}
+      onToggleMenu={(id) => setOpenCommentId((current) => (current === id ? null : id))}
+      onStartEdit={(item) => {
+        setEditingCommentId(item.id);
+        setEditingValue(item.content);
+        setOpenCommentId(null);
+      }}
+      onChangeEditingValue={setEditingValue}
+      onUpdate={(commentId) => {
+        if (disabled || !editingValue.trim()) return;
+        update.mutate(
+          { commentId, content: editingValue.trim() },
+          {
+            onSuccess: () => {
+              setEditingCommentId(null);
+              setEditingValue('');
+            },
+            onError,
+          },
+        );
+      }}
+      onCancelEdit={() => {
+        setEditingCommentId(null);
+        setEditingValue('');
+      }}
+      onDelete={(commentId) => {
+        if (disabled) return;
+        remove.mutate(commentId, {
+          onSuccess: () => {
+            setOpenCommentId(null);
+          },
+          onError,
+        });
+      }}
+    />
+  );
 
   return (
     <section className="text-[14px] leading-5">
       <CommentForm
         value={commentValue}
         onValueChange={setCommentValue}
-        onSubmit={handleSubmitComment}
+        onSubmit={() => submit()}
+        disabled={disabled}
+        profileImageUrl={profile?.profileImageUrl}
       />
+      {isPending && <CommunityListState type="loading" message="로딩 중..." />}
+      {error && !isFetchNextPageError && (
+        <CommunityListState
+          type="error"
+          message="댓글을 불러오지 못했습니다."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      )}
 
       <ul className="mt-6 flex flex-col gap-4">
-        {commentList.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            isMine={comment.author.id === personalProfile.id}
-            isEditing={editingCommentId === comment.id}
-            isMenuOpen={openCommentId === comment.id}
-            editingValue={editingValue}
-            textareaRef={editingTextareaRef}
-            onToggleMenu={(commentId) => {
-              setOpenCommentId((prev) => (prev === commentId ? null : commentId));
-            }}
-            onStartEdit={(comment) => {
-              setEditingCommentId(comment.id);
-              setEditingValue(comment.content);
-              setOpenCommentId(null);
-            }}
-            onChangeEditingValue={setEditingValue}
-            onUpdate={handleUpdateComment}
-            onCancelEdit={() => {
-              setEditingCommentId(null);
-              setEditingValue('');
-            }}
-            onDelete={(commentId) => {
-              setCommentList((prev) => prev.filter((item) => item.id !== commentId));
-              setOpenCommentId(null);
-            }}
-          />
+        {comments.map((comment) => (
+          <Fragment key={comment.id}>
+            {renderItem(comment)}
+            {comment.replies.length > 0 && (
+              <li className="ml-12 flex flex-col gap-4">
+                <ul className="flex flex-col gap-4">{comment.replies.map(renderItem)}</ul>
+              </li>
+            )}
+          </Fragment>
         ))}
       </ul>
+
+      <div ref={loadMoreRef} className="h-px" />
+      {isFetchingNextPage && <CommunityListState type="loading" message="로딩 중..." />}
+      {isFetchNextPageError && (
+        <Button
+          disabled={isFetchingNextPage}
+          onClick={() => {
+            if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+          }}
+        >
+          다시 시도
+        </Button>
+      )}
     </section>
   );
 }

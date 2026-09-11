@@ -8,6 +8,7 @@ import MoreIcon from '@/assets/icons/common/more.svg';
 import type { CommentItemProps } from './types';
 
 export default function CommentItem({
+  disabled = false,
   comment,
   isMine,
   isEditing,
@@ -34,6 +35,7 @@ export default function CommentItem({
           {isEditing ? (
             <div className="flex flex-col gap-3">
               <textarea
+                disabled={disabled}
                 ref={textareaRef}
                 value={editingValue}
                 onChange={(e) => {
@@ -41,7 +43,7 @@ export default function CommentItem({
                   resizeTextarea(e.target, 80);
                 }}
                 onKeyDown={(e) => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                  if (!disabled && (e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                     e.preventDefault();
                     onUpdate(comment.id);
                   }
@@ -50,11 +52,22 @@ export default function CommentItem({
               />
 
               <div className="flex gap-1 self-end">
-                <Button onClick={onCancelEdit} width={56} size={36} variant="gray">
+                <Button
+                  disabled={disabled}
+                  onClick={onCancelEdit}
+                  width={56}
+                  size={36}
+                  variant="gray"
+                >
                   취소
                 </Button>
 
-                <Button onClick={() => onUpdate(comment.id)} width={56} size={36}>
+                <Button
+                  onClick={() => onUpdate(comment.id)}
+                  width={56}
+                  size={36}
+                  disabled={disabled}
+                >
                   수정
                 </Button>
               </div>
@@ -66,6 +79,7 @@ export default function CommentItem({
 
         <button
           type="button"
+          disabled={disabled}
           className="mt-4 flex w-[33px] justify-center"
           onClick={() => onToggleMenu(comment.id)}
         >
@@ -82,6 +96,7 @@ export default function CommentItem({
                 type="button"
                 className="mx-3 rounded-[5px] px-2 text-left hover:bg-gray-200"
                 onClick={() => onStartEdit(comment)}
+                disabled={disabled}
               >
                 수정
               </button>

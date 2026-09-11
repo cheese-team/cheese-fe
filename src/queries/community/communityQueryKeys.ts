@@ -1,3 +1,4 @@
+import type { CommunityCommentCategory } from '@/types/community/comment';
 import type {
   GroupPostsListParams,
   InfoPostsListParams,
@@ -6,6 +7,8 @@ import type {
 
 export const communityQueryKeys = {
   all: ['community'] as const,
+  comments: (category: CommunityCommentCategory, postId: string) =>
+    [...communityQueryKeys.all, category, postId, 'comments'] as const,
 
   jobs: () => [...communityQueryKeys.all, 'jobs'] as const,
   jobLists: () => [...communityQueryKeys.jobs(), 'list'] as const,

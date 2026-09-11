@@ -66,7 +66,7 @@ export default function InfoDetailPage() {
           )}
         </article>
 
-        <Comment />
+        <Comment category="info" postId={infoPost.id} />
       </section>
 
       <PostDetailAside
