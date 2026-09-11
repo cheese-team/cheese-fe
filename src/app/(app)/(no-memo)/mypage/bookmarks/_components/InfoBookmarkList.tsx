@@ -1,57 +1,94 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import InfoPostCard from '@/components/community/info';
 
-import { useBookmarkedPosts } from '../hooks/useBookmarkedPosts';
+import CommunityListState from '@/app/(app)/community/_components/CommunityListState';
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { useInfoBookmarks } from '@/queries/mypage/useInfoBookmarks';
+import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
 
-import type { InfoSort } from '@/app/(app)/community/_constants/community';
-import type { TogglePostLikeParams } from '@/types/community/community';
+export default function InfoBookmarkList() {
+  const currentUserQuery = useCurrentUser();
+  const {
+    data,
+    isPending,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchNextPageError,
+  } = useInfoBookmarks();
+  const { mutate: toggleLike, isPending: isLikePending } = useToggleInfoPostLike();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const bookmarkedInfoPosts = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data],
+  );
 
-import { infoPosts } from '@/mocks/posts';
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetching || isFetchNextPageError) return;
 
-type InfoBookmarkListProps = {
-  sort: InfoSort;
-  keyword: string;
-};
-
-// TODO:
-// Mutation 적용 시 관심글에서는 좋아요 해제 후에도
-// 현재 화면에서는 목록을 유지하고,
-// 재조회(새로고침/재진입) 시 목록에서 제외되도록 처리
-export default function InfoBookmarkList({ sort, keyword }: InfoBookmarkListProps) {
-  const { bookmarkedPosts: bookmarkedInfoPosts, toggleLike } = useBookmarkedPosts(infoPosts);
-
-  const filteredInfoPosts = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
-
-    return bookmarkedInfoPosts.filter((post) => {
-      const matchesCategory = sort === 'all' || post.category === sort;
-
-      if (!matchesCategory) {
-        return false;
-      }
-
-      if (!normalizedKeyword) {
-        return true;
-      }
-
-      return (
-        post.title.toLowerCase().includes(normalizedKeyword) ||
-        post.author.nickname.toLowerCase().includes(normalizedKeyword) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(normalizedKeyword))
-      );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void fetchNextPage();
     });
-  }, [bookmarkedInfoPosts, sort, keyword]);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
 
-  const handleToggleLike = ({ postId }: TogglePostLikeParams) => {
-    toggleLike(postId);
-  };
+  if (currentUserQuery.isError) {
+    return (
+      <CommunityListState
+        type="error"
+        message="사용자 정보를 불러오지 못했습니다."
+        onRetry={() => {
+          void currentUserQuery.refetch();
+        }}
+      />
+    );
+  }
+
+  if (isPending) return <CommunityListState type="loading" message="로딩 중..." />;
+
+  if (isError && !isFetchNextPageError) {
+    return (
+      <CommunityListState
+        type="error"
+        message="관심글을 불러오지 못했습니다."
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
 
   return (
     <>
-      {filteredInfoPosts?.map((post) => (
-        <InfoPostCard key={post.id} post={post} onToggleLike={handleToggleLike} />
-      ))}
+      <div className="flex flex-col">
+        {bookmarkedInfoPosts.map((infoPost) => (
+          <InfoPostCard
+            key={infoPost.id}
+            post={infoPost}
+            onToggleLike={toggleLike}
+            isLikePending={isLikePending}
+          />
+        ))}
+      </div>
+      {bookmarkedInfoPosts.length === 0 && !hasNextPage && (
+        <CommunityListState type="empty" message="관심 정보/자료공유가 없습니다." />
+      )}
+      <div ref={loadMoreRef} className="h-px" />
+      {isFetching && hasNextPage && <CommunityListState type="loading" message="로딩 중..." />}
+      {isFetchNextPageError && (
+        <CommunityListState
+          type="error"
+          message="다음 관심글을 불러오지 못했습니다."
+          onRetry={() => {
+            void fetchNextPage();
+          }}
+        />
+      )}
     </>
   );
 }

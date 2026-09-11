@@ -1,11 +1,10 @@
-import type { Comment } from '@/app/(app)/community/_components/Comment/types';
 import type { InfoPost } from '@/types/community/community';
 
 import { getMockUserSummary } from '@/mocks/profile/userSummaries';
 
 export const infoPosts: InfoPost[] = [
   {
-    id: 1,
+    id: '1',
     category: 'info',
     title: '신입 프론트엔드 포트폴리오 구성 팁 정리',
 
@@ -39,7 +38,7 @@ export const infoPosts: InfoPost[] = [
   },
 
   {
-    id: 2,
+    id: '2',
     category: 'question',
     title: 'Next.js App Router에서 인증 처리 어떻게 하시나요?',
 
@@ -63,7 +62,7 @@ export const infoPosts: InfoPost[] = [
   },
 
   {
-    id: 3,
+    id: '3',
     category: 'info',
     title: 'React Query와 Zustand 함께 사용할 때 상태 분리 기준',
 
@@ -95,7 +94,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 4,
+    id: '4',
     category: 'question',
     title: 'Tailwind CSS에서 디자인 시스템 컬러 관리 어떻게 하세요?',
 
@@ -119,7 +118,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 5,
+    id: '5',
     category: 'info',
     title: '면접에서 자주 나오는 CS 질문 정리 (프론트엔드)',
 
@@ -150,7 +149,7 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
   },
 
   {
-    id: 6,
+    id: '6',
     category: 'question',
     title: 'Next.js에서 이미지 최적화 전략 어떻게 가져가시나요?',
 
@@ -174,45 +173,5 @@ React Query는 서버에서 가져오는 데이터의 캐싱과 동기화에 강
     commentCount: 7,
 
     isLiked: true,
-  },
-];
-
-export const infoComments: Comment[] = [
-  {
-    id: 1,
-    author: getMockUserSummary(2, 'company'),
-    content: '잘 보고 갑니다',
-    createdAt: '2026-07-01T09:30:00',
-  },
-  {
-    id: 2,
-    author: getMockUserSummary(3, 'personal'),
-    content: '좋은 글 감사합니다',
-    createdAt: '2026-07-02T09:30:00',
-  },
-  {
-    id: 3,
-    author: getMockUserSummary(4, 'company'),
-    content: '좋아요',
-    createdAt: '2026-07-03T09:30:00',
-  },
-  {
-    id: 4,
-    author: getMockUserSummary(5, 'personal'),
-    content: '좋네요 수고요',
-    createdAt: '2026-07-04T10:15:00',
-  },
-  {
-    id: 5,
-    author: getMockUserSummary(10, 'company'),
-    content:
-      '좋은 글 감사합니다!\n\n실제 프로젝트를 진행하면서 비슷한 고민을 많이 했는데, 정리해주신 내용이 정말 도움이 됐어요. 특히 예시를 함께 설명해주셔서 이해하기 쉬웠습니다. 다음에도 좋은 글 기대하겠습니다 😊',
-    createdAt: '2026-07-05T10:15:00',
-  },
-  {
-    id: 6,
-    author: getMockUserSummary(1, 'personal'),
-    content: '감사합니다 ^^',
-    createdAt: '2026-07-06T10:15:00',
   },
 ];

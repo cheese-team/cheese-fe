@@ -1,10 +1,5 @@
 import type { CommunitySort, InfoSort } from '@/app/(app)/community/_constants/community';
 
-export type CommunityPostsListParams = {
-  sort?: CommunitySort;
-  keyword?: string;
-};
-
 export type JobPostsListParams = {
   userId?: string;
   sort?: CommunitySort;
@@ -14,8 +9,11 @@ export type JobPostsListParams = {
 };
 
 export type InfoPostsListParams = {
+  userId?: string;
   sort?: InfoSort;
   keyword?: string;
+  cursor?: string;
+  limit?: number;
 };
 
 export type GroupPostsListParams = {

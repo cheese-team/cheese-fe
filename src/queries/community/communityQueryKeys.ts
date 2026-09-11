@@ -1,3 +1,4 @@
+import type { CommunityCommentCategory } from '@/types/community/comment';
 import type {
   GroupPostsListParams,
   InfoPostsListParams,
@@ -6,6 +7,8 @@ import type {
 
 export const communityQueryKeys = {
   all: ['community'] as const,
+  comments: (category: CommunityCommentCategory, postId: string) =>
+    [...communityQueryKeys.all, category, postId, 'comments'] as const,
 
   jobs: () => [...communityQueryKeys.all, 'jobs'] as const,
   jobLists: () => [...communityQueryKeys.jobs(), 'list'] as const,
@@ -26,4 +29,7 @@ export const communityQueryKeys = {
   info: () => [...communityQueryKeys.all, 'info'] as const,
   infoLists: () => [...communityQueryKeys.info(), 'list'] as const,
   infoList: (params: InfoPostsListParams) => [...communityQueryKeys.infoLists(), params] as const,
+  infoDetails: () => [...communityQueryKeys.info(), 'detail'] as const,
+  infoDetail: (infoId: string, userId?: string) =>
+    [...communityQueryKeys.infoDetails(), infoId, { userId }] as const,
 };

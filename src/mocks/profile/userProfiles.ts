@@ -1,11 +1,5 @@
 import { mockUserSummaries } from '@/mocks/profile/userSummaries';
-import {
-  AccountSettings,
-  CompanyProfile,
-  ContactMethod,
-  Mypage,
-  PersonalProfile,
-} from '@/types/profile';
+import type { CompanyProfile, ContactMethod, PersonalProfile } from '@/types/profile';
 
 const createDocument = (fileName: string) => ({
   fileName,
@@ -118,19 +112,3 @@ const mockCompanyProfiles: CompanyProfile[] = [
       contactUrl: undefined,
     })),
 ];
-
-const mockAccountSettings: AccountSettings = {
-  contactMethod: 'email',
-  email: 'cheese@test.com',
-  passwordUpdatedAt: '2026-01-30',
-  address: '서울특별시',
-};
-
-const MOCK_LOGIN_USER_ID = 1;
-
-export const mockMypage: Mypage = {
-  activeProfileType: 'personal',
-  personalProfile: getMockPersonalProfile(MOCK_LOGIN_USER_ID),
-  companyProfile: getMockCompanyProfile(MOCK_LOGIN_USER_ID),
-  accountSettings: mockAccountSettings,
-};
