@@ -101,19 +101,23 @@ export type DeleteJobPostRequest = {
   userId: string;
 };
 
+type DeleteJobPostResponse = {
+  success: boolean;
+};
+
 export function deleteJobPost({ jobId, userId }: DeleteJobPostRequest) {
-  return apiClient<JobPost>(`/backend-api/community/jobs/${jobId}`, {
+  return apiClient<DeleteJobPostResponse>(`/backend-api/community/jobs/${jobId}`, {
     method: 'DELETE',
     query: { userId },
   });
 }
 
-export type JobPostLikeRequest = {
+type JobPostLikeRequest = {
   jobId: string;
   userId: string;
 };
 
-export type JobPostLikeResponse = {
+type JobPostLikeResponse = {
   isLiked: boolean;
 };
 
@@ -131,12 +135,12 @@ export function unlikeJobPost({ jobId, userId }: JobPostLikeRequest) {
   });
 }
 
-export type JobPostApplyRequest = {
+type JobPostApplyRequest = {
   jobId: string;
   userId: string;
 };
 
-export type JobPostApplyResponse = {
+type JobPostApplyResponse = {
   isApplied: boolean;
 };
 
@@ -253,24 +257,23 @@ export type DeleteGroupPostRequest = {
   userId: string;
 };
 
-export async function deleteGroupPost({
-  groupId,
-  userId,
-}: DeleteGroupPostRequest): Promise<GroupPost> {
-  const response = await apiClient<GroupPostResponse>(`/backend-api/community/groups/${groupId}`, {
+type DeleteGroupPostResponse = {
+  success: boolean;
+};
+
+export async function deleteGroupPost({ groupId, userId }: DeleteGroupPostRequest) {
+  return apiClient<DeleteGroupPostResponse>(`/backend-api/community/groups/${groupId}`, {
     method: 'DELETE',
     query: { userId },
   });
-
-  return mapGroupPost(response);
 }
 
-export type GroupPostLikeRequest = {
+type GroupPostLikeRequest = {
   groupId: string;
   userId: string;
 };
 
-export type GroupPostLikeResponse = {
+type GroupPostLikeResponse = {
   isLiked: boolean;
 };
 
@@ -288,12 +291,12 @@ export function unlikeGroupPost({ groupId, userId }: GroupPostLikeRequest) {
   });
 }
 
-export type GroupPostApplyRequest = {
+type GroupPostApplyRequest = {
   groupId: string;
   userId: string;
 };
 
-export type GroupPostApplyResponse = {
+type GroupPostApplyResponse = {
   isApplied: boolean;
 };
 
@@ -314,7 +317,7 @@ type InfoPostResponse = Omit<InfoPost, 'author'> & {
   };
 };
 
-export type InfoPostsResponse = {
+type InfoPostsResponse = {
   nextCursor: string | null;
   hasMore: boolean;
   items: InfoPost[];
@@ -380,7 +383,7 @@ export async function createInfoPost(request: CreateInfoPostRequest): Promise<In
   return mapInfoPost(response);
 }
 
-export type UpdateInfoPostData = Omit<CreateInfoPostRequest, 'userId' | 'attachmentFileId'> & {
+type UpdateInfoPostData = Omit<CreateInfoPostRequest, 'userId' | 'attachmentFileId'> & {
   attachmentFileId?: string | null;
 };
 
@@ -402,4 +405,20 @@ export async function updateInfoPost({
   });
 
   return mapInfoPost(response);
+}
+
+export type DeleteInfoPostRequest = {
+  infoId: string;
+  userId: string;
+};
+
+type DeleteInfoPostResponse = {
+  success: boolean;
+};
+
+export async function deleteInfoPost({ infoId, userId }: DeleteInfoPostRequest) {
+  return apiClient<DeleteInfoPostResponse>(`/backend-api/community/info/${infoId}`, {
+    method: 'DELETE',
+    query: { userId },
+  });
 }
