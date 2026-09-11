@@ -16,6 +16,9 @@ type InfoDetailHeaderProps = {
   infoPost: InfoPost;
 };
 
+// TODO: author.id 식별 기준 확정 필요
+// 현재 author.id 기반 isMine 판별은 신뢰할 수 없으므로,
+// 스펙 확정 후 본인 작성 글은 수정·삭제, 타인 작성 글은 신고 메뉴로 분기
 export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
   const router = useRouter();
 
