@@ -379,3 +379,27 @@ export async function createInfoPost(request: CreateInfoPostRequest): Promise<In
 
   return mapInfoPost(response);
 }
+
+export type UpdateInfoPostData = Omit<CreateInfoPostRequest, 'userId' | 'attachmentFileId'> & {
+  attachmentFileId?: string | null;
+};
+
+export type UpdateInfoPostRequest = {
+  infoId: string;
+  userId: string;
+  data: UpdateInfoPostData;
+};
+
+export async function updateInfoPost({
+  infoId,
+  userId,
+  data,
+}: UpdateInfoPostRequest): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(`/backend-api/community/info/${infoId}`, {
+    method: 'PATCH',
+    query: { userId },
+    body: JSON.stringify(data),
+  });
+
+  return mapInfoPost(response);
+}

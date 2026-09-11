@@ -15,6 +15,7 @@ import useTagInput from '@/hooks/useTagInput';
 import { ApiError } from '@/api/client';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useCreateInfoPost } from '@/queries/community/useCreateInfoPost';
+import { useUpdateInfoPost } from '@/queries/community/useUpdateInfoPost';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
 import { INFO_SORT_OPTIONS } from '../../_constants/community';
@@ -33,13 +34,15 @@ type InfoPostFormProps = {
 
 export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps) {
   const router = useRouter();
+
   const { data: user } = useCurrentUser();
   const { mutateAsync: createInfoPost, isPending: isCreatePending } = useCreateInfoPost();
+  const { mutateAsync: updateInfoPost, isPending: isUpdatePending } = useUpdateInfoPost();
   const { mutateAsync: uploadFile, isPending: isUploadPending } = useUploadFile();
-  const [category, setCategory] = useState(initialValues?.category ?? '');
 
-  // TODO: 수정 페이지에서는 기존 첨부파일과 새로 업로드한 파일을 함께 관리하도록 개선
-  // (기존 파일 조회/삭제, 신규 파일 추가)
+  const [category, setCategory] = useState(initialValues?.category ?? '');
+  const [isExistingFileRemoved, setIsExistingFileRemoved] = useState(false);
+
   const { files, fileInputRef, openFilePicker, addFiles, removeFile, openFile } = useFileUpload({
     multiple: false,
   });
@@ -51,7 +54,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
 
-    if (isCreatePending || isUploadPending) return;
+    if (isCreatePending || isUpdatePending || isUploadPending) return;
 
     const formData = new FormData(event.currentTarget);
 
@@ -85,8 +88,38 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
       return;
     }
 
-    // TODO: 수정 API + 게시글 상세 페이지로 이동
-    alert('게시글이 수정되었습니다.');
+    if (!user || !initialValues) return;
+
+    if (category !== 'question' && category !== 'info' && category !== 'resource') {
+      alert('분류를 선택해주세요.');
+      return;
+    }
+
+    try {
+      const file = files[0];
+      const uploadedFile = file ? await uploadFile({ userId: user.id, file }) : undefined;
+
+      await updateInfoPost({
+        infoId: initialValues.id,
+        userId: user.id,
+        data: {
+          category,
+          title,
+          content,
+          tags,
+          ...(uploadedFile
+            ? { attachmentFileId: uploadedFile.id }
+            : isExistingFileRemoved
+              ? { attachmentFileId: null }
+              : {}),
+        },
+      });
+      router.replace(`/community/info/${initialValues.id}`);
+    } catch (error) {
+      alert(
+        error instanceof ApiError ? error.message : '정보/자료공유 게시글 수정에 실패했습니다.',
+      );
+    }
   };
 
   return (
@@ -94,7 +127,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
       mode={mode}
       onSubmit={handleSubmit}
       initialContent={initialValues?.content ?? ''}
-      isSubmitting={isCreatePending || isUploadPending}
+      isSubmitting={isCreatePending || isUpdatePending || isUploadPending}
     >
       <section className="flex flex-col gap-[30px]">
         <Input
@@ -114,6 +147,31 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
           <div className="flex flex-col gap-2">
             <span className="text-[14px]">첨부파일</span>
+
+            {mode === 'edit' &&
+              initialValues?.attachmentUrl &&
+              files.length === 0 &&
+              !isExistingFileRemoved && (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={initialValues.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-success max-w-[280px] truncate text-left underline"
+                  >
+                    {initialValues.attachmentFileName || '기존 첨부파일'}
+                  </a>
+
+                  <button
+                    type="button"
+                    aria-label="기존 첨부파일 삭제"
+                    onClick={() => setIsExistingFileRemoved(true)}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    <CloseIcon className="h-3 w-3" aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             {files.length > 0 && (
               <div className="flex flex-col gap-1">
                 {files.map((file, index) => (
