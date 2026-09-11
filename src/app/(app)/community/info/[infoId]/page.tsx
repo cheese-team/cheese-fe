@@ -9,14 +9,19 @@ import { InfoDetailHeader } from '../_components';
 import { POST_CONTENT_CLASS } from '../../_constants/community';
 
 import DownloadIcon from '@/assets/icons/common/download.svg';
+import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
+import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
+import { Button } from '@/components/common/Button';
 
 import { ApiError } from '@/api/client';
 import { useInfoPost } from '@/queries/community/useInfoPost';
+import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
 import CommunityListState from '../../_components/CommunityListState';
 
 export default function InfoDetailPage() {
   const { infoId } = useParams<{ infoId: string }>();
   const { data: infoPost, error, isPending, refetch } = useInfoPost(infoId);
+  const { mutate: toggleInfoPostLike, isPending: isLikePending } = useToggleInfoPostLike();
 
   if (error instanceof ApiError && error.status === 404) {
     notFound();
@@ -64,7 +69,33 @@ export default function InfoDetailPage() {
         <Comment />
       </section>
 
-      <PostDetailAside profile={<PostDetailAsideProfile author={infoPost.author} />}>
+      <PostDetailAside
+        profile={<PostDetailAsideProfile author={infoPost.author} />}
+        actions={
+          <div className="flex w-full gap-2 px-3 py-5">
+            <Button
+              variant="outlineGray"
+              size={54}
+              width={90}
+              className="gap-2 border-gray-400"
+              aria-label="좋아요"
+              aria-pressed={infoPost.isLiked}
+              disabled={isLikePending}
+              onClick={() => {
+                if (isLikePending) return;
+                toggleInfoPostLike({ infoId, isLiked: infoPost.isLiked });
+              }}
+            >
+              {infoPost.isLiked ? (
+                <LikeFilledIcon className="text-error-subtle w-[14px]" />
+              ) : (
+                <LikeOutlineIcon className="w-[14px] text-gray-500" />
+              )}
+              <span>{infoPost.likeCount}</span>
+            </Button>
+          </div>
+        }
+      >
         {infoPost.attachmentUrl && (
           <div className="flex w-full flex-col gap-1 border-t border-gray-300 px-3 py-10 text-[14px] leading-6 text-gray-600">
             <div className="font-medium">첨부파일</div>

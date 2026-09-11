@@ -317,7 +317,7 @@ type InfoPostResponse = Omit<InfoPost, 'author'> & {
   };
 };
 
-type InfoPostsResponse = {
+export type InfoPostsResponse = {
   nextCursor: string | null;
   hasMore: boolean;
   items: InfoPost[];
@@ -418,6 +418,29 @@ type DeleteInfoPostResponse = {
 
 export async function deleteInfoPost({ infoId, userId }: DeleteInfoPostRequest) {
   return apiClient<DeleteInfoPostResponse>(`/backend-api/community/info/${infoId}`, {
+    method: 'DELETE',
+    query: { userId },
+  });
+}
+
+type InfoPostLikeRequest = {
+  infoId: string;
+  userId: string;
+};
+
+type InfoPostLikeResponse = {
+  isLiked: boolean;
+};
+
+export function likeInfoPost({ infoId, userId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(`/backend-api/community/info/${infoId}/like`, {
+    method: 'POST',
+    query: { userId },
+  });
+}
+
+export function unlikeInfoPost({ infoId, userId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(`/backend-api/community/info/${infoId}/like`, {
     method: 'DELETE',
     query: { userId },
   });

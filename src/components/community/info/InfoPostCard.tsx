@@ -18,9 +18,15 @@ type InfoPostCardProps = {
   post: InfoPost;
   wrapperClassName?: string;
   onToggleLike?: (variables: ToggleInfoPostLikeParams) => void;
+  isLikePending?: boolean;
 };
 
-export default function InfoPostCard({ post, wrapperClassName, onToggleLike }: InfoPostCardProps) {
+export default function InfoPostCard({
+  post,
+  wrapperClassName,
+  onToggleLike,
+  isLikePending = false,
+}: InfoPostCardProps) {
   return (
     <article className={cn('border-b border-gray-300 p-5 leading-5', wrapperClassName)}>
       <div className="flex w-full items-center gap-5">
@@ -67,7 +73,9 @@ export default function InfoPostCard({ post, wrapperClassName, onToggleLike }: I
 
               <button
                 type="button"
-                disabled={!onToggleLike}
+                disabled={!onToggleLike || isLikePending}
+                aria-label="좋아요"
+                aria-pressed={post.isLiked}
                 onClick={() =>
                   onToggleLike?.({
                     infoId: post.id,

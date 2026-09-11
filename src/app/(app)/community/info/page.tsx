@@ -10,9 +10,11 @@ import CommunityListState from '../_components/CommunityListState';
 import { COMMUNITY_LIST_LIMIT, isInfoSort } from '@/app/(app)/community/_constants/community';
 
 import { useInfoPosts } from '@/queries/community/useInfoPosts';
+import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
 
 export default function CommunityInfoPage() {
   const searchParams = useSearchParams();
+  const { mutate: toggleInfoPostLike, isPending: isLikePending } = useToggleInfoPostLike();
 
   const sortParam = searchParams.get('sort');
   const sort = isInfoSort(sortParam) ? sortParam : 'all';
@@ -77,7 +79,13 @@ export default function CommunityInfoPage() {
     <div>
       <div className="mx-auto flex w-full flex-col px-[50px]">
         {infoPosts.map((infoPost) => (
-          <InfoPostCard key={infoPost.id} post={infoPost} wrapperClassName="py-8" />
+          <InfoPostCard
+            key={infoPost.id}
+            post={infoPost}
+            wrapperClassName="py-8"
+            onToggleLike={toggleInfoPostLike}
+            isLikePending={isLikePending}
+          />
         ))}
       </div>
 
