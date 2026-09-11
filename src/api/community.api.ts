@@ -345,6 +345,27 @@ export async function getInfoPosts({
   return { ...response, items: response.items.map(mapInfoPost) };
 }
 
+type GetInfoPostParams = {
+  infoId: string;
+  userId?: string;
+  signal?: AbortSignal;
+};
+
+export async function getInfoPost({
+  infoId,
+  userId,
+  signal,
+}: GetInfoPostParams): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(`/backend-api/community/info/${infoId}`, {
+    method: 'GET',
+    cache: 'no-store',
+    query: { userId },
+    signal,
+  });
+
+  return mapInfoPost(response);
+}
+
 export type CreateInfoPostRequest = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
   userId: string;
   attachmentFileId?: string;

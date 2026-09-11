@@ -114,7 +114,6 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
           <div className="flex flex-col gap-2">
             <span className="text-[14px]">첨부파일</span>
-
             {files.length > 0 && (
               <div className="flex flex-col gap-1">
                 {files.map((file, index) => (
@@ -141,8 +140,15 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                 ))}
               </div>
             )}
-
-            <input ref={fileInputRef} type="file" className="hidden" onChange={addFiles} />
+            {/* TODO: 현재 파일 업로드 API는 이미지만 지원
+                      일반 파일 업로드 지원 시 정보/자료공유 첨부파일 업로드 확장 */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={addFiles}
+            />
             <Button
               type="button"
               onClick={openFilePicker}
