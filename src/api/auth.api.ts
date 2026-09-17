@@ -156,3 +156,13 @@ export function resetPassword(data: ResetPasswordRequest) {
     body: JSON.stringify(data),
   });
 }
+
+export type DeleteMeResponse = {
+  success: boolean;
+};
+
+export function deleteMe() {
+  return apiClient<DeleteMeResponse>('/backend-api/auth/me', {
+    method: 'DELETE',
+  });
+}
