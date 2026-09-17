@@ -38,6 +38,7 @@ const PROFILE_SWITCH_OPTIONS: CategoryTabItem<ProfileType>[] = [
   },
 ];
 
+// TODO: 연락용 이메일 변경 플로우 연동 (contact-change 이메일 인증 후 요청)
 export default function MyPage() {
   const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage();
 
