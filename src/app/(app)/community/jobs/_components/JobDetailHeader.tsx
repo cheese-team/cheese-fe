@@ -39,10 +39,10 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
     const authorProfileType = jobPost.author.profileType;
 
     // TODO: JWT 인증 방식 전환 시 확인
-    // if (authorProfileType === user.activeProfileType) {
-    //   router.push(`/community/jobs/${jobId}/edit`);
-    //   return;
-    // }
+    if (authorProfileType === user.account.activeProfileType) {
+      router.push(`/community/jobs/${jobId}/edit`);
+      return;
+    }
 
     const confirmed = window.confirm(
       `이 게시글은 ${authorProfileType === 'company' ? '기업' : '개인'} 프로필로 작성되었습니다.\n수정하려면 해당 프로필로 전환해야 합니다. 전환하시겠습니까?`,
