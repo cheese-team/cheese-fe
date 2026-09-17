@@ -14,8 +14,12 @@ import { useSignup } from '@/queries/auth/useSignup';
 import { useCheckNickname } from '@/queries/auth/useCheckNickname';
 import { ApiError } from '@/api/client';
 
-import { validateNickname, validatePassword, validatePasswordConfirmation } from '@/lib/validation';
-import { AUTH_MESSAGE } from '@/constants/auth';
+import { AUTH_MESSAGE } from '../_constants/authMessage';
+import {
+  validateNickname,
+  validatePassword,
+  validatePasswordConfirmation,
+} from '../_lib/validation';
 
 import CheckIcon from '@/assets/icons/common/check.svg';
 import ChevronIcon from '@/assets/icons/common/chevron.svg';

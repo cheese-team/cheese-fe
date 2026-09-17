@@ -6,8 +6,9 @@ import { Button } from '@/components/common/Button';
 import { useSendEmailCode } from '@/queries/auth/useSendEmailCode';
 import { useVerifyEmailCode } from '@/queries/auth/useVerifyEmailCode';
 
-import { validateEmail } from '@/lib/validation';
-import { AUTH_MESSAGE } from '@/constants/auth';
+import { AUTH_MESSAGE } from '../(auth)/_constants/authMessage';
+import { validateEmail } from '../(auth)/_lib/validation';
+import { getSendEmailErrorMessage } from '../(auth)/_lib/emailVerification';
 
 import type { EmailVerificationPurpose } from '@/api/auth.api';
 
@@ -88,9 +89,9 @@ export default function EmailVerifyForm({
       setVerificationCode('');
       setVerificationError(undefined);
       setStatus('SENT');
-    } catch {
+    } catch (error) {
       setStatus('SEND_ERROR');
-      setEmailError(AUTH_MESSAGE.EMAIL.SEND_FAILED);
+      setEmailError(getSendEmailErrorMessage(error, purpose));
     }
   };
 

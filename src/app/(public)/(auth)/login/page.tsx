@@ -9,7 +9,8 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 
 import { useLogin } from '@/queries/auth/useLogin';
-import { AUTH_MESSAGE } from '@/constants/auth';
+
+import { AUTH_MESSAGE } from '../_constants/authMessage';
 
 import SeparatorIcon from '@/assets/icons/common/separator-vertival.svg';
 

@@ -4,7 +4,7 @@ export const AUTH_MESSAGE = {
   },
 
   EMAIL: {
-    UNREGISTERED: '이메일이 올바르지 않습니다',
+    UNREGISTERED: '가입되지 않은 이메일입니다',
     ALREADY_REGISTERED: '이미 가입된 이메일입니다',
     AVAILABLE: '사용 가능',
     SEND_SUCCESS: '인증 메일이 발송되었습니다',
