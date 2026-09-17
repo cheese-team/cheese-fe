@@ -331,6 +331,7 @@ export default function SignupPage() {
 
         <EmailVerifyModal
           title="아이디 (이메일) 입력"
+          purpose="signup"
           isOpen={isVerifyOpen}
           onClose={closeVerify}
           onNext={handleEmailVerified}

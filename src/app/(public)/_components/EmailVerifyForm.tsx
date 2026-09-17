@@ -9,6 +9,8 @@ import { useVerifyEmailCode } from '@/queries/auth/useVerifyEmailCode';
 import { validateEmail } from '@/lib/validation';
 import { AUTH_MESSAGE } from '@/constants/auth';
 
+import type { EmailVerificationPurpose } from '@/api/auth.api';
+
 export type EmailVerifyBaseProps = {
   title?: string;
   description?: React.ReactNode;
@@ -16,6 +18,7 @@ export type EmailVerifyBaseProps = {
   initialStatus?: EmailVerifyStatus;
   onNext: (email: string) => void;
   emailDisabled?: boolean;
+  purpose: EmailVerificationPurpose;
 };
 
 export type EmailVerifyStatus =
@@ -35,6 +38,7 @@ export default function EmailVerifyForm({
   initialStatus = 'IDLE',
   onNext,
   emailDisabled,
+  purpose,
 }: EmailVerifyFormProps) {
   const [email, setEmail] = useState(initialEmail);
   const [sentEmail, setSentEmail] = useState(initialEmail);
@@ -70,6 +74,7 @@ export default function EmailVerifyForm({
     try {
       const sendEmailCodeResult = await sendEmailCode({
         email: normalizedEmail,
+        purpose,
       });
 
       if (!sendEmailCodeResult.success) {

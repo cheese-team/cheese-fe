@@ -39,6 +39,7 @@ export default function EmailStep({
     try {
       const sendEmailCodeResult = await sendEmailCode({
         email: normalizedEmail,
+        purpose: 'password-reset',
       });
 
       if (!sendEmailCodeResult.success) {

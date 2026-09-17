@@ -23,7 +23,7 @@ export default function ResetPasswordPage() {
   const [verifiedEmail, setVerifiedEmail] = useState('');
   const [isDoneOpen, setIsDoneOpen] = useState(false);
 
-  const displayedEmail = user?.email ?? email;
+  const displayedEmail = user?.account.email ?? email;
 
   const handlePasswordResetComplete = () => {
     setIsDoneOpen(false);
