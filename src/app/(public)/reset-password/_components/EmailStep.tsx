@@ -11,7 +11,7 @@ import { getSendEmailErrorMessage } from '../../(auth)/_lib/emailVerification';
 type EmailStepProps = {
   email: string;
   onEmailChange: (email: string) => void;
-  onNext: () => void;
+  onNext: (expiresInSeconds: number) => void;
   emailDisabled?: boolean;
   actionDisabled?: boolean;
 };
@@ -50,7 +50,7 @@ export default function EmailStep({
       }
 
       onEmailChange(normalizedEmail);
-      onNext();
+      onNext(sendEmailCodeResult.expiresInSeconds);
     } catch (error) {
       setEmailError(getSendEmailErrorMessage(error, 'password-reset'));
     }

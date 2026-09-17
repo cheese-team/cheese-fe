@@ -20,6 +20,7 @@ export const AUTH_MESSAGE = {
     REQUIRED: '인증번호를 입력해주세요',
     INVALID: '인증번호가 일치하지 않습니다',
     MATCHED: '인증번호가 일치합니다',
+    EXPIRED: '인증번호가 만료되었습니다. 다시 발송해 주세요',
     EMAIL_REQUIRED: '이메일 인증을 완료해 주세요',
   },
 
