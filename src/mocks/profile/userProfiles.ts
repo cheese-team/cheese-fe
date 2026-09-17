@@ -121,7 +121,7 @@ const mockCompanyProfiles: CompanyProfile[] = [
 
 const mockAccountSettings: AccountSettings = {
   contactMethod: 'email',
-  email: 'cheese@test.com',
+  contactEmail: 'cheese@test.com',
   passwordUpdatedAt: '2026-01-30',
   address: '서울특별시',
 };

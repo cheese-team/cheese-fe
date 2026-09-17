@@ -30,7 +30,7 @@ export default function ApplyFormContent({
   const router = useRouter();
 
   const { data: user, isError: isUserError } = useCurrentUser();
-  const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage(user?.id);
+  const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
 
   if (isUserError || isMypageError) {
     return <p role="alert">정보를 불러오지 못했습니다.</p>;

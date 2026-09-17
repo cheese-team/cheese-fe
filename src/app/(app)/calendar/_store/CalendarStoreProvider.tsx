@@ -67,7 +67,7 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
     isPending: isCurrentUserPending,
     isRefetchError: isCurrentUserRefetchError,
   } = useCurrentUser();
-  const userId = currentUser?.id;
+  const userId = currentUser?.account.userId; // TODO: JWT 인증 방식 전환 시 userId 제거
   const hasCurrentUserError = Boolean(currentUserError) || isCurrentUserRefetchError;
   const canLoadCalendarEvents = Boolean(userId) && !hasCurrentUserError;
   const {

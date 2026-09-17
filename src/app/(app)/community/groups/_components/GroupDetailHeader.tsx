@@ -20,7 +20,7 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
 
   const router = useRouter();
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
   const { mutate: deleteGroupPost, isPending: isDeletePending } = useDeleteGroupPost();
 
   const isMine =
@@ -46,17 +46,18 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
         if (!user || !isMine || isDeletePending) return;
         if (!window.confirm('삭제하시겠습니까?')) return;
 
-        deleteGroupPost(
-          { groupId: groupPost.id, userId: user.id },
-          {
-            onSuccess: () => {
-              router.push('/community/groups');
-            },
-            onError: (error) => {
-              alert(error instanceof ApiError ? error.message : '그룹모집 삭제에 실패했습니다.');
-            },
-          },
-        );
+        // TODO: JWT 인증 방식 전환 시 확인
+        // deleteGroupPost(
+        //   { groupId: groupPost.id, userId: user.id },
+        //   {
+        //     onSuccess: () => {
+        //       router.push('/community/groups');
+        //     },
+        //     onError: (error) => {
+        //       alert(error instanceof ApiError ? error.message : '그룹모집 삭제에 실패했습니다.');
+        //     },
+        //   },
+        // );
       }}
     />
   );

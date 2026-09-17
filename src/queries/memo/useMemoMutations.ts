@@ -51,7 +51,9 @@ export function useSaveMemoMutation() {
   return useMutation({
     mutationFn: async ({ userId, memo, currentMemo }: SaveMemoVariables) => {
       const uploadedFile = memo.imageFile
-        ? await uploadFile({ userId, file: memo.imageFile })
+        ? // TODO: JWT 인증 방식 전환 시 확인
+          // 기존 코드: await uploadFile({ userId, file: memo.imageFile })
+          await uploadFile({ file: memo.imageFile })
         : null;
       const draft: MemoDraft = {
         title: memo.title.trim() || '제목',

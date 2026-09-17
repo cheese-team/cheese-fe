@@ -23,7 +23,7 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
   const { mutate: deleteJobPost, isPending: isDeletePending } = useDeleteJobPost();
   const { mutate: updateActiveProfileType, isPending: isProfileSwitchPending } =
     useUpdateActiveProfileType();
@@ -34,18 +34,15 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
     (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile.id);
 
   const handleEdit = () => {
-    console.log('handleEdit 실행', {
-      authorProfileType: jobPost.author.profileType,
-      activeProfileType: user?.activeProfileType,
-    });
     if (!user || isProfileSwitchPending) return;
 
     const authorProfileType = jobPost.author.profileType;
 
-    if (authorProfileType === user.activeProfileType) {
-      router.push(`/community/jobs/${jobId}/edit`);
-      return;
-    }
+    // TODO: JWT 인증 방식 전환 시 확인
+    // if (authorProfileType === user.activeProfileType) {
+    //   router.push(`/community/jobs/${jobId}/edit`);
+    //   return;
+    // }
 
     const confirmed = window.confirm(
       `이 게시글은 ${authorProfileType === 'company' ? '기업' : '개인'} 프로필로 작성되었습니다.\n수정하려면 해당 프로필로 전환해야 합니다. 전환하시겠습니까?`,
@@ -55,7 +52,8 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
     updateActiveProfileType(
       {
-        userId: user.id,
+        // TODO: JWT 인증 방식 전환 시 확인
+        // userId: user.id,
         activeProfileType: authorProfileType,
       },
       {
@@ -82,14 +80,15 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
         const confirmed = window.confirm('삭제하시겠습니까?');
         if (!confirmed) return;
 
-        deleteJobPost(
-          { jobId, userId: user.id },
-          {
-            onSuccess: () => {
-              router.push('/community/jobs');
-            },
-          },
-        );
+        // TODO: JWT 인증 방식 전환 시 확인
+        // deleteJobPost(
+        //   { jobId, userId: user.id },
+        //   {
+        //     onSuccess: () => {
+        //       router.push('/community/jobs');
+        //     },
+        //   },
+        // );
       }}
     />
   );

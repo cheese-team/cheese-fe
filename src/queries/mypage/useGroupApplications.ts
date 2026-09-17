@@ -6,13 +6,13 @@ import { mypageQueryKeys } from './mypageQueryKeys';
 
 export function useGroupApplications(params: Omit<ApplicationsParams, 'userId' | 'cursor'>) {
   const { data: currentUser } = useCurrentUser();
-  const userId = currentUser?.id;
+  const userId = currentUser?.account.userId; // TODO: JWT 인증 방식 전환 시 userId 제거
 
   return useInfiniteQuery({
-    queryKey: mypageQueryKeys.groupApplicationList(userId, params),
+    queryKey: mypageQueryKeys.groupApplicationList(params), // TODO: JWT 인증 방식 전환 시 확인
     queryFn: ({ pageParam, signal }) => {
       if (!userId) throw new Error('로그인 사용자 정보가 필요합니다.');
-      return getGroupApplications({ ...params, userId, cursor: pageParam }, signal);
+      return getGroupApplications({ ...params, cursor: pageParam }, signal); // TODO: JWT 인증 방식 전환 시 확인
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>

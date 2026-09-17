@@ -33,26 +33,26 @@ export function useToggleGroupPostLike() {
         throw new Error('로그인 사용자 정보가 필요합니다.');
       }
 
-      const request = { groupId: postId, userId: currentUser.id };
+      const request = { groupId: postId, userId: currentUser?.account.userId }; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
 
       await (isLiked ? unlikeGroupPost(request) : likeGroupPost(request));
 
-      return { isLiked: !isLiked, userId: currentUser.id };
+      return { isLiked: !isLiked, userId: currentUser?.account.userId }; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
     },
 
     onMutate: async (variables) => {
       if (!currentUser) return;
 
-      const listFilters = getGroupListFilters(currentUser.id);
+      const listFilters = getGroupListFilters(currentUser.account.userId); // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
 
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: communityQueryKeys.groupDetail(variables.postId, currentUser.id),
+          queryKey: communityQueryKeys.groupDetail(variables.postId, currentUser.account.userId), // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
           exact: true,
         }),
         queryClient.cancelQueries(listFilters),
         queryClient.cancelQueries({
-          queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'groups'),
+          queryKey: mypageQueryKeys.bookmarks('groups'), // TODO: JWT 인증 방식 전환 시 확인
         }),
       ]);
     },
@@ -88,7 +88,7 @@ export function useToggleGroupPostLike() {
         };
       });
       queryClient.setQueriesData<InfiniteData<GroupBookmarksResponse>>(
-        { queryKey: mypageQueryKeys.bookmarks(response.userId, 'groups') },
+        { queryKey: mypageQueryKeys.bookmarks('groups') }, // TODO: JWT 인증 방식 전환 시 확인
         (current) => {
           if (!current) return current;
 
@@ -105,7 +105,7 @@ export function useToggleGroupPostLike() {
       );
 
       await queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.groupApplications(response.userId),
+        queryKey: mypageQueryKeys.groupApplications(), // TODO: JWT 인증 방식 전환 시 확인
       });
     },
   });
