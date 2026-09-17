@@ -134,6 +134,11 @@ export default function EmailVerifyForm({
       return;
     }
 
+    if (code.length !== 6) {
+      setVerificationError(AUTH_MESSAGE.VERIFICATION.LENGTH);
+      return;
+    }
+
     setVerificationError(undefined);
     setStatus('VERIFYING');
 
@@ -198,9 +203,12 @@ export default function EmailVerifyForm({
           name="verificationCode"
           type="text"
           inputMode="numeric"
+          maxLength={6}
           value={verificationCode}
           onChange={(event) => {
-            setVerificationCode(event.target.value);
+            const value = event.target.value.replace(/\D/g, '').slice(0, 6);
+
+            setVerificationCode(value);
             setVerificationError(undefined);
           }}
           placeholder="인증번호 입력"
