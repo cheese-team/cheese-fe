@@ -10,71 +10,73 @@ import type {
   AccountSettings,
 } from '@/types/profile';
 
-export async function getMypage(userId: string, signal?: AbortSignal) {
+export async function getMypage(signal?: AbortSignal) {
   return apiClient<Mypage>('/backend-api/mypage', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId },
     signal,
   });
 }
 
 export type UpdateActiveProfileTypeRequest = {
-  userId: string;
   activeProfileType: ProfileType;
 };
 
 export async function updateActiveProfileType({
-  userId,
   activeProfileType,
 }: UpdateActiveProfileTypeRequest) {
   return apiClient<Mypage>('/backend-api/mypage/active-profile', {
     method: 'PATCH',
-    body: JSON.stringify({ userId, activeProfileType }),
+    body: JSON.stringify({ activeProfileType }),
   });
 }
 
 export type UpdatePersonalProfileRequest = {
-  userId: string;
-  data: Omit<PersonalProfile, 'id'>;
+  data: Omit<PersonalProfile, 'id' | 'email'>;
 };
 
-export async function updatePersonalProfile({ userId, data }: UpdatePersonalProfileRequest) {
+export async function updatePersonalProfile({ data }: UpdatePersonalProfileRequest) {
   return apiClient<Mypage>('/backend-api/mypage/profile/personal', {
     method: 'PATCH',
-    body: JSON.stringify({ userId, ...data }),
+    body: JSON.stringify(data),
   });
 }
 
 export type UpdateCompanyProfileRequest = {
-  userId: string;
-  data: Omit<CompanyProfile, 'id'>;
+  data: Omit<CompanyProfile, 'id' | 'email'>;
 };
 
-export async function updateCompanyProfile({ userId, data }: UpdateCompanyProfileRequest) {
+export async function updateCompanyProfile({ data }: UpdateCompanyProfileRequest) {
   return apiClient<Mypage>('/backend-api/mypage/profile/company', {
     method: 'PATCH',
-    body: JSON.stringify({ userId, ...data }),
+    body: JSON.stringify(data),
   });
 }
 
 export type UpdateAccountSettingsRequest = {
-  userId: string;
-  data: AccountSettings;
+  data: Omit<AccountSettings, 'contactEmail'>;
 };
 
-export async function updateAccountSettings({ userId, data }: UpdateAccountSettingsRequest) {
+export async function updateAccountSettings({ data }: UpdateAccountSettingsRequest) {
   return apiClient<Mypage>('/backend-api/mypage/account-settings', {
     method: 'PATCH',
-    body: JSON.stringify({
-      userId,
-      ...data,
-    }),
+    body: JSON.stringify(data),
+  });
+}
+
+export type UpdateContactEmailRequest = {
+  contactEmail: string;
+};
+
+// TODO: 연락용 이메일 변경 플로우 연동
+export function updateContactEmail(data: UpdateContactEmailRequest) {
+  return apiClient<Mypage>('/backend-api/mypage/contact-email', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   });
 }
 
 export type ApplicationsParams = {
-  userId: string;
   cursor?: string;
   limit?: number;
   q?: string;
@@ -88,13 +90,13 @@ export type JobApplicationsResponse = {
 };
 
 export function getJobApplications(
-  { userId, cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
+  { cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
   signal?: AbortSignal,
 ) {
   return apiClient<JobApplicationsResponse>('/backend-api/mypage/applications', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, type: 'jobs', cursor, limit: String(limit), q, sort },
+    query: { type: 'jobs', cursor, limit: String(limit), q, sort },
     signal,
   });
 }
@@ -106,13 +108,13 @@ export type GroupApplicationsResponse = {
 };
 
 export function getGroupApplications(
-  { userId, cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
+  { cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
   signal?: AbortSignal,
 ) {
   return apiClient<GroupApplicationsResponse>('/backend-api/mypage/applications', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, type: 'groups', cursor, limit: String(limit), q, sort },
+    query: { type: 'groups', cursor, limit: String(limit), q, sort },
     signal,
   });
 }
@@ -120,7 +122,6 @@ export function getGroupApplications(
 export type BookmarkType = 'jobs' | 'groups' | 'info';
 
 export type BookmarkListParams = {
-  userId: string;
   cursor?: string;
   limit?: number;
 };
@@ -131,14 +132,11 @@ export type JobBookmarksResponse = {
   hasMore: boolean;
 };
 
-export function getJobBookmarks(
-  { userId, cursor, limit = 20 }: BookmarkListParams,
-  signal?: AbortSignal,
-) {
+export function getJobBookmarks({ cursor, limit = 20 }: BookmarkListParams, signal?: AbortSignal) {
   return apiClient<JobBookmarksResponse>('/backend-api/mypage/bookmarks', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, type: 'jobs', cursor, limit: String(limit) },
+    query: { type: 'jobs', cursor, limit: String(limit) },
     signal,
   });
 }
@@ -150,13 +148,13 @@ export type GroupBookmarksResponse = {
 };
 
 export function getGroupBookmarks(
-  { userId, cursor, limit = 20 }: BookmarkListParams,
+  { cursor, limit = 20 }: BookmarkListParams,
   signal?: AbortSignal,
 ) {
   return apiClient<GroupBookmarksResponse>('/backend-api/mypage/bookmarks', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, type: 'groups', cursor, limit: String(limit) },
+    query: { type: 'groups', cursor, limit: String(limit) },
     signal,
   });
 }
