@@ -43,11 +43,11 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
   );
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
   const { mutate: createJobPost, isPending: isCreatePending } = useCreateJobPost();
   const { mutate: updateJobPost, isPending: isUpdatePending } = useUpdateJobPost();
 
-  const isCompanyProfile = user?.activeProfileType === 'company';
+  // const isCompanyProfile = user?.activeProfileType === 'company';
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
@@ -66,63 +66,64 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
       .filter(Boolean);
     const applyUrl = String(formData.get('url') ?? '').trim();
 
-    if (!isCompanyProfile && !applyUrl) {
-      return;
-    }
+    // TODO: JWT 인증 방식 전환 시 확인
+    // if (!isCompanyProfile && !applyUrl) {
+    //   return;
+    // }
 
-    const jobPostData = {
-      // TODO: 개인 프로필 작성 시 companyName 입력 방식 협의 필요
-      companyName:
-        mode === 'edit' && initialValues
-          ? initialValues.companyName
-          : isCompanyProfile
-            ? (mypage?.companyProfile.companyName ?? '')
-            : '',
-      title,
-      field: toFieldArray(field),
-      employmentType,
-      location,
-      education,
-      career,
-      skills,
-      deadline: date || null,
-      apply: isCompanyProfile
-        ? {
-            type: 'direct' as const,
-          }
-        : {
-            type: 'homepage' as const,
-            url: applyUrl,
-          },
-      content,
-    };
+    // const jobPostData = {
+    //   // TODO: 개인 프로필 작성 시 companyName 입력 방식 협의 필요
+    //   companyName:
+    //     mode === 'edit' && initialValues
+    //       ? initialValues.companyName
+    //       : isCompanyProfile
+    //         ? (mypage?.companyProfile.companyName ?? '')
+    //         : '',
+    //   title,
+    //   field: toFieldArray(field),
+    //   employmentType,
+    //   location,
+    //   education,
+    //   career,
+    //   skills,
+    //   deadline: date || null,
+    //   apply: isCompanyProfile
+    //     ? {
+    //         type: 'direct' as const,
+    //       }
+    //     : {
+    //         type: 'homepage' as const,
+    //         url: applyUrl,
+    //       },
+    //   content,
+    // };
 
-    if (mode === 'create') {
-      createJobPost(
-        { userId: user.id, ...jobPostData },
-        {
-          onSuccess: (createdJobPost) => {
-            router.replace(`/community/jobs/${createdJobPost.id}`);
-          },
-        },
-      );
-      return;
-    }
+    // if (mode === 'create') {
+    //   createJobPost(
+    //     { userId: user.id, ...jobPostData },
+    //     {
+    //       onSuccess: (createdJobPost) => {
+    //         router.replace(`/community/jobs/${createdJobPost.id}`);
+    //       },
+    //     },
+    //   );
+    //   return;
+    // }
 
     if (!jobId || !initialValues) return;
 
-    updateJobPost(
-      {
-        jobId,
-        userId: user.id,
-        data: jobPostData,
-      },
-      {
-        onSuccess: () => {
-          router.replace(`/community/jobs/${jobId}`);
-        },
-      },
-    );
+    // updateJobPost(
+    //   {
+    //     jobId,
+    //     userId: user.id,
+    //     data: jobPostData,
+    //   },
+    //   {
+    //     onSuccess: () => {
+    //       router.replace(`/community/jobs/${jobId}`);
+    //     },
+    //   },
+    // );
   };
 
   const applyUrl = initialValues?.apply.type === 'homepage' ? initialValues.apply.url : '';
@@ -208,7 +209,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
               label="공고 URL"
               name="url"
               type="url"
-              required={!isCompanyProfile}
+              // required={!isCompanyProfile} // TODO: JWT 인증 방식 전환 시 확인
               placeholder="URL 입력"
               defaultValue={applyUrl}
               className="h-[30px]"

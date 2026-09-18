@@ -8,13 +8,13 @@ export function useGroupBookmarks({
   limit = 20,
 }: Omit<BookmarkListParams, 'userId' | 'cursor'> = {}) {
   const { data: currentUser } = useCurrentUser();
-  const userId = currentUser?.id;
+  const userId = currentUser?.account.userId; // TODO: JWT 인증 방식 전환 시 userId 제거
 
   return useInfiniteQuery({
-    queryKey: mypageQueryKeys.bookmarkList(userId, 'groups', { limit }),
+    queryKey: mypageQueryKeys.bookmarkList('groups', { limit }), // TODO: JWT 인증 방식 전환 시 확인
     queryFn: ({ pageParam, signal }) => {
       if (!userId) throw new Error('로그인 사용자 정보가 필요합니다.');
-      return getGroupBookmarks({ userId, cursor: pageParam, limit }, signal);
+      return getGroupBookmarks({ cursor: pageParam, limit }, signal); // TODO: JWT 인증 방식 전환 시 확인
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) =>

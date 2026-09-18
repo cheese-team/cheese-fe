@@ -13,7 +13,6 @@ import MypageModalRenderer from './_components/Modal/MypageModalRenderer';
 import { useMypageModal } from './_components/Modal/useMypageModal';
 import ConfirmModal from './_components/Modal/ConfirmModal';
 
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useMypage } from '@/queries/mypage/useMypage';
 import { useUpdateActiveProfileType } from '@/queries/mypage/useUpdateActiveProfileType';
 import { useUpdatePersonalProfile } from '@/queries/mypage/useUpdatePersonalProfile';
@@ -39,9 +38,9 @@ const PROFILE_SWITCH_OPTIONS: CategoryTabItem<ProfileType>[] = [
   },
 ];
 
+// TODO: 연락용 이메일 변경 플로우 연동 (contact-change 이메일 인증 후 요청)
 export default function MyPage() {
-  const { data: user, isPending: isUserPending, isError: isUserError } = useCurrentUser();
-  const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage(user?.id);
+  const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage();
 
   const { mutateAsync: updateActiveProfileType, isPending: isActiveProfilePending } =
     useUpdateActiveProfileType();
@@ -56,14 +55,6 @@ export default function MyPage() {
   const [pendingProfileType, setPendingProfileType] = useState<ProfileType | null>(null);
 
   const { editingItem, openModal, closeModal } = useMypageModal();
-
-  if (isUserPending) {
-    return <div>로딩 중...</div>;
-  }
-
-  if (isUserError || !user) {
-    return <div>사용자 정보를 불러오지 못했습니다.</div>;
-  }
 
   if (isMypagePending) {
     return <div>로딩 중...</div>;
@@ -105,11 +96,10 @@ export default function MyPage() {
   };
 
   const handleConfirmProfileChange = async () => {
-    if (!pendingProfileType || !user?.id) return;
+    if (!pendingProfileType) return;
 
     try {
       await updateActiveProfileType({
-        userId: user.id,
         activeProfileType: pendingProfileType,
       });
 
@@ -130,18 +120,16 @@ export default function MyPage() {
     const input = event.target;
     const file = event.target.files?.[0];
 
-    if (!file || !user?.id) return;
+    if (!file) return;
 
     try {
       const uploadedFile = await uploadFile({
-        userId: user.id,
         file,
       });
 
       if (isPersonalProfile) {
         const personalProfileData = {
           nickname: mypage.personalProfile.nickname,
-          email: mypage.personalProfile.email,
           profileImageUrl: uploadedFile.url,
           interestedJob: mypage.personalProfile.interestedJob,
           coverLetter: mypage.personalProfile.coverLetter,
@@ -153,13 +141,11 @@ export default function MyPage() {
         };
 
         await updatePersonalProfile({
-          userId: user.id,
           data: personalProfileData,
         });
       } else {
         const companyProfileData = {
           companyName: mypage.companyProfile.companyName,
-          email: mypage.companyProfile.email,
           profileImageUrl: uploadedFile.url,
           representativeName: mypage.companyProfile.representativeName,
           companyType: mypage.companyProfile.companyType,
@@ -172,7 +158,6 @@ export default function MyPage() {
         };
 
         await updateCompanyProfile({
-          userId: user.id,
           data: companyProfileData,
         });
       }
@@ -192,8 +177,6 @@ export default function MyPage() {
     if (section === 'accountAction') return;
 
     try {
-      if (!user?.id) return;
-
       if (section === 'personalProfile') {
         let nextValue: unknown = value;
 
@@ -206,7 +189,6 @@ export default function MyPage() {
 
         const personalProfileData = {
           nickname: mypage.personalProfile.nickname,
-          email: mypage.personalProfile.email,
           profileImageUrl: mypage.personalProfile.profileImageUrl,
           interestedJob: mypage.personalProfile.interestedJob,
           coverLetter: mypage.personalProfile.coverLetter,
@@ -218,7 +200,6 @@ export default function MyPage() {
         };
 
         await updatePersonalProfile({
-          userId: user.id,
           data: { ...personalProfileData, [field]: nextValue },
         });
 
@@ -247,7 +228,6 @@ export default function MyPage() {
 
         const companyProfileData = {
           companyName: mypage.companyProfile.companyName,
-          email: mypage.companyProfile.email,
           profileImageUrl: mypage.companyProfile.profileImageUrl,
           representativeName: mypage.companyProfile.representativeName,
           companyType: mypage.companyProfile.companyType,
@@ -260,7 +240,6 @@ export default function MyPage() {
         };
 
         await updateCompanyProfile({
-          userId: user.id,
           data: { ...companyProfileData, [field]: nextValue },
         });
 
@@ -271,7 +250,6 @@ export default function MyPage() {
         const accountSettingsData = {
           contactMethod: mypage.accountSettings.contactMethod,
           contactUrl: mypage.accountSettings.contactUrl,
-          email: mypage.accountSettings.email,
           passwordUpdatedAt: mypage.accountSettings.passwordUpdatedAt,
           address: mypage.accountSettings.address,
         };
@@ -289,7 +267,6 @@ export default function MyPage() {
               };
 
         await updateAccountSettings({
-          userId: user.id,
           data: nextAccountSettingsData,
         });
 

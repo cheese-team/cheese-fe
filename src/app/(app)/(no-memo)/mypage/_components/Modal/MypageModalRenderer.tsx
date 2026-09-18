@@ -6,6 +6,7 @@ import SelectEditModal from './SelectEditModal';
 import ConfirmModal from './ConfirmModal';
 
 import { useLogout } from '@/queries/auth/useLogout';
+import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 
 import type { ContactSettings, ProfileDocument } from '@/types/profile';
 import type { MypageModalItem } from './types';
@@ -28,12 +29,19 @@ export default function MypageModalRenderer({
   isPending,
 }: MypageModalRendererProps) {
   const router = useRouter();
+
   const {
     mutate: logout,
     isPending: isLogoutPending,
     isError: isLogoutError,
     reset: resetLogout,
   } = useLogout();
+  const {
+    mutate: deleteMe,
+    isPending: isDeletePending,
+    isError: isDeleteError,
+    reset: resetDeleteMe,
+  } = useDeleteMe();
 
   if (!editingItem) return null;
 
@@ -67,7 +75,7 @@ export default function MypageModalRenderer({
       logout(undefined, {
         onSuccess: () => {
           onClose();
-          router.replace('/login');
+          router.replace('/');
         },
       });
 
@@ -75,7 +83,12 @@ export default function MypageModalRenderer({
     }
 
     if (editingItem.field === 'deleteAccount') {
-      // TODO: 계정 삭제
+      deleteMe(undefined, {
+        onSuccess: () => {
+          onClose();
+          router.replace('/');
+        },
+      });
 
       return;
     }
@@ -83,13 +96,19 @@ export default function MypageModalRenderer({
     onClose();
   };
 
+  const isConfirmPending = (isLogout && isLogoutPending) || (isDeleteAccount && isDeletePending);
+
   const handleConfirmModalClose = () => {
-    if (isLogout && isLogoutPending) {
+    if (isConfirmPending) {
       return;
     }
 
     if (isLogout) {
       resetLogout();
+    }
+
+    if (isDeleteAccount) {
+      resetDeleteMe();
     }
 
     onClose();
@@ -173,9 +192,13 @@ export default function MypageModalRenderer({
         buttonText={editingItem.label}
         buttonClassName={confirmButtonClassName}
         onClose={handleConfirmModalClose}
-        disabled={isLogout && isLogoutPending}
+        disabled={isConfirmPending}
         errorMessage={
-          isLogout && isLogoutError ? '로그아웃에 실패했습니다. 다시 시도해 주세요.' : undefined
+          isLogout && isLogoutError
+            ? '로그아웃에 실패했습니다. 다시 시도해 주세요.'
+            : isDeleteAccount && isDeleteError
+              ? '계정 삭제에 실패했습니다. 다시 시도해 주세요.'
+              : undefined
         }
         onConfirm={handleConfirm}
       />

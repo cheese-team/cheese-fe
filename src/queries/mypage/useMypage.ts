@@ -3,16 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { getMypage } from '@/api/mypage.api';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
-export function useMypage(userId: string | undefined) {
+export function useMypage() {
   return useQuery({
-    queryKey: mypageQueryKeys.user(userId),
+    queryKey: mypageQueryKeys.user(),
     queryFn: ({ signal }) => {
-      if (!userId) {
-        throw new Error('userId가 필요합니다');
-      }
-
-      return getMypage(userId, signal);
+      return getMypage(signal);
     },
-    enabled: !!userId,
   });
 }

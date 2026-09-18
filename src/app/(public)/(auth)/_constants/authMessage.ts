@@ -4,7 +4,7 @@ export const AUTH_MESSAGE = {
   },
 
   EMAIL: {
-    UNREGISTERED: '이메일이 올바르지 않습니다',
+    UNREGISTERED: '가입되지 않은 이메일입니다',
     ALREADY_REGISTERED: '이미 가입된 이메일입니다',
     AVAILABLE: '사용 가능',
     SEND_SUCCESS: '인증 메일이 발송되었습니다',
@@ -20,6 +20,8 @@ export const AUTH_MESSAGE = {
     REQUIRED: '인증번호를 입력해주세요',
     INVALID: '인증번호가 일치하지 않습니다',
     MATCHED: '인증번호가 일치합니다',
+    EXPIRED: '인증번호가 만료되었습니다. 다시 발송해 주세요',
+    LENGTH: '인증번호 6자리를 입력해주세요',
     EMAIL_REQUIRED: '이메일 인증을 완료해 주세요',
   },
 

@@ -18,7 +18,7 @@ export function useApplyJobPost() {
         throw new Error('로그인 사용자 정보가 필요합니다.');
       }
 
-      const userId = currentUser.id;
+      const userId = currentUser.account.userId; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
       const response = await applyJobPost({ jobId, userId });
 
       return { ...response, userId };
@@ -63,10 +63,10 @@ export function useApplyJobPost() {
         queryClient.invalidateQueries({ queryKey, exact: true }),
         queryClient.invalidateQueries(listFilters),
         queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.bookmarks(response.userId, 'jobs'),
+          queryKey: mypageQueryKeys.bookmarks('jobs'), // TODO: JWT 인증 방식 전환 시 확인
         }),
         queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.jobApplications(response.userId),
+          queryKey: mypageQueryKeys.jobApplications(), // TODO: JWT 인증 방식 전환 시 확인
         }),
       ]);
     },

@@ -8,7 +8,7 @@ import { communityQueryKeys } from './communityQueryKeys';
 
 export function useGroupPost(groupId: string) {
   const { data: currentUser } = useCurrentUser();
-  const userId = currentUser?.id;
+  const userId = currentUser?.account.userId; // TODO: JWT 인증 방식 전환 시 userId 제거
 
   return useQuery({
     queryKey: communityQueryKeys.groupDetail(groupId, userId),

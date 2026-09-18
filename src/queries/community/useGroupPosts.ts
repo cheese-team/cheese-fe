@@ -13,7 +13,7 @@ export function useGroupPosts(params: GroupPostsListParams) {
     ...params,
     sort: params.sort ?? 'latest',
     limit: params.limit ?? 20,
-    userId: currentUser?.id,
+    userId: currentUser?.account.userId, // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
   };
 
   return useInfiniteQuery({

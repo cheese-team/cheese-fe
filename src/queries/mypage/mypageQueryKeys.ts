@@ -3,24 +3,20 @@ import type { BookmarkListParams, BookmarkType, ApplicationsParams } from '@/api
 export const mypageQueryKeys = {
   all: ['mypage'] as const,
 
-  user: (userId: string | undefined) => [...mypageQueryKeys.all, userId] as const,
-  jobApplications: (userId: string | undefined) =>
-    [...mypageQueryKeys.user(userId), 'applications', 'jobs'] as const,
-  groupApplications: (userId: string | undefined) =>
-    [...mypageQueryKeys.user(userId), 'applications', 'groups'] as const,
-  groupApplicationList: (
-    userId: string | undefined,
-    params: Omit<ApplicationsParams, 'userId' | 'cursor'>,
-  ) => [...mypageQueryKeys.groupApplications(userId), params] as const,
-  jobApplicationList: (
-    userId: string | undefined,
-    params: Omit<ApplicationsParams, 'userId' | 'cursor'>,
-  ) => [...mypageQueryKeys.jobApplications(userId), params] as const,
-  bookmarks: (userId: string | undefined, type: BookmarkType) =>
-    [...mypageQueryKeys.user(userId), 'bookmarks', type] as const,
-  bookmarkList: (
-    userId: string | undefined,
-    type: BookmarkType,
-    params: Omit<BookmarkListParams, 'userId' | 'cursor'>,
-  ) => [...mypageQueryKeys.bookmarks(userId, type), params] as const,
+  user: () => [...mypageQueryKeys.all, 'user'] as const,
+
+  jobApplications: () => [...mypageQueryKeys.user(), 'applications', 'jobs'] as const,
+
+  jobApplicationList: (params: Omit<ApplicationsParams, 'cursor'>) =>
+    [...mypageQueryKeys.jobApplications(), params] as const,
+
+  groupApplications: () => [...mypageQueryKeys.user(), 'applications', 'groups'] as const,
+
+  groupApplicationList: (params: Omit<ApplicationsParams, 'cursor'>) =>
+    [...mypageQueryKeys.groupApplications(), params] as const,
+
+  bookmarks: (type: BookmarkType) => [...mypageQueryKeys.user(), 'bookmarks', type] as const,
+
+  bookmarkList: (type: BookmarkType, params: Omit<BookmarkListParams, 'cursor'>) =>
+    [...mypageQueryKeys.bookmarks(type), params] as const,
 };

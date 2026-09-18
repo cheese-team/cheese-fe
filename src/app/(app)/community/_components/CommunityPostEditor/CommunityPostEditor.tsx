@@ -92,9 +92,8 @@ export default function CommunityPostEditor({
 
       isUploadingRef.current = true;
       try {
-        const results = await Promise.allSettled(
-          imageFiles.map((file) => uploadImage({ userId: currentUser.id, file })),
-        );
+        // TODO: JWT 인증 방식 전환 시 확인
+        const results = await Promise.allSettled(imageFiles.map((file) => uploadImage({ file })));
         const images = results.flatMap((result) => {
           if (result.status !== 'fulfilled') return [];
           const src = result.value.url;

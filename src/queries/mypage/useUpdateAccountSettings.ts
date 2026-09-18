@@ -8,9 +8,9 @@ export function useUpdateAccountSettings() {
   return useMutation({
     mutationFn: updateAccountSettings,
 
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       return queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.user(variables.userId),
+        queryKey: mypageQueryKeys.user(), // TODO: JWT 인증 방식 전환 시 확인
       });
     },
   });

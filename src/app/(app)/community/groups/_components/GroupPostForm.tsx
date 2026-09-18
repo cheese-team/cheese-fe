@@ -84,30 +84,32 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
       alert(error instanceof ApiError ? error.message : '그룹모집 저장에 실패했습니다.');
     };
 
-    if (mode === 'create') {
-      createGroupPost(
-        { userId: user.id, ...groupPostPayload },
-        {
-          onSuccess: (createdGroupPost) => {
-            router.replace(`/community/groups/${createdGroupPost.id}`);
-          },
-          onError,
-        },
-      );
-      return;
-    }
+    // TODO: JWT 인증 방식 전환 시 확인
+    // if (mode === 'create') {
+    //   createGroupPost(
+    //     { userId: user.id, ...groupPostPayload },
+    //     {
+    //       onSuccess: (createdGroupPost) => {
+    //         router.replace(`/community/groups/${createdGroupPost.id}`);
+    //       },
+    //       onError,
+    //     },
+    //   );
+    //   return;
+    // }
 
     if (!groupId || !initialValues) return;
 
-    updateGroupPost(
-      { groupId, userId: user.id, data: groupPostPayload },
-      {
-        onSuccess: () => {
-          router.replace(`/community/groups/${groupId}`);
-        },
-        onError,
-      },
-    );
+    // TODO: JWT 인증 방식 전환 시 확인
+    // updateGroupPost(
+    //   { groupId, userId: user.id, data: groupPostPayload },
+    //   {
+    //     onSuccess: () => {
+    //       router.replace(`/community/groups/${groupId}`);
+    //     },
+    //     onError,
+    //   },
+    // );
   };
 
   return (

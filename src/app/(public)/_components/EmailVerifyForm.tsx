@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Input, InputActionButton } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -6,16 +6,21 @@ import { Button } from '@/components/common/Button';
 import { useSendEmailCode } from '@/queries/auth/useSendEmailCode';
 import { useVerifyEmailCode } from '@/queries/auth/useVerifyEmailCode';
 
-import { validateEmail } from '@/lib/validation';
-import { AUTH_MESSAGE } from '@/constants/auth';
+import { AUTH_MESSAGE } from '../(auth)/_constants/authMessage';
+import { validateEmail } from '../(auth)/_lib/validation';
+import { getSendEmailErrorMessage } from '../(auth)/_lib/emailVerification';
+
+import type { EmailVerificationPurpose } from '@/api/auth.api';
 
 export type EmailVerifyBaseProps = {
   title?: string;
   description?: React.ReactNode;
   initialEmail?: string;
   initialStatus?: EmailVerifyStatus;
+  initialRemainingSeconds?: number;
   onNext: (email: string) => void;
   emailDisabled?: boolean;
+  purpose: EmailVerificationPurpose;
 };
 
 export type EmailVerifyStatus =
@@ -33,8 +38,10 @@ export default function EmailVerifyForm({
   description,
   initialEmail = '',
   initialStatus = 'IDLE',
+  initialRemainingSeconds = 0,
   onNext,
   emailDisabled,
+  purpose,
 }: EmailVerifyFormProps) {
   const [email, setEmail] = useState(initialEmail);
   const [sentEmail, setSentEmail] = useState(initialEmail);
@@ -43,6 +50,7 @@ export default function EmailVerifyForm({
 
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationError, setVerificationError] = useState<string>();
+  const [remainingSeconds, setRemainingSeconds] = useState(initialRemainingSeconds);
 
   const { mutateAsync: sendEmailCode } = useSendEmailCode();
   const { mutateAsync: verifyEmailCode } = useVerifyEmailCode();
@@ -54,6 +62,11 @@ export default function EmailVerifyForm({
   const hasSentEmail = status === 'SENT' || isVerifying || isVerified;
   const isEmailLocked = isSending || isVerifying || isVerified || emailDisabled;
   const isSentEmail = email === sentEmail;
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+
+  const formattedRemainingTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   const handleSend = async () => {
     const normalizedEmail = email.trim();
@@ -70,6 +83,7 @@ export default function EmailVerifyForm({
     try {
       const sendEmailCodeResult = await sendEmailCode({
         email: normalizedEmail,
+        purpose,
       });
 
       if (!sendEmailCodeResult.success) {
@@ -82,20 +96,46 @@ export default function EmailVerifyForm({
       setSentEmail(normalizedEmail);
       setVerificationCode('');
       setVerificationError(undefined);
+      setRemainingSeconds(sendEmailCodeResult.expiresInSeconds);
       setStatus('SENT');
-    } catch {
+    } catch (error) {
       setStatus('SEND_ERROR');
-      setEmailError(AUTH_MESSAGE.EMAIL.SEND_FAILED);
+      setEmailError(getSendEmailErrorMessage(error, purpose));
     }
   };
 
+  useEffect(() => {
+    if (!hasSentEmail || isVerified) return;
+
+    const timer = window.setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(timer);
+          setVerificationCode('');
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [hasSentEmail, isVerified]);
+
+  const isExpired = hasSentEmail && remainingSeconds === 0;
+
   const handleVerify = async () => {
-    if (!isSentEmail) return;
+    if (!isSentEmail || isExpired) return;
 
     const code = verificationCode.trim();
 
     if (!code) {
       setVerificationError(AUTH_MESSAGE.VERIFICATION.REQUIRED);
+      return;
+    }
+
+    if (code.length !== 6) {
+      setVerificationError(AUTH_MESSAGE.VERIFICATION.LENGTH);
       return;
     }
 
@@ -163,22 +203,30 @@ export default function EmailVerifyForm({
           name="verificationCode"
           type="text"
           inputMode="numeric"
+          maxLength={6}
           value={verificationCode}
           onChange={(event) => {
-            setVerificationCode(event.target.value);
+            const value = event.target.value.replace(/\D/g, '').slice(0, 6);
+
+            setVerificationCode(value);
             setVerificationError(undefined);
           }}
           placeholder="인증번호 입력"
-          disabled={!hasSentEmail || !isSentEmail || isVerifying || isVerified}
-          errorMessage={verificationError}
+          disabled={!hasSentEmail || !isSentEmail || isExpired || isVerifying || isVerified}
+          errorMessage={isExpired ? AUTH_MESSAGE.VERIFICATION.EXPIRED : verificationError}
           successMessage={isVerified ? AUTH_MESSAGE.VERIFICATION.MATCHED : undefined}
           rightAddon={
-            <InputActionButton
-              onClick={handleVerify}
-              disabled={!hasSentEmail || !isSentEmail || isVerifying || isVerified}
-            >
-              인증하기
-            </InputActionButton>
+            <>
+              {hasSentEmail && !isVerified && (
+                <span className="text-secondary-800 mr-1 w-[44px]">{formattedRemainingTime}</span>
+              )}
+              <InputActionButton
+                onClick={handleVerify}
+                disabled={!hasSentEmail || !isSentEmail || isExpired || isVerifying || isVerified}
+              >
+                인증하기
+              </InputActionButton>
+            </>
           }
           className="h-10 px-2 font-medium tracking-normal"
           showMessageSpace

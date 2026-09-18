@@ -2,14 +2,16 @@ import { useState } from 'react';
 
 import { Input, InputActionButton } from '@/components/common/Input';
 
-import { validateEmail } from '@/lib/validation';
-import { AUTH_MESSAGE } from '@/constants/auth';
 import { useSendEmailCode } from '@/queries/auth/useSendEmailCode';
+
+import { AUTH_MESSAGE } from '../../(auth)/_constants/authMessage';
+import { validateEmail } from '../../(auth)/_lib/validation';
+import { getSendEmailErrorMessage } from '../../(auth)/_lib/emailVerification';
 
 type EmailStepProps = {
   email: string;
   onEmailChange: (email: string) => void;
-  onNext: () => void;
+  onNext: (expiresInSeconds: number) => void;
   emailDisabled?: boolean;
   actionDisabled?: boolean;
 };
@@ -39,6 +41,7 @@ export default function EmailStep({
     try {
       const sendEmailCodeResult = await sendEmailCode({
         email: normalizedEmail,
+        purpose: 'password-reset',
       });
 
       if (!sendEmailCodeResult.success) {
@@ -47,9 +50,9 @@ export default function EmailStep({
       }
 
       onEmailChange(normalizedEmail);
-      onNext();
-    } catch {
-      setEmailError(AUTH_MESSAGE.EMAIL.SEND_FAILED);
+      onNext(sendEmailCodeResult.expiresInSeconds);
+    } catch (error) {
+      setEmailError(getSendEmailErrorMessage(error, 'password-reset'));
     }
   };
 

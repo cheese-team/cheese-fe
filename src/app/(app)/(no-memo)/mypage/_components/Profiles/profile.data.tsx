@@ -255,13 +255,12 @@ export function getAccountItems(profile: AccountSettings): SettingItemData[] {
       section: 'accountSettings',
       field: 'email',
       label: '이메일',
-      value: profile.email,
+      value: profile.contactEmail,
       icon: <EmailIcon className="h-6" />,
       buttonIcon: <EditIcon className="h-[14px]" />,
       buttonText: '변경',
       modalType: 'text',
     },
-    // TODO: 비밀번호 마지막 변경일 노출 필요 여부 기획 확인
     {
       section: 'accountAction',
       field: 'updatePassword',
@@ -291,7 +290,6 @@ export function getAccountItems(profile: AccountSettings): SettingItemData[] {
       buttonText: '로그아웃',
       modalType: 'confirm',
     },
-    // TODO: 계정 삭제 API 추가 후 회원탈퇴 기능 연동
     {
       section: 'accountAction',
       field: 'deleteAccount',

@@ -1,10 +1,14 @@
 import Image from 'next/image';
+
 import BaseModal from '@/components/common/Modal';
 import EmailVerifyForm, { EmailVerifyBaseProps } from '../../_components/EmailVerifyForm';
+
+import type { EmailVerificationPurpose } from '@/api/auth.api';
 
 type EmailVerifyModalProps = Pick<EmailVerifyBaseProps, 'title' | 'description' | 'onNext'> & {
   isOpen: boolean;
   onClose: () => void;
+  purpose: EmailVerificationPurpose;
 };
 
 export default function EmailVerifyModal({
@@ -12,6 +16,7 @@ export default function EmailVerifyModal({
   onClose,
   title,
   description,
+  purpose,
   onNext,
 }: EmailVerifyModalProps) {
   return (
@@ -24,6 +29,7 @@ export default function EmailVerifyModal({
         <EmailVerifyForm
           title={title}
           description={description}
+          purpose={purpose}
           onNext={(email) => {
             onNext(email);
             onClose();

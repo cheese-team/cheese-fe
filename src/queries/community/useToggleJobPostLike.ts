@@ -33,7 +33,7 @@ export function useToggleJobPostLike() {
         throw new Error('로그인 사용자 정보가 필요합니다.');
       }
 
-      const request = { jobId, userId: currentUser.id };
+      const request = { jobId, userId: currentUser.account.userId }; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
 
       return isLiked ? unlikeJobPost(request) : likeJobPost(request);
     },
@@ -41,16 +41,16 @@ export function useToggleJobPostLike() {
     onMutate: async (variables) => {
       if (!currentUser) return;
 
-      const listFilters = getJobListFilters(currentUser.id);
+      const listFilters = getJobListFilters(currentUser.account.userId); // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
 
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: communityQueryKeys.jobDetail(variables.jobId, currentUser.id),
+          queryKey: communityQueryKeys.jobDetail(variables.jobId, currentUser.account.userId), // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
           exact: true,
         }),
         queryClient.cancelQueries(listFilters),
         queryClient.cancelQueries({
-          queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'jobs'),
+          queryKey: mypageQueryKeys.bookmarks('jobs'), // TODO: JWT 인증 방식 전환 시 확인
         }),
       ]);
     },
@@ -58,10 +58,10 @@ export function useToggleJobPostLike() {
     onSuccess: (response, variables) => {
       if (!currentUser) return;
 
-      const listFilters = getJobListFilters(currentUser.id);
+      const listFilters = getJobListFilters(currentUser.account.userId); // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
 
       void queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.jobApplications(currentUser.id),
+        queryKey: mypageQueryKeys.jobApplications(), // TODO: JWT 인증 방식 전환 시 확인
       });
 
       const likeCountDelta = response.isLiked === variables.isLiked ? 0 : response.isLiked ? 1 : -1;
@@ -72,7 +72,7 @@ export function useToggleJobPostLike() {
       });
 
       queryClient.setQueryData<JobPost>(
-        communityQueryKeys.jobDetail(variables.jobId, currentUser.id),
+        communityQueryKeys.jobDetail(variables.jobId, currentUser.account.userId), // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인,
         (current) => (current ? updateLike(current) : current),
       );
 
@@ -91,7 +91,7 @@ export function useToggleJobPostLike() {
       });
 
       queryClient.setQueriesData<InfiniteData<JobBookmarksResponse>>(
-        { queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'jobs') },
+        { queryKey: mypageQueryKeys.bookmarks('jobs') }, // TODO: JWT 인증 방식 전환 시 확인
         (current) => {
           if (!current) return current;
 
