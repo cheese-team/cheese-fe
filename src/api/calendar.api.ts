@@ -13,14 +13,12 @@ type CalendarEventRequest = Pick<CalendarEventDraft, 'title' | 'start' | 'end'> 
   >;
 
 type GetCalendarEventsParams = {
-  userId: string;
   from?: string;
   to?: string;
   signal?: AbortSignal;
 };
 
 type CalendarEventMutationParams = {
-  userId: string;
   draft: CalendarEventDraft;
 };
 
@@ -29,7 +27,6 @@ type UpdateCalendarEventParams = CalendarEventMutationParams & {
 };
 
 type DeleteCalendarEventParams = {
-  userId: string;
   eventId: string;
 };
 
