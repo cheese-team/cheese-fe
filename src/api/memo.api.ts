@@ -27,24 +27,20 @@ export type MemoDraft = {
 };
 
 type GetMemosParams = {
-  userId: string;
   deleted?: boolean;
   signal?: AbortSignal;
 };
 
 type GetWidgetMemosParams = {
-  userId: string;
   limit?: number;
   signal?: AbortSignal;
 };
 
 type CreateMemoParams = {
-  userId: string;
   draft: MemoDraft;
 };
 
 type MemoMutationParams = {
-  userId: string;
   memoId: string;
 };
 
