@@ -14,7 +14,7 @@ export function useUpdateActiveProfileType() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.user(), // TODO: JWT 인증 방식 전환 시 확인
+          queryKey: mypageQueryKeys.user(),
         }),
         queryClient.invalidateQueries({
           queryKey: authQueryKeys.me(),
