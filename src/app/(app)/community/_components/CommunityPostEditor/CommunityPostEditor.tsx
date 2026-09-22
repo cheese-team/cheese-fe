@@ -12,8 +12,8 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
 import CommunityEditorToolbar from './CommunityPostEditorToolbar';
+
 import { ApiError } from '@/api/client';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -32,7 +32,7 @@ export default function CommunityPostEditor({
 }: CommunityPostEditorProps) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const isUploadingRef = useRef(false);
-  const { data: currentUser } = useCurrentUser();
+
   const { mutateAsync: uploadImage } = useUploadFile();
 
   const editor = useEditor({
@@ -75,10 +75,6 @@ export default function CommunityPostEditor({
   const handleUploadImages = useCallback(
     async (files: FileList | null) => {
       if (!files?.length || !editor || isUploadingRef.current) return;
-      if (!currentUser) {
-        alert('로그인 사용자 정보가 필요합니다.');
-        return;
-      }
 
       const imageFiles = Array.from(files);
       if (imageFiles.some((file) => !ACCEPTED_IMAGE_TYPES.has(file.type))) {
@@ -92,7 +88,6 @@ export default function CommunityPostEditor({
 
       isUploadingRef.current = true;
       try {
-        // TODO: JWT 인증 방식 전환 시 확인
         const results = await Promise.allSettled(imageFiles.map((file) => uploadImage({ file })));
         const images = results.flatMap((result) => {
           if (result.status !== 'fulfilled') return [];
@@ -116,7 +111,7 @@ export default function CommunityPostEditor({
         isUploadingRef.current = false;
       }
     },
-    [editor, currentUser, uploadImage],
+    [editor, uploadImage],
   );
 
   useEffect(() => {

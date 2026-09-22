@@ -11,14 +11,7 @@ export function useUpdateJobPost() {
     mutationFn: (request: UpdateJobPostRequest) => updateJobPost(request),
 
     onSuccess: async (updatedJobPost, variables) => {
-      queryClient.removeQueries({
-        queryKey: [...communityQueryKeys.jobDetails(), variables.jobId],
-      });
-
-      queryClient.setQueryData(
-        communityQueryKeys.jobDetail(variables.jobId, variables.userId),
-        updatedJobPost,
-      );
+      queryClient.setQueryData(communityQueryKeys.jobDetail(variables.jobId), updatedJobPost);
 
       await queryClient.invalidateQueries({
         queryKey: communityQueryKeys.jobLists(),

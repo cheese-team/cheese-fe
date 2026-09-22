@@ -6,7 +6,6 @@ export type CommunityPostsListParams = {
 };
 
 export type JobPostsListParams = {
-  userId?: string;
   sort?: CommunitySort;
   keyword?: string;
   cursor?: string;
@@ -19,7 +18,6 @@ export type InfoPostsListParams = {
 };
 
 export type GroupPostsListParams = {
-  userId?: string;
   sort?: CommunitySort;
   keyword?: string;
   cursor?: string;
