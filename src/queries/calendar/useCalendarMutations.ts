@@ -7,7 +7,6 @@ import { calendarQueryKeys } from './calendarQueryKeys';
 import type { CalendarEventDraft } from '@/app/(app)/calendar/_model/types';
 
 type CreateCalendarEventVariables = {
-  userId: string;
   draft: CalendarEventDraft;
 };
 
@@ -16,16 +15,15 @@ type UpdateCalendarEventVariables = CreateCalendarEventVariables & {
 };
 
 type DeleteCalendarEventVariables = {
-  userId: string;
   eventId: string;
 };
 
 function useInvalidateCalendarEvents() {
   const queryClient = useQueryClient();
 
-  return (userId: string) =>
+  return () =>
     queryClient.invalidateQueries({
-      queryKey: calendarQueryKeys.byUser(userId),
+      queryKey: calendarQueryKeys.events(),
     });
 }
 
@@ -33,10 +31,9 @@ export function useCreateCalendarEventMutation() {
   const invalidateCalendarEvents = useInvalidateCalendarEvents();
 
   return useMutation({
-    mutationFn: ({ userId, draft }: CreateCalendarEventVariables) =>
-      createCalendarEvent({ userId, draft }),
-    onSettled: async (_data, _error, variables) => {
-      await invalidateCalendarEvents(variables.userId);
+    mutationFn: ({ draft }: CreateCalendarEventVariables) => createCalendarEvent({ draft }),
+    onSettled: async () => {
+      await invalidateCalendarEvents();
     },
   });
 }
@@ -45,10 +42,10 @@ export function useUpdateCalendarEventMutation() {
   const invalidateCalendarEvents = useInvalidateCalendarEvents();
 
   return useMutation({
-    mutationFn: ({ userId, eventId, draft }: UpdateCalendarEventVariables) =>
-      updateCalendarEvent({ userId, eventId, draft }),
-    onSettled: async (_data, _error, variables) => {
-      await invalidateCalendarEvents(variables.userId);
+    mutationFn: ({ eventId, draft }: UpdateCalendarEventVariables) =>
+      updateCalendarEvent({ eventId, draft }),
+    onSettled: async () => {
+      await invalidateCalendarEvents();
     },
   });
 }
@@ -57,10 +54,9 @@ export function useDeleteCalendarEventMutation() {
   const invalidateCalendarEvents = useInvalidateCalendarEvents();
 
   return useMutation({
-    mutationFn: ({ userId, eventId }: DeleteCalendarEventVariables) =>
-      deleteCalendarEvent({ userId, eventId }),
-    onSettled: async (_data, _error, variables) => {
-      await invalidateCalendarEvents(variables.userId);
+    mutationFn: ({ eventId }: DeleteCalendarEventVariables) => deleteCalendarEvent({ eventId }),
+    onSettled: async () => {
+      await invalidateCalendarEvents();
     },
   });
 }
