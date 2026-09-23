@@ -33,8 +33,8 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
   const isMine =
     (jobPost.author.profileType === 'personal' &&
-      jobPost.author.id === mypage?.personalProfile.id) ||
-    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile.id);
+      jobPost.author.id === mypage?.personalProfile?.id) ||
+    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile?.id);
 
   const handleEdit = () => {
     if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;

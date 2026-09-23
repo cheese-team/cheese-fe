@@ -30,8 +30,9 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
 
   const isMine =
     (infoPost.author.profileType === 'personal' &&
-      infoPost.author.id === mypage?.personalProfile.id) ||
-    (infoPost.author.profileType === 'company' && infoPost.author.id === mypage?.companyProfile.id);
+      infoPost.author.id === mypage?.personalProfile?.id) ||
+    (infoPost.author.profileType === 'company' &&
+      infoPost.author.id === mypage?.companyProfile?.id);
 
   return (
     <PostDetailHeader

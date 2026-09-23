@@ -33,9 +33,9 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
 
   const isMine =
     (groupPost.author.profileType === 'personal' &&
-      groupPost.author.id === mypage?.personalProfile.id) ||
+      groupPost.author.id === mypage?.personalProfile?.id) ||
     (groupPost.author.profileType === 'company' &&
-      groupPost.author.id === mypage?.companyProfile.id);
+      groupPost.author.id === mypage?.companyProfile?.id);
 
   const handleEdit = () => {
     if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;

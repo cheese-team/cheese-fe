@@ -93,9 +93,9 @@ export default function Comment({ category, postId }: CommentProps) {
       disabled={disabled}
       isMine={
         (comment.author.profileType === 'personal' &&
-          comment.author.id === mypage?.personalProfile.id) ||
+          comment.author.id === mypage?.personalProfile?.id) ||
         (comment.author.profileType === 'company' &&
-          comment.author.id === mypage?.companyProfile.id)
+          comment.author.id === mypage?.companyProfile?.id)
       }
       isEditing={editingCommentId === comment.id}
       isMenuOpen={openCommentId === comment.id}
