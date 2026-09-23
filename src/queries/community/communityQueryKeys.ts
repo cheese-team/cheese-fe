@@ -27,6 +27,5 @@ export const communityQueryKeys = {
   infoLists: () => [...communityQueryKeys.info(), 'list'] as const,
   infoList: (params: InfoPostsListParams) => [...communityQueryKeys.infoLists(), params] as const,
   infoDetails: () => [...communityQueryKeys.info(), 'detail'] as const,
-  infoDetail: (infoId: string, userId?: string) =>
-    [...communityQueryKeys.infoDetails(), infoId, { userId }] as const,
+  infoDetail: (infoId: string) => [...communityQueryKeys.infoDetails(), infoId] as const,
 };

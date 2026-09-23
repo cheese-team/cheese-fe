@@ -310,7 +310,6 @@ export function mapInfoPost({ author, ...post }: InfoPostResponse): InfoPost {
 }
 
 export async function getInfoPosts({
-  userId,
   sort = 'all',
   keyword,
   cursor,
@@ -322,7 +321,7 @@ export async function getInfoPosts({
   >('/backend-api/community/info', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, sort, keyword, cursor, limit: limit.toString() },
+    query: { sort, keyword, cursor, limit: limit.toString() },
     signal,
   });
 
@@ -331,27 +330,23 @@ export async function getInfoPosts({
 
 type GetInfoPostParams = {
   infoId: string;
-  userId?: string;
   signal?: AbortSignal;
 };
 
-export async function getInfoPost({
-  infoId,
-  userId,
-  signal,
-}: GetInfoPostParams): Promise<InfoPost> {
-  const response = await apiClient<InfoPostResponse>(`/backend-api/community/info/${infoId}`, {
-    method: 'GET',
-    cache: 'no-store',
-    query: { userId },
-    signal,
-  });
+export async function getInfoPost({ infoId, signal }: GetInfoPostParams): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    },
+  );
 
   return mapInfoPost(response);
 }
 
 export type CreateInfoPostRequest = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
-  userId: string;
   attachmentFileId?: string;
 };
 
@@ -364,68 +359,72 @@ export async function createInfoPost(request: CreateInfoPostRequest): Promise<In
   return mapInfoPost(response);
 }
 
-type UpdateInfoPostData = Omit<CreateInfoPostRequest, 'userId' | 'attachmentFileId'> & {
+type UpdateInfoPostData = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
   attachmentFileId?: string | null;
+  authorProfileType: UserSummary['profileType'];
 };
 
 export type UpdateInfoPostRequest = {
   infoId: string;
-  userId: string;
   data: UpdateInfoPostData;
 };
 
-export async function updateInfoPost({
-  infoId,
-  userId,
-  data,
-}: UpdateInfoPostRequest): Promise<InfoPost> {
-  const response = await apiClient<InfoPostResponse>(`/backend-api/community/info/${infoId}`, {
-    method: 'PATCH',
-    query: { userId },
-    body: JSON.stringify(data),
-  });
+export async function updateInfoPost({ infoId, data }: UpdateInfoPostRequest): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+  );
 
   return mapInfoPost(response);
 }
 
 export type DeleteInfoPostRequest = {
   infoId: string;
-  userId: string;
 };
 
-type DeleteInfoPostResponse = {
-  success: boolean;
-};
+export async function deleteInfoPost({ infoId }: DeleteInfoPostRequest) {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'DELETE',
+    },
+  );
 
-export async function deleteInfoPost({ infoId, userId }: DeleteInfoPostRequest) {
-  return apiClient<DeleteInfoPostResponse>(`/backend-api/community/info/${infoId}`, {
-    method: 'DELETE',
-    query: { userId },
-  });
+  return mapInfoPost(response);
 }
 
 type InfoPostLikeRequest = {
   infoId: string;
-  userId: string;
 };
 
 type InfoPostLikeResponse = {
   isLiked: boolean;
 };
 
-export function likeInfoPost({ infoId, userId }: InfoPostLikeRequest) {
-  return apiClient<InfoPostLikeResponse>(`/backend-api/community/info/${infoId}/like`, {
-    method: 'POST',
-    query: { userId },
-  });
+export function likeInfoPost({ infoId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}/like`,
+    {
+      method: 'POST',
+    },
+  );
 }
 
-export function unlikeInfoPost({ infoId, userId }: InfoPostLikeRequest) {
-  return apiClient<InfoPostLikeResponse>(`/backend-api/community/info/${infoId}/like`, {
-    method: 'DELETE',
-    query: { userId },
-  });
+export function unlikeInfoPost({ infoId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}/like`,
+    {
+      method: 'DELETE',
+    },
+  );
 }
+
+/* ================================
+      Comment
+   ================================ */
 
 type CommentResponse = Omit<CommunityCommentResult, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };

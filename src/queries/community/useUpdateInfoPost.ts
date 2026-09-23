@@ -15,10 +15,7 @@ export function useUpdateInfoPost() {
         queryKey: [...communityQueryKeys.infoDetails(), variables.infoId],
       });
 
-      queryClient.setQueryData(
-        communityQueryKeys.infoDetail(variables.infoId, variables.userId),
-        updatedInfoPost,
-      );
+      queryClient.setQueryData(communityQueryKeys.infoDetail(variables.infoId), updatedInfoPost);
 
       await queryClient.invalidateQueries({
         queryKey: communityQueryKeys.infoLists(),

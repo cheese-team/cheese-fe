@@ -1,65 +1,37 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { likeInfoPost, unlikeInfoPost, type InfoPostsResponse } from '@/api/community.api';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
+
+import type { InfiniteData } from '@tanstack/react-query';
 import type { InfoBookmarksResponse } from '@/api/mypage.api';
-
 import type { InfoPost, ToggleInfoPostLikeParams } from '@/types/community/community';
-import type { InfiniteData, QueryFilters } from '@tanstack/react-query';
-
-const getInfoListFilters = (userId: string): QueryFilters => ({
-  queryKey: communityQueryKeys.infoLists(),
-  predicate: (query) => {
-    const params = query.queryKey[3];
-
-    return (
-      typeof params === 'object' &&
-      params !== null &&
-      'userId' in params &&
-      params.userId === userId
-    );
-  },
-});
 
 export function useToggleInfoPostLike() {
   const queryClient = useQueryClient();
-  const { data: currentUser } = useCurrentUser();
 
   return useMutation({
-    mutationFn: async ({ infoId, isLiked }: ToggleInfoPostLikeParams) => {
-      if (!currentUser) {
-        throw new Error('로그인 사용자 정보가 필요합니다.');
-      }
+    mutationFn: ({ infoId, isLiked }: ToggleInfoPostLikeParams) => {
+      const request = { infoId };
 
-      const request = { infoId, userId: currentUser.id };
-
-      const response = await (isLiked ? unlikeInfoPost(request) : likeInfoPost(request));
-
-      return { isLiked: response.isLiked, userId: currentUser.id };
+      return isLiked ? unlikeInfoPost(request) : likeInfoPost(request);
     },
 
     onMutate: async (variables) => {
-      if (!currentUser) return;
-
-      const listFilters = getInfoListFilters(currentUser.id);
-
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: communityQueryKeys.infoDetail(variables.infoId, currentUser.id),
+          queryKey: communityQueryKeys.infoDetail(variables.infoId),
           exact: true,
         }),
-        queryClient.cancelQueries(listFilters),
+        queryClient.cancelQueries({ queryKey: communityQueryKeys.infoLists() }),
         queryClient.cancelQueries({
-          queryKey: mypageQueryKeys.bookmarks(currentUser.id, 'info'),
+          queryKey: mypageQueryKeys.bookmarks('info'),
         }),
       ]);
     },
 
     onSuccess: async (response, variables) => {
-      const listFilters = getInfoListFilters(response.userId);
-
       const updateLike = (post: InfoPost): InfoPost => ({
         ...post,
         isLiked: response.isLiked,
@@ -70,25 +42,28 @@ export function useToggleInfoPostLike() {
       });
 
       queryClient.setQueryData<InfoPost>(
-        communityQueryKeys.infoDetail(variables.infoId, response.userId),
+        communityQueryKeys.infoDetail(variables.infoId),
         (current) => (current ? updateLike(current) : current),
       );
 
-      queryClient.setQueriesData<InfiniteData<InfoPostsResponse>>(listFilters, (current) => {
-        if (!current) return current;
+      queryClient.setQueriesData<InfiniteData<InfoPostsResponse>>(
+        { queryKey: communityQueryKeys.infoLists() },
+        (current) => {
+          if (!current) return current;
 
-        return {
-          ...current,
-          pages: current.pages.map((page) => ({
-            ...page,
-            items: page.items.map((post) =>
-              post.id === variables.infoId ? updateLike(post) : post,
-            ),
-          })),
-        };
-      });
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              items: page.items.map((post) =>
+                post.id === variables.infoId ? updateLike(post) : post,
+              ),
+            })),
+          };
+        },
+      );
       queryClient.setQueriesData<InfiniteData<InfoBookmarksResponse>>(
-        { queryKey: mypageQueryKeys.bookmarks(response.userId, 'info') },
+        { queryKey: mypageQueryKeys.bookmarks('info') },
         (current) => {
           if (!current) return current;
 
@@ -105,7 +80,7 @@ export function useToggleInfoPostLike() {
       );
       if (response.isLiked) {
         await queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.bookmarks(response.userId, 'info'),
+          queryKey: mypageQueryKeys.bookmarks('info'),
         });
       }
     },

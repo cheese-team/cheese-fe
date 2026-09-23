@@ -8,7 +8,6 @@ export type JobPostsListParams = {
 };
 
 export type InfoPostsListParams = {
-  userId?: string;
   sort?: InfoSort;
   keyword?: string;
   cursor?: string;

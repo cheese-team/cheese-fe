@@ -23,7 +23,7 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage();
   const { mutate: deleteInfoPost, isPending: isDeletePending } = useDeleteInfoPost();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,7 +52,7 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
         if (!window.confirm('삭제하시겠습니까?')) return;
 
         deleteInfoPost(
-          { infoId: infoPost.id, userId: user.id },
+          { infoId: infoPost.id },
           {
             onSuccess: () => {
               router.push('/community/info');

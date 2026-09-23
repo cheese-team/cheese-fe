@@ -11,7 +11,7 @@ export function useDeleteInfoPost() {
     mutationFn: (request: DeleteInfoPostRequest) => deleteInfoPost(request),
     onSuccess: async (_, variables) => {
       queryClient.removeQueries({
-        queryKey: communityQueryKeys.infoDetail(variables.infoId, variables.userId),
+        queryKey: communityQueryKeys.infoDetail(variables.infoId),
         exact: true,
       });
 

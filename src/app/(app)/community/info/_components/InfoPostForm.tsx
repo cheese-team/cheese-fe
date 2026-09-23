@@ -61,8 +61,6 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
     const title = String(formData.get('title') ?? '');
 
     if (mode === 'create') {
-      if (!user) return;
-
       if (category !== 'question' && category !== 'info' && category !== 'resource') {
         alert('분류를 선택해주세요.');
         return;
@@ -70,15 +68,16 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
       try {
         const file = files[0];
-        const uploadedFile = file ? await uploadFile({ userId: user.id, file }) : undefined;
+        const uploadedFile = file ? await uploadFile({ file }) : undefined;
+
         const createdInfoPost = await createInfoPost({
-          userId: user.id,
           category,
           title,
           content,
           tags,
           ...(uploadedFile ? { attachmentFileId: uploadedFile.id } : {}),
         });
+
         router.replace(`/community/info/${createdInfoPost.id}`);
       } catch (error) {
         alert(
@@ -97,16 +96,16 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
     try {
       const file = files[0];
-      const uploadedFile = file ? await uploadFile({ userId: user.id, file }) : undefined;
+      const uploadedFile = file ? await uploadFile({ file }) : undefined;
 
       await updateInfoPost({
         infoId: initialValues.id,
-        userId: user.id,
         data: {
           category,
           title,
           content,
           tags,
+          authorProfileType: user.account.activeProfileType,
           ...(uploadedFile
             ? { attachmentFileId: uploadedFile.id }
             : isExistingFileRemoved
@@ -114,6 +113,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
               : {}),
         },
       });
+
       router.replace(`/community/info/${initialValues.id}`);
     } catch (error) {
       alert(

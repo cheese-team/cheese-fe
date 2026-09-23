@@ -2,20 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getInfoPost } from '@/api/community.api';
 import { ApiError } from '@/api/client';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
 import { communityQueryKeys } from './communityQueryKeys';
 
 export function useInfoPost(infoId: string) {
-  const { data: currentUser } = useCurrentUser();
-  const userId = currentUser?.id;
-
   return useQuery({
-    queryKey: communityQueryKeys.infoDetail(infoId, userId),
+    queryKey: communityQueryKeys.infoDetail(infoId),
 
-    queryFn: ({ signal }) => getInfoPost({ infoId, userId, signal }),
+    queryFn: ({ signal }) => getInfoPost({ infoId, signal }),
 
-    enabled: Boolean(infoId) && Boolean(userId),
+    enabled: Boolean(infoId),
 
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 404) {
