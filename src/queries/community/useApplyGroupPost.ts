@@ -51,6 +51,9 @@ export function useApplyGroupPost() {
         queryClient.invalidateQueries({ queryKey, exact: true }),
         queryClient.invalidateQueries({ queryKey: listQueryKey }),
         queryClient.invalidateQueries({
+          queryKey: mypageQueryKeys.bookmarks('groups'),
+        }),
+        queryClient.invalidateQueries({
           queryKey: mypageQueryKeys.groupApplications(),
         }),
       ]);
