@@ -1,13 +1,16 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+
 import {
   createComment,
   updateComment,
   deleteComment,
   type CommentsParams,
 } from '@/api/community.api';
-import type { CommunityCommentsResponse } from '@/types/community/comment';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { communityQueryKeys } from './communityQueryKeys';
+
+import type { CommunityCommentsResponse } from '@/types/community/comment';
 
 export function useCommentMutations({ category, postId }: CommentsParams) {
   const queryClient = useQueryClient();
@@ -15,12 +18,14 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
   const { data: user } = useCurrentUser();
 
   const queryKey = communityQueryKeys.comments(category, postId);
+
   const detailKey =
     category === 'jobs'
       ? communityQueryKeys.jobDetails()
       : category === 'groups'
         ? communityQueryKeys.groupDetails()
         : communityQueryKeys.infoDetails();
+
   const listKey =
     category === 'jobs'
       ? communityQueryKeys.jobLists()
@@ -30,14 +35,17 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
   const updateCommentCount = (delta: number) => {
     type PostWithCommentCount = { id: string; commentCount?: number };
+
     const updateCount = (post: PostWithCommentCount) =>
       typeof post.commentCount === 'number'
         ? { ...post, commentCount: Math.max(0, post.commentCount + delta) }
         : post;
+
     queryClient.setQueriesData<PostWithCommentCount>(
       { queryKey: [...detailKey, postId] },
       (current) => (current ? updateCount(current) : current),
     );
+
     queryClient.setQueriesData<InfiniteData<{ items: PostWithCommentCount[] }>>(
       { queryKey: listKey },
       (current) =>
@@ -53,16 +61,12 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
     );
   };
 
-  const getUserId = () => {
-    if (!user) throw new Error('로그인 사용자 정보가 필요합니다.');
-    return user.id;
-  };
-
   const cancel = () => queryClient.cancelQueries({ queryKey, exact: true });
 
   const create = useMutation({
     mutationFn: (data: { content: string; parentId?: string }) =>
-      createComment({ category, postId, userId: getUserId(), ...data }),
+      createComment({ category, postId, ...data }),
+
     onSuccess: async () => {
       updateCommentCount(1);
       await queryClient.invalidateQueries({ queryKey, exact: true });
@@ -70,8 +74,16 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
   });
 
   const update = useMutation({
-    mutationFn: (data: { commentId: string; content: string }) =>
-      updateComment({ ...data, userId: getUserId() }),
+    mutationFn: (data: { commentId: string; content: string }) => {
+      if (!user) {
+        throw new Error('로그인 사용자 정보가 필요합니다.');
+      }
+
+      return updateComment({
+        ...data,
+        authorProfileType: user.account.activeProfileType,
+      });
+    },
 
     onMutate: cancel,
 
@@ -112,22 +124,28 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
   const remove = useMutation({
     mutationFn: async (commentId: string) => {
-      const response = await deleteComment({ commentId, userId: getUserId() });
+      const response = await deleteComment({ commentId });
+
       if (!response.success) throw new Error('댓글 삭제에 실패했습니다.');
+
       return response;
     },
 
     onMutate: async (commentId) => {
       await cancel();
+
       const current = queryClient.getQueryData<InfiniteData<CommunityCommentsResponse>>(queryKey);
+
       const comment = current?.pages
         .flatMap((page) => page.items)
         .find((item) => item.id === commentId);
+
       return { deletedCount: comment ? 1 + comment.replies.length : 1 };
     },
 
     onSuccess: (_, commentId, context) => {
       updateCommentCount(-(context?.deletedCount ?? 1));
+
       queryClient.setQueryData<InfiniteData<CommunityCommentsResponse>>(queryKey, (current) => {
         if (!current) return current;
         return {
@@ -145,5 +163,6 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
       });
     },
   });
+
   return { create, update, remove };
 }

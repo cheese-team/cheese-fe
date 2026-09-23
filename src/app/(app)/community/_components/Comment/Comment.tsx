@@ -27,38 +27,54 @@ export default function Comment({ category, postId }: CommentProps) {
   } = useComments({ category, postId });
   const { create, update, remove } = useCommentMutations({ category, postId });
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage();
+
   const [openCommentId, setOpenCommentId] = useState<string | null>(null);
   const [commentValue, setCommentValue] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+
   const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
   const busy = create.isPending || update.isPending || remove.isPending;
+
   const disabled = busy || !user;
+
   const comments = data?.pages.flatMap((page) => page.items) ?? [];
+
   const profile =
-    user?.activeProfileType === 'company' ? mypage?.companyProfile : mypage?.personalProfile;
+    user?.account.activeProfileType === 'company'
+      ? mypage?.companyProfile
+      : mypage?.personalProfile;
 
   useEffect(() => {
     if (editingCommentId) editingTextareaRef.current?.focus();
   }, [editingCommentId]);
+
   useEffect(() => {
     const target = loadMoreRef.current;
+
     if (!target || !hasNextPage || isFetchNextPageError) return;
+
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !isFetchingNextPage) void fetchNextPage();
     });
+
     observer.observe(target);
+
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
 
   const onError = (error: Error) => {
     alert(error instanceof ApiError ? error.message : '댓글 요청에 실패했습니다.');
   };
+
   const submit = () => {
     const content = commentValue.trim();
+
     if (disabled || !content) return;
+
     create.mutate(
       { content },
       {
@@ -69,6 +85,7 @@ export default function Comment({ category, postId }: CommentProps) {
       },
     );
   };
+
   const renderItem = (comment: CommunityCommentResult) => (
     <CommentItem
       key={comment.id}
@@ -129,7 +146,9 @@ export default function Comment({ category, postId }: CommentProps) {
         disabled={disabled}
         profileImageUrl={profile?.profileImageUrl}
       />
+
       {isPending && <CommunityListState type="loading" message="로딩 중..." />}
+
       {error && !isFetchNextPageError && (
         <CommunityListState
           type="error"
@@ -144,6 +163,7 @@ export default function Comment({ category, postId }: CommentProps) {
         {comments.map((comment) => (
           <Fragment key={comment.id}>
             {renderItem(comment)}
+
             {comment.replies.length > 0 && (
               <li className="ml-12 flex flex-col gap-4">
                 <ul className="flex flex-col gap-4">{comment.replies.map(renderItem)}</ul>
@@ -154,7 +174,9 @@ export default function Comment({ category, postId }: CommentProps) {
       </ul>
 
       <div ref={loadMoreRef} className="h-px" />
+
       {isFetchingNextPage && <CommunityListState type="loading" message="로딩 중..." />}
+
       {isFetchNextPageError && (
         <Button
           disabled={isFetchingNextPage}

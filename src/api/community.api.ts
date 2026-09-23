@@ -429,17 +429,21 @@ export function unlikeInfoPost({ infoId }: InfoPostLikeRequest) {
 type CommentResponse = Omit<CommunityCommentResult, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
 };
+
 type CommentsListResponse = Omit<CommunityCommentsResponse, 'items'> & {
   items: (CommentResponse & {
     parentId: null;
     replies: (CommentResponse & { parentId: string })[];
   })[];
 };
+
 function mapComment({ author, ...comment }: CommentResponse): CommunityCommentResult {
   const { type, ...profile } = author;
   return { ...comment, author: { ...profile, profileType: type } };
 }
+
 export type CommentsParams = { category: CommunityCommentCategory; postId: string };
+
 export async function getComments({
   category,
   postId,
@@ -467,10 +471,10 @@ export async function getComments({
   };
 }
 export type CreateCommentRequest = CommentsParams & {
-  userId: string;
   content: string;
   parentId?: string;
 };
+
 export async function createComment({ category, postId, ...data }: CreateCommentRequest) {
   const response = await apiClient<CommentResponse>(
     `/backend-api/community/${category}/${postId}/comments`,
@@ -479,24 +483,35 @@ export async function createComment({ category, postId, ...data }: CreateComment
       body: JSON.stringify(data),
     },
   );
+
   return mapComment(response);
 }
-export type UpdateCommentRequest = { commentId: string; userId: string; content: string };
-export async function updateComment({ commentId, userId, content }: UpdateCommentRequest) {
+
+export type UpdateCommentRequest = {
+  commentId: string;
+  content: string;
+  authorProfileType: UserSummary['profileType'];
+};
+
+export async function updateComment({
+  commentId,
+  content,
+  authorProfileType,
+}: UpdateCommentRequest) {
   const response = await apiClient<CommentResponse>(
     `/backend-api/community/comments/${commentId}`,
     {
       method: 'PATCH',
-      query: { userId },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, authorProfileType }),
     },
   );
   return mapComment(response);
 }
-export type DeleteCommentRequest = { commentId: string; userId: string };
-export function deleteComment({ commentId, userId }: DeleteCommentRequest) {
+
+export type DeleteCommentRequest = { commentId: string };
+
+export function deleteComment({ commentId }: DeleteCommentRequest) {
   return apiClient<{ success: boolean }>(`/backend-api/community/comments/${commentId}`, {
     method: 'DELETE',
-    query: { userId },
   });
 }
