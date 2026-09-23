@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import GroupPostCard from '@/components/community/groups/GroupPostCard';
 
 import CommunityListState from '@/app/(app)/community/_components/CommunityListState';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { useGroupBookmarks } from '@/queries/mypage/useGroupBookmarks';
 import { useToggleGroupPostLike } from '@/queries/community/useToggleGroupPostLike';
 
@@ -15,7 +15,6 @@ type GroupBookmarkListProps = {
 };
 
 export default function GroupBookmarkList({ sort, keyword }: GroupBookmarkListProps) {
-  const currentUserQuery = useCurrentUser();
   const {
     data,
     isPending,
@@ -88,18 +87,6 @@ export default function GroupBookmarkList({ sort, keyword }: GroupBookmarkListPr
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [bookmarkedGroupPosts, sort, keyword]);
-
-  if (currentUserQuery.isError) {
-    return (
-      <CommunityListState
-        type="error"
-        message="사용자 정보를 불러오지 못했습니다."
-        onRetry={() => {
-          void currentUserQuery.refetch();
-        }}
-      />
-    );
-  }
 
   if (isPending) return <CommunityListState type="loading" message="로딩 중..." />;
 

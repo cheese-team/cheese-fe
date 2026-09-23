@@ -9,6 +9,13 @@ import DatePicker from '@/components/common/DatePicker/DatePicker';
 
 import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
 
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { useCreateJobPost } from '@/queries/community/useCreateJobPost';
+import { useUpdateJobPost } from '@/queries/community/useUpdateJobPost';
+
+import { FieldSelectValue, toFieldArray, toFieldSelectValue } from '@/lib/jobField';
+import { formatDate } from '@/lib/formatDate';
+
 import {
   CAREER_OPTIONS,
   EDUCATION_OPTIONS,
@@ -17,12 +24,6 @@ import {
 } from '@/constants/profileOptions';
 
 import type { JobPost } from '@/types/community/community';
-import { FieldSelectValue, toFieldArray, toFieldSelectValue } from '@/lib/jobField';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useCreateJobPost } from '@/queries/community/useCreateJobPost';
-import { useUpdateJobPost } from '@/queries/community/useUpdateJobPost';
-import { useMypage } from '@/queries/mypage/useMypage';
-import { formatDate } from '@/lib/formatDate';
 
 type JobPostFormProps = {
   mode: 'create' | 'edit';
@@ -43,18 +44,16 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
   );
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
+
   const { mutate: createJobPost, isPending: isCreatePending } = useCreateJobPost();
   const { mutate: updateJobPost, isPending: isUpdatePending } = useUpdateJobPost();
 
-  // const isCompanyProfile = user?.activeProfileType === 'company';
+  const isCompanyProfile = user?.account.activeProfileType === 'company';
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
 
     if (!user || isCreatePending || isUpdatePending) return;
-
-    if (mode === 'create' && !mypage) return;
 
     const formData = new FormData(event.currentTarget);
 
@@ -66,64 +65,59 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
       .filter(Boolean);
     const applyUrl = String(formData.get('url') ?? '').trim();
 
-    // TODO: JWT 인증 방식 전환 시 확인
-    // if (!isCompanyProfile && !applyUrl) {
-    //   return;
-    // }
+    if (!isCompanyProfile && !applyUrl) {
+      return;
+    }
 
-    // const jobPostData = {
-    //   // TODO: 개인 프로필 작성 시 companyName 입력 방식 협의 필요
-    //   companyName:
-    //     mode === 'edit' && initialValues
-    //       ? initialValues.companyName
-    //       : isCompanyProfile
-    //         ? (mypage?.companyProfile.companyName ?? '')
-    //         : '',
-    //   title,
-    //   field: toFieldArray(field),
-    //   employmentType,
-    //   location,
-    //   education,
-    //   career,
-    //   skills,
-    //   deadline: date || null,
-    //   apply: isCompanyProfile
-    //     ? {
-    //         type: 'direct' as const,
-    //       }
-    //     : {
-    //         type: 'homepage' as const,
-    //         url: applyUrl,
-    //       },
-    //   content,
-    // };
+    const jobPostData = {
+      // TODO: 개인 프로필 작성 시 companyName 입력 방식 협의 필요
+      companyName:
+        mode === 'edit' && initialValues
+          ? initialValues.companyName
+          : isCompanyProfile
+            ? user.profile.displayName
+            : '',
+      title,
+      field: toFieldArray(field),
+      employmentType,
+      location,
+      education,
+      career,
+      skills,
+      deadline: date || null,
+      apply: isCompanyProfile
+        ? {
+            type: 'direct' as const,
+          }
+        : {
+            type: 'homepage' as const,
+            url: applyUrl,
+          },
+      content,
+    };
 
-    // if (mode === 'create') {
-    //   createJobPost(
-    //     { userId: user.id, ...jobPostData },
-    //     {
-    //       onSuccess: (createdJobPost) => {
-    //         router.replace(`/community/jobs/${createdJobPost.id}`);
-    //       },
-    //     },
-    //   );
-    //   return;
-    // }
+    if (mode === 'create') {
+      createJobPost(jobPostData, {
+        onSuccess: (createdJobPost) => {
+          router.replace(`/community/jobs/${createdJobPost.id}`);
+        },
+      });
+      return;
+    }
 
     if (!jobId || !initialValues) return;
 
-    // updateJobPost(
-    //   {
-    //     jobId,
-    //     userId: user.id,
-    //     data: jobPostData,
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       router.replace(`/community/jobs/${jobId}`);
-    //     },
-    //   },
-    // );
+    updateJobPost(
+      {
+        jobId,
+        data: jobPostData,
+      },
+      {
+        onSuccess: () => {
+          router.replace(`/community/jobs/${jobId}`);
+        },
+      },
+    );
   };
 
   const applyUrl = initialValues?.apply.type === 'homepage' ? initialValues.apply.url : '';
@@ -209,7 +203,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
               label="공고 URL"
               name="url"
               type="url"
-              // required={!isCompanyProfile} // TODO: JWT 인증 방식 전환 시 확인
+              required={!isCompanyProfile}
               placeholder="URL 입력"
               defaultValue={applyUrl}
               className="h-[30px]"

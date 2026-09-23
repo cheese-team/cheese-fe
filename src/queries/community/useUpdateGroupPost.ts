@@ -11,14 +11,7 @@ export function useUpdateGroupPost() {
     mutationFn: (request: UpdateGroupPostRequest) => updateGroupPost(request),
 
     onSuccess: async (updatedGroupPost, variables) => {
-      queryClient.removeQueries({
-        queryKey: [...communityQueryKeys.groupDetails(), variables.groupId],
-      });
-
-      queryClient.setQueryData(
-        communityQueryKeys.groupDetail(variables.groupId, variables.userId),
-        updatedGroupPost,
-      );
+      queryClient.setQueryData(communityQueryKeys.groupDetail(variables.groupId), updatedGroupPost);
 
       await queryClient.invalidateQueries({
         queryKey: communityQueryKeys.groupLists(),

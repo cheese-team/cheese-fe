@@ -1,47 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { applyGroupPost, type GroupPostsResponse } from '@/api/community.api';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 import type { GroupPost } from '@/types/community/community';
-import type { InfiniteData, QueryFilters } from '@tanstack/react-query';
+import type { InfiniteData } from '@tanstack/react-query';
 
 export function useApplyGroupPost() {
   const queryClient = useQueryClient();
-  const { data: currentUser } = useCurrentUser();
 
   return useMutation({
-    mutationFn: async (groupId: string) => {
-      if (!currentUser) {
-        throw new Error('로그인 사용자 정보가 필요합니다.');
-      }
+    mutationFn: async (groupId: string) => applyGroupPost({ groupId }),
 
-      const userId = currentUser.account.userId; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
-      const response = await applyGroupPost({ groupId, userId });
-
-      return { ...response, userId };
-    },
     onSuccess: async (response, groupId) => {
-      const queryKey = communityQueryKeys.groupDetail(groupId, response.userId);
-      const listFilters: QueryFilters = {
-        queryKey: communityQueryKeys.groupLists(),
-        predicate: (query) => {
-          const params = query.queryKey[3];
-
-          return (
-            typeof params === 'object' &&
-            params !== null &&
-            'userId' in params &&
-            params.userId === response.userId
-          );
-        },
-      };
+      const queryKey = communityQueryKeys.groupDetail(groupId);
+      const listQueryKey = communityQueryKeys.groupLists();
 
       await Promise.all([
         queryClient.cancelQueries({ queryKey, exact: true }),
-        queryClient.cancelQueries(listFilters),
+        queryClient.cancelQueries({ queryKey: listQueryKey }),
       ]);
 
       const updateApplied = (post: GroupPost): GroupPost => ({
@@ -54,23 +32,29 @@ export function useApplyGroupPost() {
         current ? updateApplied(current) : current,
       );
 
-      queryClient.setQueriesData<InfiniteData<GroupPostsResponse>>(listFilters, (current) => {
-        if (!current) return current;
+      queryClient.setQueriesData<InfiniteData<GroupPostsResponse>>(
+        { queryKey: listQueryKey },
+        (current) => {
+          if (!current) return current;
 
-        return {
-          ...current,
-          pages: current.pages.map((page) => ({
-            ...page,
-            items: page.items.map((post) => (post.id === groupId ? updateApplied(post) : post)),
-          })),
-        };
-      });
+          return {
+            ...current,
+            pages: current.pages.map((page) => ({
+              ...page,
+              items: page.items.map((post) => (post.id === groupId ? updateApplied(post) : post)),
+            })),
+          };
+        },
+      );
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey, exact: true }),
-        queryClient.invalidateQueries(listFilters),
+        queryClient.invalidateQueries({ queryKey: listQueryKey }),
         queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.groupApplications(), // TODO: JWT 인증 방식 전환 시 확인
+          queryKey: mypageQueryKeys.bookmarks('groups'),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: mypageQueryKeys.groupApplications(),
         }),
       ]);
     },

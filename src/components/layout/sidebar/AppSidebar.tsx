@@ -19,7 +19,6 @@ import ProfileImage from '@/components/common/ProfileImage';
 import { NotificationSidebar } from './NotificationSidebar';
 
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useMypage } from '@/queries/mypage/useMypage';
 
 import { cn } from '@/lib/cn';
 import {
@@ -66,23 +65,9 @@ export default function AppSidebar() {
 
   const isMyPageActive = !isNotificationSidebarOpen && isSidebarItemActive(pathname, '/mypage');
 
-  // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage();
 
-  const profile =
-    mypage?.activeProfileType === 'personal'
-      ? mypage.personalProfile
-      : mypage?.activeProfileType === 'company'
-        ? mypage.companyProfile
-        : undefined;
-
-  const profileName =
-    mypage?.activeProfileType === 'personal'
-      ? mypage.personalProfile.nickname
-      : mypage?.activeProfileType === 'company'
-        ? mypage.companyProfile.companyName
-        : '';
+  const profile = user?.profile;
 
   return (
     <>
@@ -111,7 +96,7 @@ export default function AppSidebar() {
                 <ProfileImage src={profile?.profileImageUrl} size={25} />
               </div>
 
-              <span>{profileName ? `${profileName} 님` : ''}</span>
+              <span>{profile?.displayName ? `${profile.displayName} 님` : ''}</span>
             </Link>
           </div>
 
