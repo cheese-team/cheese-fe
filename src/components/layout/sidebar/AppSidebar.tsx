@@ -19,7 +19,6 @@ import ProfileImage from '@/components/common/ProfileImage';
 import { NotificationSidebar } from './NotificationSidebar';
 
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useMypage } from '@/queries/mypage/useMypage';
 
 import { cn } from '@/lib/cn';
 import {
@@ -67,21 +66,8 @@ export default function AppSidebar() {
   const isMyPageActive = !isNotificationSidebarOpen && isSidebarItemActive(pathname, '/mypage');
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
 
-  const profile =
-    mypage?.activeProfileType === 'personal'
-      ? mypage.personalProfile
-      : mypage?.activeProfileType === 'company'
-        ? mypage.companyProfile
-        : undefined;
-
-  const profileName =
-    mypage?.activeProfileType === 'personal'
-      ? mypage.personalProfile.nickname
-      : mypage?.activeProfileType === 'company'
-        ? mypage.companyProfile.companyName
-        : '';
+  const profile = user?.profile;
 
   return (
     <>
@@ -110,7 +96,7 @@ export default function AppSidebar() {
                 <ProfileImage src={profile?.profileImageUrl} size={25} />
               </div>
 
-              <span>{profileName ? `${profileName} 님` : ''}</span>
+              <span>{profile?.displayName ? `${profile.displayName} 님` : ''}</span>
             </Link>
           </div>
 

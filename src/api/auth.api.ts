@@ -1,5 +1,7 @@
 import { apiClient, ApiError } from './client';
 
+import type { ProfileType } from '@/types/profile';
+
 export type LoginRequest = {
   email: string;
   password: string;
@@ -9,7 +11,22 @@ export type AuthUser = {
   id: string;
   nickname: string;
   email: string;
-  activeProfileType: 'personal' | 'company';
+  activeProfileType: ProfileType;
+};
+
+export type CurrentUser = {
+  account: {
+    userId: string;
+    email: string;
+    activeProfileType: ProfileType;
+    isAdmin: boolean;
+  };
+  profile: {
+    id: number;
+    profileType: ProfileType;
+    displayName: string;
+    profileImageUrl: string;
+  };
 };
 
 export function login(data: LoginRequest) {
@@ -20,7 +37,7 @@ export function login(data: LoginRequest) {
 }
 
 export function getMe() {
-  return apiClient<AuthUser>('/backend-api/auth/me', {
+  return apiClient<CurrentUser>('/backend-api/auth/me', {
     method: 'GET',
     cache: 'no-store',
   });
@@ -46,7 +63,7 @@ export async function getMeFromServer(cookie: string) {
     throw new ApiError('사용자 인증에 실패했습니다.', response.status);
   }
 
-  return (await response.json()) as AuthUser;
+  return (await response.json()) as CurrentUser;
 }
 
 export type LogoutResponse = {
@@ -74,12 +91,16 @@ export function signup(data: SignupRequest) {
   });
 }
 
+export type EmailVerificationPurpose = 'signup' | 'password-reset' | 'contact-change';
+
 export type SendEmailCodeRequest = {
   email: string;
+  purpose: EmailVerificationPurpose;
 };
 
 export type SendEmailCodeResponse = {
   success: boolean;
+  expiresInSeconds: number;
 };
 
 export function sendEmailCode(data: SendEmailCodeRequest) {
@@ -133,5 +154,15 @@ export function resetPassword(data: ResetPasswordRequest) {
   return apiClient<ResetPasswordResponse>('/backend-api/auth/password-reset', {
     method: 'PATCH',
     body: JSON.stringify(data),
+  });
+}
+
+export type DeleteMeResponse = {
+  success: boolean;
+};
+
+export function deleteMe() {
+  return apiClient<DeleteMeResponse>('/backend-api/auth/me', {
+    method: 'DELETE',
   });
 }

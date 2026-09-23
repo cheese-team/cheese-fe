@@ -8,9 +8,9 @@ export function useUpdateAccountSettings() {
   return useMutation({
     mutationFn: updateAccountSettings,
 
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       return queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.user(variables.userId),
+        queryKey: mypageQueryKeys.user(),
       });
     },
   });

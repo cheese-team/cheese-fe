@@ -45,7 +45,7 @@ export type CompanyProfile = {
 export type AccountSettings = {
   contactMethod: ContactMethod;
   contactUrl?: string;
-  email: string;
+  contactEmail: string;
   passwordUpdatedAt: string;
   address: string;
 };
@@ -54,6 +54,7 @@ export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUr
 
 export type Mypage = {
   activeProfileType: ProfileType;
+  loginEmail?: string; // TODO: mock 데이터 삭제 후 필수여부 확인
   personalProfile: PersonalProfile;
   companyProfile: CompanyProfile;
   accountSettings: AccountSettings;

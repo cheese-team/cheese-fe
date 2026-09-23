@@ -47,13 +47,8 @@ function getCalendarErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function getMutationErrorMessage(
-  error: unknown,
-  requestUserId: string | undefined,
-  currentUserId: string | undefined,
-  fallback: string,
-) {
-  if (!error || !requestUserId || requestUserId !== currentUserId) {
+function getMutationErrorMessage(error: unknown, fallback: string) {
+  if (!error) {
     return null;
   }
 
@@ -67,31 +62,28 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
     isPending: isCurrentUserPending,
     isRefetchError: isCurrentUserRefetchError,
   } = useCurrentUser();
-  const userId = currentUser?.id;
   const hasCurrentUserError = Boolean(currentUserError) || isCurrentUserRefetchError;
-  const canLoadCalendarEvents = Boolean(userId) && !hasCurrentUserError;
+  const hasAuthenticatedUser = Boolean(currentUser);
+  const canLoadCalendarEvents = hasAuthenticatedUser && !hasCurrentUserError;
   const {
     data: calendarEvents,
     error: calendarEventsError,
     isPending: isCalendarEventsPending,
-  } = useCalendarEvents({ userId, enabled: canLoadCalendarEvents });
+  } = useCalendarEvents({ enabled: canLoadCalendarEvents });
   const {
     mutateAsync: createCalendarEventAsync,
     reset: resetCreateCalendarEvent,
     error: createCalendarEventError,
-    variables: createCalendarEventVariables,
   } = useCreateCalendarEventMutation();
   const {
     mutateAsync: updateCalendarEventAsync,
     reset: resetUpdateCalendarEvent,
     error: updateCalendarEventError,
-    variables: updateCalendarEventVariables,
   } = useUpdateCalendarEventMutation();
   const {
     mutateAsync: deleteCalendarEventAsync,
     reset: resetDeleteCalendarEvent,
     error: deleteCalendarEventError,
-    variables: deleteCalendarEventVariables,
   } = useDeleteCalendarEventMutation();
 
   const events = canLoadCalendarEvents
@@ -112,7 +104,7 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
         return 'loading';
       }
 
-      if (!userId || hasCurrentUserError) {
+      if (!canLoadCalendarEvents) {
         return 'error';
       }
 
@@ -130,7 +122,6 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
 
       try {
         await createCalendarEventAsync({
-          userId,
           draft: normalizedEvent,
         });
         return 'success';
@@ -145,12 +136,11 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
     },
     [
       createCalendarEventAsync,
+      canLoadCalendarEvents,
       events,
-      hasCurrentUserError,
       isCalendarLoading,
       resetCreateCalendarEvent,
       resetMutationErrors,
-      userId,
     ],
   );
 
@@ -160,7 +150,7 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
         return 'loading';
       }
 
-      if (!userId || hasCurrentUserError) {
+      if (!canLoadCalendarEvents) {
         return 'error';
       }
 
@@ -190,7 +180,6 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
 
       try {
         await updateCalendarEventAsync({
-          userId,
           eventId: editingEventId,
           draft: nextEvent,
         });
@@ -210,13 +199,12 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
       }
     },
     [
+      canLoadCalendarEvents,
       events,
-      hasCurrentUserError,
       isCalendarLoading,
       resetMutationErrors,
       resetUpdateCalendarEvent,
       updateCalendarEventAsync,
-      userId,
     ],
   );
 
@@ -226,14 +214,14 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
         return 'loading';
       }
 
-      if (!userId || hasCurrentUserError) {
+      if (!canLoadCalendarEvents) {
         return 'error';
       }
 
       resetMutationErrors();
 
       try {
-        await deleteCalendarEventAsync({ userId, eventId });
+        await deleteCalendarEventAsync({ eventId });
         return 'success';
       } catch (error) {
         if (error instanceof ApiError && error.status === 404) {
@@ -245,17 +233,16 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
       }
     },
     [
+      canLoadCalendarEvents,
       deleteCalendarEventAsync,
-      hasCurrentUserError,
       isCalendarLoading,
       resetDeleteCalendarEvent,
       resetMutationErrors,
-      userId,
     ],
   );
 
   const authErrorMessage =
-    !isCurrentUserPending && (hasCurrentUserError || !userId)
+    !isCurrentUserPending && !canLoadCalendarEvents
       ? getCalendarErrorMessage(currentUserError, '로그인 정보를 확인할 수 없습니다.')
       : null;
   const queryErrorMessage = calendarEventsError
@@ -264,24 +251,9 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
   const errorMessage =
     authErrorMessage ??
     queryErrorMessage ??
-    getMutationErrorMessage(
-      createCalendarEventError,
-      createCalendarEventVariables?.userId,
-      userId,
-      '일정을 등록하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      updateCalendarEventError,
-      updateCalendarEventVariables?.userId,
-      userId,
-      '일정을 수정하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      deleteCalendarEventError,
-      deleteCalendarEventVariables?.userId,
-      userId,
-      '일정을 삭제하지 못했습니다.',
-    );
+    getMutationErrorMessage(createCalendarEventError, '일정을 등록하지 못했습니다.') ??
+    getMutationErrorMessage(updateCalendarEventError, '일정을 수정하지 못했습니다.') ??
+    getMutationErrorMessage(deleteCalendarEventError, '일정을 삭제하지 못했습니다.');
 
   const value = useMemo(
     () => ({

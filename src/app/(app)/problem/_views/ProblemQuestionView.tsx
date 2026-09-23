@@ -85,7 +85,7 @@ export default function ProblemQuestionView({
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
 
   const currentUserQuery = useCurrentUser();
-  const userId = currentUserQuery.data?.id;
+  const userId = currentUserQuery.data?.account.userId; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
   const detailQuery = useProblemSetDetail({
     userId,
     problemSetId,

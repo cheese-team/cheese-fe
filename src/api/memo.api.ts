@@ -27,24 +27,20 @@ export type MemoDraft = {
 };
 
 type GetMemosParams = {
-  userId: string;
   deleted?: boolean;
   signal?: AbortSignal;
 };
 
 type GetWidgetMemosParams = {
-  userId: string;
   limit?: number;
   signal?: AbortSignal;
 };
 
 type CreateMemoParams = {
-  userId: string;
   draft: MemoDraft;
 };
 
 type MemoMutationParams = {
-  userId: string;
   memoId: string;
 };
 
@@ -74,10 +70,10 @@ function toMemo(response: MemoResponse): Memo {
   };
 }
 
-export async function getMemos({ userId, deleted = false, signal }: GetMemosParams) {
+export async function getMemos({ deleted = false, signal }: GetMemosParams) {
   const memos = await apiClient<MemoResponse[]>('/backend-api/memos', {
     method: 'GET',
-    query: { userId, deleted: String(deleted) },
+    query: { deleted: String(deleted) },
     signal,
     cache: 'no-store',
   });
@@ -85,10 +81,10 @@ export async function getMemos({ userId, deleted = false, signal }: GetMemosPara
   return memos.map(toMemo);
 }
 
-export async function getWidgetMemos({ userId, limit = 5, signal }: GetWidgetMemosParams) {
+export async function getWidgetMemos({ limit = 5, signal }: GetWidgetMemosParams) {
   const memos = await apiClient<MemoResponse[]>('/backend-api/memos/widget', {
     method: 'GET',
-    query: { userId, limit: String(limit) },
+    query: { limit: String(limit) },
     signal,
     cache: 'no-store',
   });
@@ -96,59 +92,51 @@ export async function getWidgetMemos({ userId, limit = 5, signal }: GetWidgetMem
   return memos.map(toMemo);
 }
 
-export async function createMemo({ userId, draft }: CreateMemoParams) {
+export async function createMemo({ draft }: CreateMemoParams) {
   const memo = await apiClient<MemoResponse>('/backend-api/memos', {
     method: 'POST',
-    body: JSON.stringify({
-      userId,
-      ...draft,
-    }),
-  });
-
-  return toMemo(memo);
-}
-
-export async function updateMemo({ userId, memoId, draft }: UpdateMemoParams) {
-  const memo = await apiClient<MemoResponse>(`/backend-api/memos/${memoId}`, {
-    method: 'PATCH',
-    query: { userId },
     body: JSON.stringify(draft),
   });
 
   return toMemo(memo);
 }
 
-export async function updateMemoPin({ userId, memoId, pinned }: UpdateMemoPinParams) {
+export async function updateMemo({ memoId, draft }: UpdateMemoParams) {
+  const memo = await apiClient<MemoResponse>(`/backend-api/memos/${memoId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(draft),
+  });
+
+  return toMemo(memo);
+}
+
+export async function updateMemoPin({ memoId, pinned }: UpdateMemoPinParams) {
   const memo = await apiClient<MemoResponse>(`/backend-api/memos/${memoId}/pin`, {
     method: 'PATCH',
-    query: { userId },
     body: JSON.stringify({ pinned }),
   });
 
   return toMemo(memo);
 }
 
-export async function deleteMemo({ userId, memoId }: MemoMutationParams) {
+export async function deleteMemo({ memoId }: MemoMutationParams) {
   const memo = await apiClient<MemoResponse>(`/backend-api/memos/${memoId}`, {
     method: 'DELETE',
-    query: { userId },
   });
 
   return toMemo(memo);
 }
 
-export async function restoreMemo({ userId, memoId }: MemoMutationParams) {
+export async function restoreMemo({ memoId }: MemoMutationParams) {
   const memo = await apiClient<MemoResponse>(`/backend-api/memos/${memoId}/restore`, {
     method: 'POST',
-    query: { userId },
   });
 
   return toMemo(memo);
 }
 
-export function permanentDeleteMemo({ userId, memoId }: MemoMutationParams) {
+export function permanentDeleteMemo({ memoId }: MemoMutationParams) {
   return apiClient<{ success: boolean }>(`/backend-api/memos/${memoId}/permanent`, {
     method: 'DELETE',
-    query: { userId },
   });
 }

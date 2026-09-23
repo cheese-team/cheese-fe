@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import GroupPostCard from '@/components/community/groups/GroupPostCard';
 import CommunityListState from '@/app/(app)/community/_components/CommunityListState';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { useGroupApplications } from '@/queries/mypage/useGroupApplications';
 import { useToggleGroupPostLike } from '@/queries/community/useToggleGroupPostLike';
 
@@ -16,7 +16,6 @@ type AppliedGroupListProps = {
 };
 
 export default function AppliedGroupList({ sort, keyword }: AppliedGroupListProps) {
-  const currentUserQuery = useCurrentUser();
   const {
     data,
     isPending,
@@ -41,18 +40,6 @@ export default function AppliedGroupList({ sort, keyword }: AppliedGroupListProp
     observer.observe(target);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
-
-  if (currentUserQuery.isError) {
-    return (
-      <CommunityListState
-        type="error"
-        message="사용자 정보를 불러오지 못했습니다."
-        onRetry={() => {
-          void currentUserQuery.refetch();
-        }}
-      />
-    );
-  }
 
   if (isPending) {
     return <CommunityListState type="loading" message="로딩 중..." />;

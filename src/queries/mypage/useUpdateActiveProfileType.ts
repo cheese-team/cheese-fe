@@ -11,10 +11,10 @@ export function useUpdateActiveProfileType() {
       return updateActiveProfileType(request);
     },
 
-    onSuccess: async (_, variables) => {
+    onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.user(variables.userId),
+          queryKey: mypageQueryKeys.user(),
         }),
         queryClient.invalidateQueries({
           queryKey: authQueryKeys.me(),

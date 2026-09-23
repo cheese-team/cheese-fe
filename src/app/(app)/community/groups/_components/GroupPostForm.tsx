@@ -9,16 +9,17 @@ import DatePicker from '@/components/common/DatePicker/DatePicker';
 
 import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
 
+import { ApiError } from '@/api/client';
+import { useCreateGroupPost } from '@/queries/community/useCreateGroupPost';
+import { useUpdateGroupPost } from '@/queries/community/useUpdateGroupPost';
+
+import { formatDate } from '@/lib/formatDate';
 import { toFieldArray, toFieldSelectValue, type FieldSelectValue } from '@/lib/jobField';
+
 import { FIELD_OPTIONS, WORK_METHOD_OPTIONS } from '@/constants/profileOptions';
 
 import type { GroupPost } from '@/types/community/community';
 import type { CreateGroupPostRequest } from '@/api/community.api';
-import { ApiError } from '@/api/client';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useCreateGroupPost } from '@/queries/community/useCreateGroupPost';
-import { useUpdateGroupPost } from '@/queries/community/useUpdateGroupPost';
-import { formatDate } from '@/lib/formatDate';
 
 type GroupPostFormProps = {
   mode: 'create' | 'edit';
@@ -34,14 +35,14 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
   const [date, setDate] = useState(
     initialValues?.deadline ? formatDate(initialValues.deadline).replaceAll('.', '-') : '',
   );
-  const { data: user } = useCurrentUser();
+
   const { mutate: createGroupPost, isPending: isCreatePending } = useCreateGroupPost();
   const { mutate: updateGroupPost, isPending: isUpdatePending } = useUpdateGroupPost();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
 
-    if (!user || isCreatePending || isUpdatePending) return;
+    if (isCreatePending || isUpdatePending) return;
 
     const selectedFields = toFieldArray(field);
 
@@ -69,7 +70,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
       .filter(Boolean);
     const recruitCount = Number(formData.get('recruitCount') ?? 0);
 
-    const groupPostPayload: Omit<CreateGroupPostRequest, 'userId'> = {
+    const groupPostPayload: CreateGroupPostRequest = {
       title,
       field: selectedFields,
       progressType,
@@ -85,22 +86,19 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
     };
 
     if (mode === 'create') {
-      createGroupPost(
-        { userId: user.id, ...groupPostPayload },
-        {
-          onSuccess: (createdGroupPost) => {
-            router.replace(`/community/groups/${createdGroupPost.id}`);
-          },
-          onError,
+      createGroupPost(groupPostPayload, {
+        onSuccess: (createdGroupPost) => {
+          router.replace(`/community/groups/${createdGroupPost.id}`);
         },
-      );
+        onError,
+      });
       return;
     }
 
     if (!groupId || !initialValues) return;
 
     updateGroupPost(
-      { groupId, userId: user.id, data: groupPostPayload },
+      { groupId, data: groupPostPayload },
       {
         onSuccess: () => {
           router.replace(`/community/groups/${groupId}`);

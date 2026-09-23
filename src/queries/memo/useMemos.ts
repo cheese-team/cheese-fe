@@ -9,7 +9,6 @@ import type { Memo } from '@/app/(app)/memo/_types/memo';
 const WIDGET_MEMO_LIMIT = 5;
 
 type UseMemosParams = {
-  userId?: string;
   enabled: boolean;
 };
 
@@ -18,18 +17,14 @@ export type MemoQueryData = {
   widgetMemos: Memo[];
 };
 
-export function useMemos({ userId, enabled }: UseMemosParams) {
+export function useMemos({ enabled }: UseMemosParams) {
   return useQuery({
-    queryKey: memoQueryKeys.data(userId ?? ''),
+    queryKey: memoQueryKeys.data(),
     queryFn: async ({ signal }): Promise<MemoQueryData> => {
-      if (!userId) {
-        return { memos: [], widgetMemos: [] };
-      }
-
       const [activeMemos, deletedMemos, widgetMemos] = await Promise.all([
-        getMemos({ userId, signal }),
-        getMemos({ userId, deleted: true, signal }),
-        getWidgetMemos({ userId, limit: WIDGET_MEMO_LIMIT, signal }),
+        getMemos({ signal }),
+        getMemos({ deleted: true, signal }),
+        getWidgetMemos({ limit: WIDGET_MEMO_LIMIT, signal }),
       ]);
 
       return {
@@ -37,6 +32,6 @@ export function useMemos({ userId, enabled }: UseMemosParams) {
         widgetMemos,
       };
     },
-    enabled: enabled && Boolean(userId),
+    enabled,
   });
 }

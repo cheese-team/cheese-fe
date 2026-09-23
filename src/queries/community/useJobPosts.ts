@@ -3,13 +3,15 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { communityQueryKeys } from './communityQueryKeys';
 
 import { getJobPosts } from '@/api/community.api';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
 import type { JobPostsListParams } from '@/types/community/query';
 
 export function useJobPosts(params: JobPostsListParams) {
-  const { data: currentUser } = useCurrentUser();
-  const requestParams = { ...params, userId: currentUser?.id };
+  const requestParams = {
+    ...params,
+    sort: params.sort ?? 'latest',
+    limit: params.limit ?? 20,
+  };
 
   return useInfiniteQuery({
     queryKey: communityQueryKeys.jobList(requestParams),
@@ -22,7 +24,5 @@ export function useJobPosts(params: JobPostsListParams) {
     getNextPageParam: (lastPage) => {
       return lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined;
     },
-
-    enabled: !!currentUser,
   });
 }

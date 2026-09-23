@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { logout } from '@/api/auth.api';
+import { deleteMe } from '@/api/auth.api';
 
-export function useLogout() {
+export function useDeleteMe() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: logout,
+    mutationFn: deleteMe,
     onSuccess: () => {
       queryClient.clear();
     },

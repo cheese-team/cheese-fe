@@ -9,9 +9,10 @@ export function useDeleteGroupPost() {
 
   return useMutation({
     mutationFn: (request: DeleteGroupPostRequest) => deleteGroupPost(request),
+
     onSuccess: async (_, variables) => {
       queryClient.removeQueries({
-        queryKey: communityQueryKeys.groupDetail(variables.groupId, variables.userId),
+        queryKey: communityQueryKeys.groupDetail(variables.groupId),
         exact: true,
       });
 

@@ -26,7 +26,7 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(user?.id);
+  const { data: mypage } = useMypage();
   const { mutate: deleteJobPost, isPending: isDeletePending } = useDeleteJobPost();
   const { mutate: updateActiveProfileType, isPending: isProfileSwitchPending } =
     useUpdateActiveProfileType();
@@ -37,15 +37,11 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
     (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile.id);
 
   const handleEdit = () => {
-    console.log('handleEdit 실행', {
-      authorProfileType: jobPost.author.profileType,
-      activeProfileType: user?.activeProfileType,
-    });
-    if (!user || isProfileSwitchPending) return;
+    if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
 
     const authorProfileType = jobPost.author.profileType;
 
-    if (authorProfileType === user.activeProfileType) {
+    if (authorProfileType === user.account.activeProfileType) {
       router.push(`/community/jobs/${jobId}/edit`);
       return;
     }
@@ -58,7 +54,6 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
     updateActiveProfileType(
       {
-        userId: user.id,
         activeProfileType: authorProfileType,
       },
       {
@@ -80,13 +75,13 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
       onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={handleEdit}
       onDelete={() => {
-        if (!user || isDeletePending) return;
+        if (!user || !isMine || isDeletePending || isProfileSwitchPending) return;
 
         const confirmed = window.confirm('삭제하시겠습니까?');
         if (!confirmed) return;
 
         deleteJobPost(
-          { jobId, userId: user.id },
+          { jobId },
           {
             onSuccess: () => {
               router.push('/community/jobs');

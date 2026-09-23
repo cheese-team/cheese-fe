@@ -13,14 +13,12 @@ type CalendarEventRequest = Pick<CalendarEventDraft, 'title' | 'start' | 'end'> 
   >;
 
 type GetCalendarEventsParams = {
-  userId: string;
   from?: string;
   to?: string;
   signal?: AbortSignal;
 };
 
 type CalendarEventMutationParams = {
-  userId: string;
   draft: CalendarEventDraft;
 };
 
@@ -29,7 +27,6 @@ type UpdateCalendarEventParams = CalendarEventMutationParams & {
 };
 
 type DeleteCalendarEventParams = {
-  userId: string;
   eventId: string;
 };
 
@@ -58,36 +55,31 @@ function toCalendarEventRequest(draft: CalendarEventDraft): CalendarEventRequest
   };
 }
 
-export function getCalendarEvents({ userId, from, to, signal }: GetCalendarEventsParams) {
+export function getCalendarEvents({ from, to, signal }: GetCalendarEventsParams) {
   return apiClient<CalendarEvent[]>('/backend-api/calendar/events', {
     method: 'GET',
-    query: { userId, from, to },
+    query: { from, to },
     signal,
     cache: 'no-store',
   });
 }
 
-export function createCalendarEvent({ userId, draft }: CalendarEventMutationParams) {
+export function createCalendarEvent({ draft }: CalendarEventMutationParams) {
   return apiClient<CalendarEvent>('/backend-api/calendar/events', {
     method: 'POST',
-    body: JSON.stringify({
-      userId,
-      ...toCalendarEventRequest(draft),
-    }),
-  });
-}
-
-export function updateCalendarEvent({ userId, eventId, draft }: UpdateCalendarEventParams) {
-  return apiClient<CalendarEvent>(`/backend-api/calendar/events/${eventId}`, {
-    method: 'PATCH',
-    query: { userId },
     body: JSON.stringify(toCalendarEventRequest(draft)),
   });
 }
 
-export function deleteCalendarEvent({ userId, eventId }: DeleteCalendarEventParams) {
+export function updateCalendarEvent({ eventId, draft }: UpdateCalendarEventParams) {
+  return apiClient<CalendarEvent>(`/backend-api/calendar/events/${eventId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(toCalendarEventRequest(draft)),
+  });
+}
+
+export function deleteCalendarEvent({ eventId }: DeleteCalendarEventParams) {
   return apiClient<CalendarEvent>(`/backend-api/calendar/events/${eventId}`, {
     method: 'DELETE',
-    query: { userId },
   });
 }

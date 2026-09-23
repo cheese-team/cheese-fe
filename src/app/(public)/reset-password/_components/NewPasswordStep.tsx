@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 
-import { AUTH_MESSAGE } from '@/constants/auth';
 import { useResetPassword } from '@/queries/auth/useResetPassword';
 
-import { validatePassword, validatePasswordConfirmation } from '@/lib/validation';
+import { AUTH_MESSAGE } from '../../(auth)/_constants/authMessage';
+import { validatePassword, validatePasswordConfirmation } from '../../(auth)/_lib/validation';
 
 type NewPasswordStepProps = {
   email: string;

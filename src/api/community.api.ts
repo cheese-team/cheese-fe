@@ -30,7 +30,6 @@ export type JobPostsResponse = {
 };
 
 export function getJobPosts({
-  userId,
   sort,
   keyword,
   cursor,
@@ -41,7 +40,6 @@ export function getJobPosts({
     method: 'GET',
     cache: 'no-store',
     query: {
-      userId,
       sort,
       keyword,
       cursor,
@@ -53,21 +51,18 @@ export function getJobPosts({
 
 type GetJobPostParams = {
   jobId: string;
-  userId?: string;
   signal?: AbortSignal;
 };
 
-export function getJobPost({ jobId, userId, signal }: GetJobPostParams) {
+export function getJobPost({ jobId, signal }: GetJobPostParams) {
   return apiClient<JobPost>(`/backend-api/community/jobs/${jobId}`, {
     method: 'GET',
     cache: 'no-store',
-    query: { userId },
     signal,
   });
 }
 
 export type CreateJobPostRequest = {
-  userId: string;
   companyName: string;
   title: string;
   field: string[];
@@ -90,70 +85,57 @@ export function createJobPost(request: CreateJobPostRequest) {
 
 export type UpdateJobPostRequest = {
   jobId: string;
-  userId: string;
-  data: Omit<CreateJobPostRequest, 'userId'>;
+  data: CreateJobPostRequest;
 };
 
-export function updateJobPost({ jobId, userId, data }: UpdateJobPostRequest) {
+export function updateJobPost({ jobId, data }: UpdateJobPostRequest) {
   return apiClient<JobPost>(`/backend-api/community/jobs/${jobId}`, {
     method: 'PATCH',
-    query: { userId },
     body: JSON.stringify(data),
   });
 }
 
 export type DeleteJobPostRequest = {
   jobId: string;
-  userId: string;
 };
 
-type DeleteJobPostResponse = {
-  success: boolean;
-};
-
-export function deleteJobPost({ jobId, userId }: DeleteJobPostRequest) {
-  return apiClient<DeleteJobPostResponse>(`/backend-api/community/jobs/${jobId}`, {
+export function deleteJobPost({ jobId }: DeleteJobPostRequest) {
+  return apiClient<JobPost>(`/backend-api/community/jobs/${jobId}`, {
     method: 'DELETE',
-    query: { userId },
   });
 }
 
 type JobPostLikeRequest = {
   jobId: string;
-  userId: string;
 };
 
 type JobPostLikeResponse = {
   isLiked: boolean;
 };
 
-export function likeJobPost({ jobId, userId }: JobPostLikeRequest) {
+export function likeJobPost({ jobId }: JobPostLikeRequest) {
   return apiClient<JobPostLikeResponse>(`/backend-api/community/jobs/${jobId}/like`, {
     method: 'POST',
-    query: { userId },
   });
 }
 
-export function unlikeJobPost({ jobId, userId }: JobPostLikeRequest) {
+export function unlikeJobPost({ jobId }: JobPostLikeRequest) {
   return apiClient<JobPostLikeResponse>(`/backend-api/community/jobs/${jobId}/like`, {
     method: 'DELETE',
-    query: { userId },
   });
 }
 
 type JobPostApplyRequest = {
   jobId: string;
-  userId: string;
 };
 
 type JobPostApplyResponse = {
   isApplied: boolean;
 };
 
-export function applyJobPost({ jobId, userId }: JobPostApplyRequest) {
+export function applyJobPost({ jobId }: JobPostApplyRequest) {
   return apiClient<JobPostApplyResponse>(`/backend-api/community/jobs/${jobId}/apply`, {
     method: 'POST',
-    query: { userId },
   });
 }
 
@@ -177,7 +159,6 @@ export function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost 
 }
 
 export async function getGroupPosts({
-  userId,
   sort = 'latest',
   keyword,
   cursor,
@@ -189,7 +170,7 @@ export async function getGroupPosts({
   >('/backend-api/community/groups', {
     method: 'GET',
     cache: 'no-store',
-    query: { userId, sort, keyword, cursor, limit: limit.toString() },
+    query: { sort, keyword, cursor, limit: limit.toString() },
     signal,
   });
 
@@ -198,21 +179,18 @@ export async function getGroupPosts({
 
 type GetGroupPostParams = {
   groupId: string;
-  userId?: string;
   signal?: AbortSignal;
 };
 
-export async function getGroupPost({
-  groupId,
-  userId,
-  signal,
-}: GetGroupPostParams): Promise<GroupPost> {
-  const response = await apiClient<GroupPostResponse>(`/backend-api/community/groups/${groupId}`, {
-    method: 'GET',
-    cache: 'no-store',
-    query: { userId },
-    signal,
-  });
+export async function getGroupPost({ groupId, signal }: GetGroupPostParams): Promise<GroupPost> {
+  const response = await apiClient<GroupPostResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    },
+  );
 
   return mapGroupPost(response);
 }
@@ -227,7 +205,7 @@ export type CreateGroupPostRequest = Pick<
   | 'skills'
   | 'deadline'
   | 'content'
-> & { userId: string };
+>;
 
 export async function createGroupPost(request: CreateGroupPostRequest): Promise<GroupPost> {
   const response = await apiClient<GroupPostResponse>('/backend-api/community/groups', {
@@ -240,77 +218,74 @@ export async function createGroupPost(request: CreateGroupPostRequest): Promise<
 
 export type UpdateGroupPostRequest = {
   groupId: string;
-  userId: string;
-  data: Omit<CreateGroupPostRequest, 'userId'>;
+  data: CreateGroupPostRequest;
 };
 
 export async function updateGroupPost({
   groupId,
-  userId,
   data,
 }: UpdateGroupPostRequest): Promise<GroupPost> {
-  const response = await apiClient<GroupPostResponse>(`/backend-api/community/groups/${groupId}`, {
-    method: 'PATCH',
-    query: { userId },
-    body: JSON.stringify(data),
-  });
+  const response = await apiClient<GroupPostResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+  );
 
   return mapGroupPost(response);
 }
 
 export type DeleteGroupPostRequest = {
   groupId: string;
-  userId: string;
 };
 
-type DeleteGroupPostResponse = {
-  success: boolean;
-};
+export async function deleteGroupPost({ groupId }: DeleteGroupPostRequest): Promise<GroupPost> {
+  const response = await apiClient<GroupPostResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
+    {
+      method: 'DELETE',
+    },
+  );
 
-export async function deleteGroupPost({ groupId, userId }: DeleteGroupPostRequest) {
-  return apiClient<DeleteGroupPostResponse>(`/backend-api/community/groups/${groupId}`, {
-    method: 'DELETE',
-    query: { userId },
-  });
+  return mapGroupPost(response);
 }
 
 type GroupPostLikeRequest = {
   groupId: string;
-  userId: string;
 };
 
 type GroupPostLikeResponse = {
   isLiked: boolean;
 };
 
-export function likeGroupPost({ groupId, userId }: GroupPostLikeRequest) {
-  return apiClient<GroupPostLikeResponse>(`/backend-api/community/groups/${groupId}/like`, {
-    method: 'POST',
-    query: { userId },
-  });
+export function likeGroupPost({ groupId }: GroupPostLikeRequest) {
+  return apiClient<GroupPostLikeResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/like`,
+    { method: 'POST' },
+  );
 }
 
-export function unlikeGroupPost({ groupId, userId }: GroupPostLikeRequest) {
-  return apiClient<GroupPostLikeResponse>(`/backend-api/community/groups/${groupId}/like`, {
-    method: 'DELETE',
-    query: { userId },
-  });
+export function unlikeGroupPost({ groupId }: GroupPostLikeRequest) {
+  return apiClient<GroupPostLikeResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/like`,
+    { method: 'DELETE' },
+  );
 }
 
 type GroupPostApplyRequest = {
   groupId: string;
-  userId: string;
 };
 
 type GroupPostApplyResponse = {
   isApplied: boolean;
 };
 
-export function applyGroupPost({ groupId, userId }: GroupPostApplyRequest) {
-  return apiClient<GroupPostApplyResponse>(`/backend-api/community/groups/${groupId}/apply`, {
-    method: 'POST',
-    query: { userId },
-  });
+export function applyGroupPost({ groupId }: GroupPostApplyRequest) {
+  return apiClient<GroupPostApplyResponse>(
+    `/backend-api/community/groups/${encodeURIComponent(groupId)}/apply`,
+    { method: 'POST' },
+  );
 }
 
 /* ================================
