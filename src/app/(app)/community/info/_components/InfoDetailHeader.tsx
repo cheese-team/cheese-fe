@@ -61,6 +61,9 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
         onSuccess: () => {
           router.push(`/community/info/${infoPost.id}/edit`);
         },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
+        },
       },
     );
   };

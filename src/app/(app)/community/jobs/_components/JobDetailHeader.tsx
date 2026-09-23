@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 
 import PostDetailHeader from '../../_components/PostDetail';
 
+import { ApiError } from '@/api/client';
+
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useMypage } from '@/queries/mypage/useMypage';
 import { useDeleteJobPost } from '@/queries/community/useDeleteJobPost';
@@ -60,6 +62,9 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
         onSuccess: () => {
           router.push(`/community/jobs/${jobId}/edit`);
         },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
+        },
       },
     );
   };
@@ -85,6 +90,11 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
           {
             onSuccess: () => {
               router.push('/community/jobs');
+            },
+            onError: (error) => {
+              alert(
+                error instanceof ApiError ? error.message : '채용공고 게시글 삭제에 실패했습니다.',
+              );
             },
           },
         );

@@ -61,6 +61,9 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
         onSuccess: () => {
           router.push(`/community/groups/${groupPost.id}/edit`);
         },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
+        },
       },
     );
   };
