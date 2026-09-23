@@ -11,6 +11,7 @@ import { useMypage } from '@/queries/mypage/useMypage';
 import { useDeleteInfoPost } from '@/queries/community/useDeleteInfoPost';
 
 import type { InfoPost } from '@/types/community/community';
+import { useUpdateActiveProfileType } from '@/queries/mypage/useUpdateActiveProfileType';
 
 type InfoDetailHeaderProps = {
   infoPost: InfoPost;
@@ -25,6 +26,8 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
   const { data: user } = useCurrentUser();
   const { data: mypage } = useMypage();
   const { mutate: deleteInfoPost, isPending: isDeletePending } = useDeleteInfoPost();
+  const { mutate: updateActiveProfileType, isPending: isProfileSwitchPending } =
+    useUpdateActiveProfileType();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -33,6 +36,34 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
       infoPost.author.id === mypage?.personalProfile?.id) ||
     (infoPost.author.profileType === 'company' &&
       infoPost.author.id === mypage?.companyProfile?.id);
+
+  const handleEdit = () => {
+    if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
+
+    const authorProfileType = infoPost.author.profileType;
+
+    if (authorProfileType === user.account.activeProfileType) {
+      router.push(`/community/info/${infoPost.id}/edit`);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `이 게시글은 ${authorProfileType === 'company' ? '기업' : '개인'} 프로필로 작성되었습니다.\n수정하려면 해당 프로필로 전환해야 합니다. 전환하시겠습니까?`,
+    );
+
+    if (!confirmed) return;
+
+    updateActiveProfileType(
+      {
+        activeProfileType: authorProfileType,
+      },
+      {
+        onSuccess: () => {
+          router.push(`/community/info/${infoPost.id}/edit`);
+        },
+      },
+    );
+  };
 
   return (
     <PostDetailHeader
@@ -44,12 +75,9 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
       isMenuOpen={isMenuOpen}
       onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
       onCloseMenu={() => setIsMenuOpen(false)}
-      onEdit={() => {
-        if (!user || !isMine || isDeletePending) return;
-        router.push(`/community/info/${infoPost.id}/edit`);
-      }}
+      onEdit={handleEdit}
       onDelete={() => {
-        if (!user || !isMine || isDeletePending) return;
+        if (!user || !isMine || isDeletePending || isProfileSwitchPending) return;
         if (!window.confirm('삭제하시겠습니까?')) return;
 
         deleteInfoPost(
