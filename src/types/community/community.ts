@@ -71,7 +71,7 @@ export type GroupPost = {
 };
 
 export type InfoPost = {
-  id: number;
+  id: string;
   category: 'question' | 'info' | 'resource';
   title: string;
 
@@ -100,13 +100,13 @@ export type InfoPost = {
   isLiked: boolean;
 };
 
-export type TogglePostLikeParams = {
-  postId: number;
+export type ToggleInfoPostLikeParams = {
+  infoId: string;
   isLiked: boolean;
 };
 
 export type ToggleGroupPostLikeParams = {
-  postId: string;
+  groupId: string;
   isLiked: boolean;
 };
 

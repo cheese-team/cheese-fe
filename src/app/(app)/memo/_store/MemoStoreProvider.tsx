@@ -52,10 +52,7 @@ function getMemoErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function getMutationErrorMessage(
-  error: unknown,
-  fallback: string,
-) {
+function getMutationErrorMessage(error: unknown, fallback: string) {
   if (!error) {
     return null;
   }
@@ -125,9 +122,7 @@ export function MemoStoreProvider({ children }: { children: ReactNode }) {
   });
 
   const selectedIds =
-    selectionState.ownerUserId === sessionUserId
-      ? selectionState.selectedIds
-      : EMPTY_SELECTED_IDS;
+    selectionState.ownerUserId === sessionUserId ? selectionState.selectedIds : EMPTY_SELECTED_IDS;
   const sourceMemos = canLoadMemoData ? (memoQueryData?.memos ?? EMPTY_MEMOS) : EMPTY_MEMOS;
   const memos = useMemo(
     () =>
@@ -203,14 +198,7 @@ export function MemoStoreProvider({ children }: { children: ReactNode }) {
         return 'error';
       }
     },
-    [
-      canLoadMemoData,
-      isMemoLoading,
-      memos,
-      resetMutationErrors,
-      resetSaveMemo,
-      saveMemoAsync,
-    ],
+    [canLoadMemoData, isMemoLoading, memos, resetMutationErrors, resetSaveMemo, saveMemoAsync],
   );
 
   const toggleSelectMemo = useCallback(
@@ -447,30 +435,12 @@ export function MemoStoreProvider({ children }: { children: ReactNode }) {
   const errorMessage =
     authErrorMessage ??
     queryErrorMessage ??
-    getMutationErrorMessage(
-      saveMemoError,
-      '메모를 저장하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      toggleMemoPinError,
-      '메모 고정 상태를 변경하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      deleteMemoError,
-      '메모를 삭제하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      deleteSelectedMemosError,
-      '일부 메모를 삭제하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      restoreMemoError,
-      '메모를 복구하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      permanentDeleteMemoError,
-      '메모를 영구 삭제하지 못했습니다.',
-    );
+    getMutationErrorMessage(saveMemoError, '메모를 저장하지 못했습니다.') ??
+    getMutationErrorMessage(toggleMemoPinError, '메모 고정 상태를 변경하지 못했습니다.') ??
+    getMutationErrorMessage(deleteMemoError, '메모를 삭제하지 못했습니다.') ??
+    getMutationErrorMessage(deleteSelectedMemosError, '일부 메모를 삭제하지 못했습니다.') ??
+    getMutationErrorMessage(restoreMemoError, '메모를 복구하지 못했습니다.') ??
+    getMutationErrorMessage(permanentDeleteMemoError, '메모를 영구 삭제하지 못했습니다.');
 
   const value = useMemo(
     () => ({

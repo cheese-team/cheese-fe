@@ -82,7 +82,7 @@ export default function GroupPostCard({
               e.stopPropagation();
               if (isLikePending) return;
               onToggleLike({
-                postId: post.id,
+                groupId: post.id,
                 isLiked: post.isLiked,
               });
             }}

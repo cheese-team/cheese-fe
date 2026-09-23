@@ -12,8 +12,8 @@ export function useToggleGroupPostLike() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ postId, isLiked }: ToggleGroupPostLikeParams) => {
-      const request = { groupId: postId };
+    mutationFn: ({ groupId, isLiked }: ToggleGroupPostLikeParams) => {
+      const request = { groupId };
 
       return isLiked ? unlikeGroupPost(request) : likeGroupPost(request);
     },
@@ -21,7 +21,7 @@ export function useToggleGroupPostLike() {
     onMutate: async (variables) => {
       await Promise.all([
         queryClient.cancelQueries({
-          queryKey: communityQueryKeys.groupDetail(variables.postId),
+          queryKey: communityQueryKeys.groupDetail(variables.groupId),
           exact: true,
         }),
         queryClient.cancelQueries({
@@ -44,7 +44,7 @@ export function useToggleGroupPostLike() {
       });
 
       queryClient.setQueryData<GroupPost>(
-        communityQueryKeys.groupDetail(variables.postId),
+        communityQueryKeys.groupDetail(variables.groupId),
         (current) => (current ? updateLike(current) : current),
       );
 
@@ -58,12 +58,13 @@ export function useToggleGroupPostLike() {
             pages: current.pages.map((page) => ({
               ...page,
               items: page.items.map((post) =>
-                post.id === variables.postId ? updateLike(post) : post,
+                post.id === variables.groupId ? updateLike(post) : post,
               ),
             })),
           };
         },
       );
+
       queryClient.setQueriesData<InfiniteData<GroupBookmarksResponse>>(
         { queryKey: mypageQueryKeys.bookmarks('groups') },
         (current) => {
@@ -74,7 +75,7 @@ export function useToggleGroupPostLike() {
             pages: current.pages.map((page) => ({
               ...page,
               items: page.items.map((post) =>
-                post.id === variables.postId ? updateLike(post) : post,
+                post.id === variables.groupId ? updateLike(post) : post,
               ),
             })),
           };

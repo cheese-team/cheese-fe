@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 
 import PostDetailHeader from '../../_components/PostDetail';
 
+import { ApiError } from '@/api/client';
+
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useMypage } from '@/queries/mypage/useMypage';
 import { useDeleteJobPost } from '@/queries/community/useDeleteJobPost';
@@ -17,6 +19,9 @@ type JobDetailHeaderProps = {
   jobPost: JobPost;
 };
 
+// TODO: author.id 식별 기준 확정 필요
+// 현재 author.id 기반 isMine 판별은 신뢰할 수 없으므로,
+// 스펙 확정 후 본인 작성 글은 수정·삭제, 타인 작성 글은 신고 메뉴로 분기
 export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -30,8 +35,8 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
   const isMine =
     (jobPost.author.profileType === 'personal' &&
-      jobPost.author.id === mypage?.personalProfile.id) ||
-    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile.id);
+      jobPost.author.id === mypage?.personalProfile?.id) ||
+    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile?.id);
 
   const handleEdit = () => {
     if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
@@ -56,6 +61,9 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
       {
         onSuccess: () => {
           router.push(`/community/jobs/${jobId}/edit`);
+        },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
         },
       },
     );
@@ -82,6 +90,11 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
           {
             onSuccess: () => {
               router.push('/community/jobs');
+            },
+            onError: (error) => {
+              alert(
+                error instanceof ApiError ? error.message : '채용공고 게시글 삭제에 실패했습니다.',
+              );
             },
           },
         );

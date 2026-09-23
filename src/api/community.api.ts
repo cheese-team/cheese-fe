@@ -1,7 +1,23 @@
 import { apiClient } from '@/api/client';
+import type {
+  CommunityCommentCategory,
+  CommunityCommentReply,
+  CommunityCommentResult,
+  CommunityCommentsResponse,
+} from '@/types/community/comment';
 
-import type { ApplyInfo, GroupPost, JobPost, UserSummary } from '@/types/community/community';
-import type { GroupPostsListParams, JobPostsListParams } from '@/types/community/query';
+import type {
+  ApplyInfo,
+  GroupPost,
+  InfoPost,
+  JobPost,
+  UserSummary,
+} from '@/types/community/community';
+import type {
+  GroupPostsListParams,
+  InfoPostsListParams,
+  JobPostsListParams,
+} from '@/types/community/query';
 
 /* ================================
      Job
@@ -89,11 +105,11 @@ export function deleteJobPost({ jobId }: DeleteJobPostRequest) {
   });
 }
 
-export type JobPostLikeRequest = {
+type JobPostLikeRequest = {
   jobId: string;
 };
 
-export type JobPostLikeResponse = {
+type JobPostLikeResponse = {
   isLiked: boolean;
 };
 
@@ -109,11 +125,11 @@ export function unlikeJobPost({ jobId }: JobPostLikeRequest) {
   });
 }
 
-export type JobPostApplyRequest = {
+type JobPostApplyRequest = {
   jobId: string;
 };
 
-export type JobPostApplyResponse = {
+type JobPostApplyResponse = {
   isApplied: boolean;
 };
 
@@ -124,10 +140,10 @@ export function applyJobPost({ jobId }: JobPostApplyRequest) {
 }
 
 /* ================================
-     Group
+      Group
    ================================ */
 
-type GroupPostResponse = Omit<GroupPost, 'author'> & {
+export type GroupPostResponse = Omit<GroupPost, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
 };
 
@@ -137,7 +153,7 @@ export type GroupPostsResponse = {
   items: GroupPost[];
 };
 
-function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost {
+export function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost {
   const { type, ...profile } = author;
   return { ...post, author: { ...profile, profileType: type } };
 }
@@ -235,11 +251,11 @@ export async function deleteGroupPost({ groupId }: DeleteGroupPostRequest): Prom
   return mapGroupPost(response);
 }
 
-export type GroupPostLikeRequest = {
+type GroupPostLikeRequest = {
   groupId: string;
 };
 
-export type GroupPostLikeResponse = {
+type GroupPostLikeResponse = {
   isLiked: boolean;
 };
 
@@ -257,11 +273,11 @@ export function unlikeGroupPost({ groupId }: GroupPostLikeRequest) {
   );
 }
 
-export type GroupPostApplyRequest = {
+type GroupPostApplyRequest = {
   groupId: string;
 };
 
-export type GroupPostApplyResponse = {
+type GroupPostApplyResponse = {
   isApplied: boolean;
 };
 
@@ -270,4 +286,232 @@ export function applyGroupPost({ groupId }: GroupPostApplyRequest) {
     `/backend-api/community/groups/${encodeURIComponent(groupId)}/apply`,
     { method: 'POST' },
   );
+}
+
+/* ================================
+      Info
+   ================================ */
+
+export type InfoPostResponse = Omit<InfoPost, 'author'> & {
+  author: Omit<UserSummary, 'profileType'> & {
+    type: UserSummary['profileType'];
+  };
+};
+
+export type InfoPostsResponse = {
+  nextCursor: string | null;
+  hasMore: boolean;
+  items: InfoPost[];
+};
+
+export function mapInfoPost({ author, ...post }: InfoPostResponse): InfoPost {
+  const { type, ...profile } = author;
+  return { ...post, author: { ...profile, profileType: type } };
+}
+
+export async function getInfoPosts({
+  sort = 'all',
+  keyword,
+  cursor,
+  limit = 20,
+  signal,
+}: InfoPostsListParams & { signal?: AbortSignal } = {}): Promise<InfoPostsResponse> {
+  const response = await apiClient<
+    Omit<InfoPostsResponse, 'items'> & { items: InfoPostResponse[] }
+  >('/backend-api/community/info', {
+    method: 'GET',
+    cache: 'no-store',
+    query: { sort, keyword, cursor, limit: limit.toString() },
+    signal,
+  });
+
+  return { ...response, items: response.items.map(mapInfoPost) };
+}
+
+type GetInfoPostParams = {
+  infoId: string;
+  signal?: AbortSignal;
+};
+
+export async function getInfoPost({ infoId, signal }: GetInfoPostParams): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    },
+  );
+
+  return mapInfoPost(response);
+}
+
+export type CreateInfoPostRequest = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
+  attachmentFileId?: string;
+};
+
+export async function createInfoPost(request: CreateInfoPostRequest): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>('/backend-api/community/info', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+
+  return mapInfoPost(response);
+}
+
+type UpdateInfoPostData = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
+  attachmentFileId?: string | null;
+  authorProfileType: UserSummary['profileType'];
+};
+
+export type UpdateInfoPostRequest = {
+  infoId: string;
+  data: UpdateInfoPostData;
+};
+
+export async function updateInfoPost({ infoId, data }: UpdateInfoPostRequest): Promise<InfoPost> {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    },
+  );
+
+  return mapInfoPost(response);
+}
+
+export type DeleteInfoPostRequest = {
+  infoId: string;
+};
+
+export async function deleteInfoPost({ infoId }: DeleteInfoPostRequest) {
+  const response = await apiClient<InfoPostResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}`,
+    {
+      method: 'DELETE',
+    },
+  );
+
+  return mapInfoPost(response);
+}
+
+type InfoPostLikeRequest = {
+  infoId: string;
+};
+
+type InfoPostLikeResponse = {
+  isLiked: boolean;
+};
+
+export function likeInfoPost({ infoId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}/like`,
+    {
+      method: 'POST',
+    },
+  );
+}
+
+export function unlikeInfoPost({ infoId }: InfoPostLikeRequest) {
+  return apiClient<InfoPostLikeResponse>(
+    `/backend-api/community/info/${encodeURIComponent(infoId)}/like`,
+    {
+      method: 'DELETE',
+    },
+  );
+}
+
+/* ================================
+      Comment
+   ================================ */
+
+type CommentResponse = Omit<CommunityCommentResult, 'author'> & {
+  author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
+};
+
+type CommentsListResponse = Omit<CommunityCommentsResponse, 'items'> & {
+  items: (CommentResponse & {
+    parentId: null;
+    replies: (CommentResponse & { parentId: string })[];
+  })[];
+};
+
+function mapComment({ author, ...comment }: CommentResponse): CommunityCommentResult {
+  const { type, ...profile } = author;
+  return { ...comment, author: { ...profile, profileType: type } };
+}
+
+export type CommentsParams = { category: CommunityCommentCategory; postId: string };
+
+export async function getComments({
+  category,
+  postId,
+  cursor,
+  limit = '20',
+  signal,
+}: CommentsParams & {
+  cursor?: string;
+  limit?: string;
+  signal?: AbortSignal;
+}): Promise<CommunityCommentsResponse> {
+  const response = await apiClient<CommentsListResponse>(
+    `/backend-api/community/${category}/${postId}/comments`,
+    { method: 'GET', cache: 'no-store', query: { cursor, limit }, signal },
+  );
+  return {
+    ...response,
+    items: response.items.map((comment) => ({
+      ...mapComment(comment),
+      parentId: null,
+      replies: comment.replies.map(
+        (reply): CommunityCommentReply => ({ ...mapComment(reply), parentId: reply.parentId }),
+      ),
+    })),
+  };
+}
+export type CreateCommentRequest = CommentsParams & {
+  content: string;
+  parentId?: string;
+};
+
+export async function createComment({ category, postId, ...data }: CreateCommentRequest) {
+  const response = await apiClient<CommentResponse>(
+    `/backend-api/community/${category}/${postId}/comments`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    },
+  );
+
+  return mapComment(response);
+}
+
+export type UpdateCommentRequest = {
+  commentId: string;
+  content: string;
+  authorProfileType: UserSummary['profileType'];
+};
+
+export async function updateComment({
+  commentId,
+  content,
+  authorProfileType,
+}: UpdateCommentRequest) {
+  const response = await apiClient<CommentResponse>(
+    `/backend-api/community/comments/${commentId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ content, authorProfileType }),
+    },
+  );
+  return mapComment(response);
+}
+
+export type DeleteCommentRequest = { commentId: string };
+
+export function deleteComment({ commentId }: DeleteCommentRequest) {
+  return apiClient<{ success: boolean }>(`/backend-api/community/comments/${commentId}`, {
+    method: 'DELETE',
+  });
 }

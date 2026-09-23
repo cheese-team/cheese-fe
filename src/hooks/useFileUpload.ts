@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react';
 
-export default function useFileUpload() {
+type UseFileUploadOptions = {
+  multiple?: boolean;
+};
+
+export default function useFileUpload({ multiple = true }: UseFileUploadOptions = {}) {
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -13,7 +17,7 @@ export default function useFileUpload() {
 
     if (selectedFiles.length === 0) return;
 
-    setFiles((prev) => [...prev, ...selectedFiles]);
+    setFiles((prev) => (multiple ? [...prev, ...selectedFiles] : [selectedFiles[0]]));
 
     // 같은 파일을 다시 선택할 수 있도록 input 값을 초기화
     event.target.value = '';

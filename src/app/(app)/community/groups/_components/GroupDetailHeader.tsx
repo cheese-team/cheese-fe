@@ -17,6 +17,9 @@ type GroupDetailHeaderProps = {
   groupPost: GroupPost;
 };
 
+// TODO: author.id 식별 기준 확정 필요
+// 현재 author.id 기반 isMine 판별은 신뢰할 수 없으므로,
+// 스펙 확정 후 본인 작성 글은 수정·삭제, 타인 작성 글은 신고 메뉴로 분기
 export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -30,9 +33,9 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
 
   const isMine =
     (groupPost.author.profileType === 'personal' &&
-      groupPost.author.id === mypage?.personalProfile.id) ||
+      groupPost.author.id === mypage?.personalProfile?.id) ||
     (groupPost.author.profileType === 'company' &&
-      groupPost.author.id === mypage?.companyProfile.id);
+      groupPost.author.id === mypage?.companyProfile?.id);
 
   const handleEdit = () => {
     if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
@@ -57,6 +60,9 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
       {
         onSuccess: () => {
           router.push(`/community/groups/${groupPost.id}/edit`);
+        },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
         },
       },
     );

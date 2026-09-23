@@ -109,7 +109,7 @@ export default function GroupDetailPage() {
               }}
               onToggleLike={() => {
                 if (isLikePending) return;
-                toggleGroupPostLike({ postId: groupId, isLiked: groupPost.isLiked });
+                toggleGroupPostLike({ groupId, isLiked: groupPost.isLiked });
               }}
             />
           </div>
