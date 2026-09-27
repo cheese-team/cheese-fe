@@ -1,5 +1,6 @@
 import { mockUserSummaries } from '@/mocks/profile/userSummaries';
-import {
+
+import type {
   AccountSettings,
   CompanyProfile,
   ContactMethod,

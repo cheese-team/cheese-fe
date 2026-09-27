@@ -47,10 +47,7 @@ function getCalendarErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function getMutationErrorMessage(
-  error: unknown,
-  fallback: string,
-) {
+function getMutationErrorMessage(error: unknown, fallback: string) {
   if (!error) {
     return null;
   }
@@ -254,18 +251,9 @@ export function CalendarStoreProvider({ children }: { children: ReactNode }) {
   const errorMessage =
     authErrorMessage ??
     queryErrorMessage ??
-    getMutationErrorMessage(
-      createCalendarEventError,
-      '일정을 등록하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      updateCalendarEventError,
-      '일정을 수정하지 못했습니다.',
-    ) ??
-    getMutationErrorMessage(
-      deleteCalendarEventError,
-      '일정을 삭제하지 못했습니다.',
-    );
+    getMutationErrorMessage(createCalendarEventError, '일정을 등록하지 못했습니다.') ??
+    getMutationErrorMessage(updateCalendarEventError, '일정을 수정하지 못했습니다.') ??
+    getMutationErrorMessage(deleteCalendarEventError, '일정을 삭제하지 못했습니다.');
 
   const value = useMemo(
     () => ({

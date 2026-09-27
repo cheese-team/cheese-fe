@@ -12,15 +12,21 @@ import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
 import CommentIcon from '@/assets/icons/common/comment.svg';
 
 import type { InfoPost } from '@/types/community/community';
-import type { TogglePostLikeParams } from '@/types/community/community';
+import type { ToggleInfoPostLikeParams } from '@/types/community/community';
 
 type InfoPostCardProps = {
   post: InfoPost;
   wrapperClassName?: string;
-  onToggleLike: (variables: TogglePostLikeParams) => void;
+  onToggleLike?: (variables: ToggleInfoPostLikeParams) => void;
+  isLikePending?: boolean;
 };
 
-export default function InfoPostCard({ post, wrapperClassName, onToggleLike }: InfoPostCardProps) {
+export default function InfoPostCard({
+  post,
+  wrapperClassName,
+  onToggleLike,
+  isLikePending = false,
+}: InfoPostCardProps) {
   return (
     <article className={cn('border-b border-gray-300 p-5 leading-5', wrapperClassName)}>
       <div className="flex w-full items-center gap-5">
@@ -67,9 +73,12 @@ export default function InfoPostCard({ post, wrapperClassName, onToggleLike }: I
 
               <button
                 type="button"
+                disabled={!onToggleLike || isLikePending}
+                aria-label="좋아요"
+                aria-pressed={post.isLiked}
                 onClick={() =>
-                  onToggleLike({
-                    postId: post.id,
+                  onToggleLike?.({
+                    infoId: post.id,
                     isLiked: post.isLiked,
                   })
                 }

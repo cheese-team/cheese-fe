@@ -4,10 +4,11 @@ import JobPostCard from '@/components/community/jobs/JobPostCard';
 import ApplyModal from '@/app/(app)/community/_components/ApplyModal';
 
 import CommunityListState from '@/app/(app)/community/_components/CommunityListState';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { useJobBookmarks } from '@/queries/mypage/useJobBookmarks';
 import { useToggleJobPostLike } from '@/queries/community/useToggleJobPostLike';
 import { useApplyJobPost } from '@/queries/community/useApplyJobPost';
+
 import { isRecruitClosed } from '@/lib/formatDeadline';
 
 import type { CommunitySort } from '@/app/(app)/community/_constants/community';
@@ -19,7 +20,7 @@ type JobBookmarkListProps = {
 
 export default function JobBookmarkList({ sort, keyword }: JobBookmarkListProps) {
   const [selectedApplyPostId, setSelectedApplyPostId] = useState<string | null>(null);
-  const currentUserQuery = useCurrentUser();
+
   const {
     data,
     isPending,
@@ -30,14 +31,19 @@ export default function JobBookmarkList({ sort, keyword }: JobBookmarkListProps)
     isFetching,
     isFetchNextPageError,
   } = useJobBookmarks();
+
   const { mutate: toggleLike, isPending: isLikePending } = useToggleJobPostLike();
+
   const {
     mutateAsync: applyJobPost,
     isPending: isApplyPending,
     variables: applyingJobId,
   } = useApplyJobPost();
+
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const bookmarkedJobPosts = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data]);
+
   const selectedApplyPost = bookmarkedJobPosts.find((post) => post.id === selectedApplyPostId);
 
   useEffect(() => {
@@ -94,18 +100,6 @@ export default function JobBookmarkList({ sort, keyword }: JobBookmarkListProps)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   }, [bookmarkedJobPosts, sort, keyword]);
-
-  if (currentUserQuery.isError) {
-    return (
-      <CommunityListState
-        type="error"
-        message="사용자 정보를 불러오지 못했습니다."
-        onRetry={() => {
-          void currentUserQuery.refetch();
-        }}
-      />
-    );
-  }
 
   if (isPending) return <CommunityListState type="loading" message="로딩 중..." />;
 

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 
 import PostDetailHeader from '../../_components/PostDetail';
 
+import { ApiError } from '@/api/client';
+
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useMypage } from '@/queries/mypage/useMypage';
 import { useDeleteJobPost } from '@/queries/community/useDeleteJobPost';
@@ -17,28 +19,30 @@ type JobDetailHeaderProps = {
   jobPost: JobPost;
 };
 
+// TODO: author.id 식별 기준 확정 필요
+// 현재 author.id 기반 isMine 판별은 신뢰할 수 없으므로,
+// 스펙 확정 후 본인 작성 글은 수정·삭제, 타인 작성 글은 신고 메뉴로 분기
 export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
+  const { data: mypage } = useMypage();
   const { mutate: deleteJobPost, isPending: isDeletePending } = useDeleteJobPost();
   const { mutate: updateActiveProfileType, isPending: isProfileSwitchPending } =
     useUpdateActiveProfileType();
 
   const isMine =
     (jobPost.author.profileType === 'personal' &&
-      jobPost.author.id === mypage?.personalProfile.id) ||
-    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile.id);
+      jobPost.author.id === mypage?.personalProfile?.id) ||
+    (jobPost.author.profileType === 'company' && jobPost.author.id === mypage?.companyProfile?.id);
 
   const handleEdit = () => {
-    if (!user || isProfileSwitchPending) return;
+    if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
 
     const authorProfileType = jobPost.author.profileType;
 
-    // TODO: JWT 인증 방식 전환 시 확인
     if (authorProfileType === user.account.activeProfileType) {
       router.push(`/community/jobs/${jobId}/edit`);
       return;
@@ -52,13 +56,14 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
     updateActiveProfileType(
       {
-        // TODO: JWT 인증 방식 전환 시 확인
-        // userId: user.id,
         activeProfileType: authorProfileType,
       },
       {
         onSuccess: () => {
           router.push(`/community/jobs/${jobId}/edit`);
+        },
+        onError: (error) => {
+          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
         },
       },
     );
@@ -75,20 +80,24 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
       onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={handleEdit}
       onDelete={() => {
-        if (!user || isDeletePending) return;
+        if (!user || !isMine || isDeletePending || isProfileSwitchPending) return;
 
         const confirmed = window.confirm('삭제하시겠습니까?');
         if (!confirmed) return;
 
-        // TODO: JWT 인증 방식 전환 시 확인
-        // deleteJobPost(
-        //   { jobId, userId: user.id },
-        //   {
-        //     onSuccess: () => {
-        //       router.push('/community/jobs');
-        //     },
-        //   },
-        // );
+        deleteJobPost(
+          { jobId },
+          {
+            onSuccess: () => {
+              router.push('/community/jobs');
+            },
+            onError: (error) => {
+              alert(
+                error instanceof ApiError ? error.message : '채용공고 게시글 삭제에 실패했습니다.',
+              );
+            },
+          },
+        );
       }}
     />
   );

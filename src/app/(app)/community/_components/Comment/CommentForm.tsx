@@ -9,14 +9,17 @@ import { resizeTextarea } from './utils';
 
 import type { CommentFormProps } from './types';
 
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
-
-export default function CommentForm({ value, onValueChange, onSubmit }: CommentFormProps) {
+export default function CommentForm({
+  value,
+  onValueChange,
+  onSubmit,
+  disabled = false,
+  profileImageUrl,
+}: CommentFormProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const personalProfile = getMockPersonalProfile(1);
-
   const handleSubmit = () => {
+    if (disabled || !value.trim()) return;
     onSubmit();
 
     requestAnimationFrame(() => {
@@ -28,10 +31,11 @@ export default function CommentForm({ value, onValueChange, onSubmit }: CommentF
 
   return (
     <div className="flex gap-3">
-      <ProfileImage size={40} src={personalProfile.profileImageUrl} />
+      <ProfileImage size={40} src={profileImageUrl} />
 
       <div className="focus-within:border-secondary-600 flex w-full items-center gap-2.5 border-b border-gray-400 pb-3 transition-colors">
         <textarea
+          disabled={disabled}
           ref={textareaRef}
           value={value}
           onChange={(e) => {
@@ -49,7 +53,7 @@ export default function CommentForm({ value, onValueChange, onSubmit }: CommentF
           className="h-[30px] max-h-60 w-full resize-none overflow-y-auto pt-1 outline-none"
         />
 
-        <Button onClick={handleSubmit} width={56} size={36}>
+        <Button disabled={disabled || !value.trim()} onClick={handleSubmit} width={56} size={36}>
           등록
         </Button>
       </div>

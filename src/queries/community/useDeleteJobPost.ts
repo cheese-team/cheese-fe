@@ -9,9 +9,10 @@ export function useDeleteJobPost() {
 
   return useMutation({
     mutationFn: (request: DeleteJobPostRequest) => deleteJobPost(request),
+
     onSuccess: async (_, variables) => {
       queryClient.removeQueries({
-        queryKey: communityQueryKeys.jobDetail(variables.jobId, variables.userId),
+        queryKey: communityQueryKeys.jobDetail(variables.jobId),
         exact: true,
       });
 

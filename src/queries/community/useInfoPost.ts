@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getGroupPost } from '@/api/community.api';
+import { getInfoPost } from '@/api/community.api';
 import { ApiError } from '@/api/client';
 
 import { communityQueryKeys } from './communityQueryKeys';
 
-export function useGroupPost(groupId: string) {
+export function useInfoPost(infoId: string) {
   return useQuery({
-    queryKey: communityQueryKeys.groupDetail(groupId),
+    queryKey: communityQueryKeys.infoDetail(infoId),
 
-    queryFn: ({ signal }) => getGroupPost({ groupId, signal }),
+    queryFn: ({ signal }) => getInfoPost({ infoId, signal }),
 
-    enabled: Boolean(groupId),
+    enabled: Boolean(infoId),
 
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 404) {

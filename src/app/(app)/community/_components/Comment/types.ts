@@ -1,29 +1,25 @@
-import { UserSummary } from '@/types/community/community';
-
-export type Comment = {
-  id: number;
-  author: UserSummary;
-  content: string;
-  createdAt?: string;
-};
+import type { CommunityCommentResult } from '@/types/community/comment';
 
 export type CommentFormProps = {
+  disabled?: boolean;
+  profileImageUrl?: string;
   value: string;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
 };
 
 export type CommentItemProps = {
-  comment: Comment;
+  disabled?: boolean;
+  comment: CommunityCommentResult;
   isMine: boolean;
   isEditing: boolean;
   isMenuOpen: boolean;
   editingValue: string;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  onToggleMenu: (commentId: number) => void;
-  onStartEdit: (comment: Comment) => void;
+  onToggleMenu: (commentId: string) => void;
+  onStartEdit: (comment: CommunityCommentResult) => void;
   onChangeEditingValue: (value: string) => void;
-  onUpdate: (commentId: number) => void;
+  onUpdate: (commentId: string) => void;
   onCancelEdit: () => void;
-  onDelete: (commentId: number) => void;
+  onDelete: (commentId: string) => void;
 };

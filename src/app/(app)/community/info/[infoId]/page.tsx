@@ -1,4 +1,6 @@
-import { notFound } from 'next/navigation';
+'use client';
+
+import { notFound, useParams } from 'next/navigation';
 
 import { PostDetailAside, PostDetailAsideProfile } from '../../_components/PostDetailAside';
 import Comment from '../../_components/Comment';
@@ -7,17 +9,40 @@ import { InfoDetailHeader } from '../_components';
 import { POST_CONTENT_CLASS } from '../../_constants/community';
 
 import DownloadIcon from '@/assets/icons/common/download.svg';
+import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
+import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
+import { Button } from '@/components/common/Button';
 
-import { infoPosts } from '@/mocks/posts';
+import { ApiError } from '@/api/client';
+import { useInfoPost } from '@/queries/community/useInfoPost';
+import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
+import CommunityListState from '../../_components/CommunityListState';
 
-export default async function InfoDetailPage({ params }: { params: Promise<{ infoId: string }> }) {
-  const { infoId } = await params;
+export default function InfoDetailPage() {
+  const { infoId } = useParams<{ infoId: string }>();
+  const { data: infoPost, error, isPending, refetch } = useInfoPost(infoId);
+  const { mutate: toggleInfoPostLike, isPending: isLikePending } = useToggleInfoPostLike();
 
-  const infoPost = infoPosts.find((post) => post.id === Number(infoId));
-
-  if (!infoPost) {
+  if (error instanceof ApiError && error.status === 404) {
     notFound();
   }
+
+  if (isPending) {
+    return <CommunityListState type="loading" message="로딩 중..." />;
+  }
+
+  if (error || !infoPost) {
+    return (
+      <CommunityListState
+        type="error"
+        message="정보/자료공유 게시글을 불러오지 못했습니다."
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="mb-[50px] flex items-start gap-5">
       <section className="flex flex-1 flex-col gap-10 px-5">
@@ -41,11 +66,37 @@ export default async function InfoDetailPage({ params }: { params: Promise<{ inf
           )}
         </article>
 
-        <Comment />
+        <Comment category="info" postId={infoPost.id} />
       </section>
 
-      <PostDetailAside profile={<PostDetailAsideProfile author={infoPost.author} />}>
-        {infoPost.attachmentUrl ? (
+      <PostDetailAside
+        profile={<PostDetailAsideProfile author={infoPost.author} />}
+        actions={
+          <div className="flex w-full gap-2 px-3 py-5">
+            <Button
+              variant="outlineGray"
+              size={54}
+              width={90}
+              className="gap-2 border-gray-400"
+              aria-label="좋아요"
+              aria-pressed={infoPost.isLiked}
+              disabled={isLikePending}
+              onClick={() => {
+                if (isLikePending) return;
+                toggleInfoPostLike({ infoId, isLiked: infoPost.isLiked });
+              }}
+            >
+              {infoPost.isLiked ? (
+                <LikeFilledIcon className="text-error-subtle w-[14px]" />
+              ) : (
+                <LikeOutlineIcon className="w-[14px] text-gray-500" />
+              )}
+              <span>{infoPost.likeCount}</span>
+            </Button>
+          </div>
+        }
+      >
+        {infoPost.attachmentUrl && (
           <div className="flex w-full flex-col gap-1 border-t border-gray-300 px-3 py-10 text-[14px] leading-6 text-gray-600">
             <div className="font-medium">첨부파일</div>
             <div className="flex items-start gap-1">
@@ -62,8 +113,6 @@ export default async function InfoDetailPage({ params }: { params: Promise<{ inf
               </a>
             </div>
           </div>
-        ) : (
-          ''
         )}
       </PostDetailAside>
     </div>

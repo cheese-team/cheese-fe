@@ -1,7 +1,8 @@
-import { updatePersonalProfile, type UpdatePersonalProfileRequest } from '@/api/mypage.api';
-import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { updatePersonalProfile, type UpdatePersonalProfileRequest } from '@/api/mypage.api';
+import { authQueryKeys } from '@/queries/auth/authQueryKeys';
+import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 export function useUpdatePersonalProfile() {
   const queryClient = useQueryClient();
@@ -10,10 +11,13 @@ export function useUpdatePersonalProfile() {
       return updatePersonalProfile(request);
     },
 
-    onSuccess: () => {
-      return queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.user(), // TODO: JWT 인증 방식 전환 시 확인
-      });
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: mypageQueryKeys.user() }),
+        queryClient.invalidateQueries({
+          queryKey: authQueryKeys.me(),
+        }),
+      ]);
     },
   });
 }

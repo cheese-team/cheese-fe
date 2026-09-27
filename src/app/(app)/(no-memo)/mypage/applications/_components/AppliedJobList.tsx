@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 
 import JobPostCard from '@/components/community/jobs/JobPostCard';
 import CommunityListState from '@/app/(app)/community/_components/CommunityListState';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { useJobApplications } from '@/queries/mypage/useJobApplications';
 import { useToggleJobPostLike } from '@/queries/community/useToggleJobPostLike';
 
@@ -16,7 +16,6 @@ type AppliedJobListProps = {
 };
 
 export default function AppliedJobList({ sort, keyword }: AppliedJobListProps) {
-  const currentUserQuery = useCurrentUser();
   const {
     data,
     isPending,
@@ -41,18 +40,6 @@ export default function AppliedJobList({ sort, keyword }: AppliedJobListProps) {
     observer.observe(target);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
-
-  if (currentUserQuery.isError) {
-    return (
-      <CommunityListState
-        type="error"
-        message="사용자 정보를 불러오지 못했습니다."
-        onRetry={() => {
-          void currentUserQuery.refetch();
-        }}
-      />
-    );
-  }
 
   if (isPending) {
     return <CommunityListState type="loading" message="로딩 중..." />;

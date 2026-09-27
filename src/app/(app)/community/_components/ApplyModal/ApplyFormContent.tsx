@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/common/Button';
 import { DocumentLinkItem } from '@/components/common/DocumentLink';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { useMypage } from '@/queries/mypage/useMypage';
 
 import ShareIcon from '@/assets/icons/common/contact.svg';
@@ -28,11 +28,9 @@ export default function ApplyFormContent({
   isApplied = false,
 }: ApplyFormContentProps) {
   const router = useRouter();
+  const { data: mypage, isError: isMypageError } = useMypage();
 
-  const { data: user, isError: isUserError } = useCurrentUser();
-  const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage(); // TODO: JWT 인증 방식 전환 시 확인
-
-  if (isUserError || isMypageError) {
+  if (isMypageError) {
     return <p role="alert">정보를 불러오지 못했습니다.</p>;
   }
 

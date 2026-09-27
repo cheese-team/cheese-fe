@@ -1,23 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { deleteGroupPost, type DeleteGroupPostRequest } from '@/api/community.api';
+import { deleteInfoPost, type DeleteInfoPostRequest } from '@/api/community.api';
 
 import { communityQueryKeys } from './communityQueryKeys';
 
-export function useDeleteGroupPost() {
+export function useDeleteInfoPost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: DeleteGroupPostRequest) => deleteGroupPost(request),
-
+    mutationFn: (request: DeleteInfoPostRequest) => deleteInfoPost(request),
     onSuccess: async (_, variables) => {
       queryClient.removeQueries({
-        queryKey: communityQueryKeys.groupDetail(variables.groupId),
+        queryKey: communityQueryKeys.infoDetail(variables.infoId),
         exact: true,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.groupLists(),
+        queryKey: communityQueryKeys.infoLists(),
       });
     },
   });

@@ -47,9 +47,7 @@ export function useSaveMemoMutation() {
 
   return useMutation({
     mutationFn: async ({ memo, currentMemo }: SaveMemoVariables) => {
-      const uploadedFile = memo.imageFile
-        ? await uploadFile({ file: memo.imageFile })
-        : null;
+      const uploadedFile = memo.imageFile ? await uploadFile({ file: memo.imageFile }) : null;
       const draft: MemoDraft = {
         title: memo.title.trim() || '제목',
         contentHtml: memo.content,
@@ -95,8 +93,7 @@ export function useToggleMemoPinMutation() {
   const invalidateMemoData = useInvalidateMemoData();
 
   return useMutation({
-    mutationFn: ({ memoId, pinned }: ToggleMemoPinVariables) =>
-      updateMemoPin({ memoId, pinned }),
+    mutationFn: ({ memoId, pinned }: ToggleMemoPinVariables) => updateMemoPin({ memoId, pinned }),
     onSettled: async () => {
       await invalidateMemoData();
     },
