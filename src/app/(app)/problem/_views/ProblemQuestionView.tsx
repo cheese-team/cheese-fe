@@ -1,66 +1,30 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import {
   useSaveProblemAnswerMutation,
+  useRetryProblemQuestionMutation,
+  useSelfGradeProblemQuestionMutation,
   useSubmitProblemAnswerMutation,
 } from '@/queries/problem/useProblemMutations';
-import {
-  useProblemQuestion,
-  useProblemSetDetail,
-  useProblemSetResult,
-} from '@/queries/problem/useProblemQueries';
+import { useProblemQuestion, useProblemSetDetail } from '@/queries/problem/useProblemQueries';
 
 import ProblemExitConfirmModal from '../_components/ProblemExitConfirmModal';
 import ProblemQuestionCard from '../_components/ProblemQuestionCard';
 import ProblemSideToc from '../_components/ProblemSideToc';
 import ProblemSolvingHeader from '../_components/ProblemSolvingHeader';
 import { useProblemSolvingSession } from '../_contexts/ProblemSolvingSessionContext';
-import type { ProblemAttempt, ProblemQuestion } from '../_types/problemSolving';
 import { formatElapsedTime } from '../_utils/formatElapsedTime';
+import { mapProblemAttempt } from '../_utils/mapProblemAttempt';
 
 type ProblemQuestionViewProps = {
   problemSetId: string;
   questionId: string;
   isReviewMode?: boolean;
 };
-
-function createApiAttempt(question: ProblemQuestion, isReviewMode: boolean): ProblemAttempt {
-  const status =
-    question.status === 'correct'
-      ? 'correct'
-      : question.status === 'incorrect'
-        ? 'incorrect'
-        : 'pending';
-  const submitted = status !== 'pending';
-
-  return {
-    answer: question.myAnswer?.answer ?? '',
-    selectedChoiceId: question.myAnswer?.selectedChoiceId ?? '',
-    status,
-    elapsedSeconds: question.elapsedSeconds ?? 0,
-    submitted,
-    selfChecked: submitted && (question.type === 'multipleChoice' || isReviewMode),
-  };
-}
-
-function getAnswerLabel(
-  answer: { selectedChoiceId?: string; answer?: string } | undefined,
-  question: ProblemQuestion | undefined,
-) {
-  if (answer?.answer) {
-    return answer.answer;
-  }
-
-  if (answer?.selectedChoiceId) {
-    return question?.choices?.find((choice) => choice.id === answer.selectedChoiceId)?.label;
-  }
-
-  return undefined;
-}
 
 export default function ProblemQuestionView({
   problemSetId,
@@ -79,66 +43,63 @@ export default function ProblemQuestionView({
     pauseSession,
     finishSession,
     resetSession,
+    resetQuestion,
   } = useProblemSolvingSession();
 
   const [isTocOpen, setIsTocOpen] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const navigationPending = useRef(false);
 
   const currentUserQuery = useCurrentUser();
-  const userId = currentUserQuery.data?.account.userId; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
+  const userId = currentUserQuery.data?.account.userId;
   const detailQuery = useProblemSetDetail({
-    userId,
     problemSetId,
     enabled: currentUserQuery.isSuccess,
   });
   const questionQuery = useProblemQuestion({
-    userId,
     problemSetId,
     questionId,
     enabled: currentUserQuery.isSuccess,
   });
-  const resultQuery = useProblemSetResult({
-    userId,
-    problemSetId,
-    enabled: currentUserQuery.isSuccess && isReviewMode,
-  });
   const saveAnswerMutation = useSaveProblemAnswerMutation();
   const submitAnswerMutation = useSubmitProblemAnswerMutation();
+  const selfGradeMutation = useSelfGradeProblemQuestionMutation();
+  const retryQuestionMutation = useRetryProblemQuestionMutation();
+  const isBusy =
+    isNavigating ||
+    saveAnswerMutation.isPending ||
+    submitAnswerMutation.isPending ||
+    selfGradeMutation.isPending ||
+    retryQuestionMutation.isPending;
 
   const apiAttempt = useMemo(
-    () => (questionQuery.data ? createApiAttempt(questionQuery.data, isReviewMode) : undefined),
-    [isReviewMode, questionQuery.data],
+    () => (questionQuery.data ? mapProblemAttempt(questionQuery.data) : undefined),
+    [questionQuery.data],
   );
-  const resultQuestion = resultQuery.data?.questions.find((item) => item.id === questionId);
-  const question = useMemo(() => {
-    if (!questionQuery.data) {
-      return undefined;
-    }
-
-    return {
-      ...questionQuery.data,
-      correctAnswer: getAnswerLabel(resultQuestion?.correctAnswer, questionQuery.data),
-    };
-  }, [questionQuery.data, resultQuestion?.correctAnswer]);
+  const question = questionQuery.data;
 
   useEffect(() => {
-    if (isHydrated && question && apiAttempt) {
+    if (isHydrated && question && apiAttempt && !isExitModalOpen && !isNavigating) {
       startQuestion(question.id, { review: isReviewMode, initialAttempt: apiAttempt });
     }
-  }, [apiAttempt, isHydrated, isReviewMode, question, startQuestion]);
+    return pauseSession;
+  }, [
+    apiAttempt,
+    isHydrated,
+    isReviewMode,
+    question,
+    startQuestion,
+    pauseSession,
+    isExitModalOpen,
+    isNavigating,
+  ]);
 
-  const error =
-    currentUserQuery.error ??
-    detailQuery.error ??
-    questionQuery.error ??
-    (isReviewMode ? resultQuery.error : null);
+  const error = currentUserQuery.error ?? detailQuery.error ?? questionQuery.error;
   const isLoading =
     !error &&
     (currentUserQuery.isPending ||
-      (Boolean(userId) &&
-        (detailQuery.isPending ||
-          questionQuery.isPending ||
-          (isReviewMode && resultQuery.isPending))));
+      (Boolean(userId) && (detailQuery.isPending || questionQuery.isPending)));
 
   if (isLoading) {
     return (
@@ -162,11 +123,7 @@ export default function ProblemQuestionView({
               return;
             }
 
-            void Promise.all([
-              detailQuery.refetch(),
-              questionQuery.refetch(),
-              ...(isReviewMode ? [resultQuery.refetch()] : []),
-            ]);
+            void Promise.all([detailQuery.refetch(), questionQuery.refetch()]);
           }}
         >
           다시 시도
@@ -200,19 +157,11 @@ export default function ProblemQuestionView({
   const reviewQuery = isReviewMode ? '?from=result' : '';
   const sessionAttempt = attempts[question.id];
   const initialAttempt =
-    !isReviewMode && question.type === 'shortAnswer' && sessionAttempt?.submitted
-      ? sessionAttempt
-      : apiAttempt.submitted
-        ? apiAttempt
-        : (sessionAttempt ?? apiAttempt);
-  const completedCount = new Set([
-    ...detail.questions.filter((item) => item.status !== 'notStarted').map((item) => item.id),
-    ...Object.entries(attempts)
-      .filter(([, attempt]) => attempt.submitted)
-      .map(([id]) => id),
-  ]).size;
+    apiAttempt.submitted || sessionAttempt?.submitted ? apiAttempt : (sessionAttempt ?? apiAttempt);
+  const completedCount = detail.summary.solvedCount;
 
   const handleNext = () => {
+    if (isBusy) return;
     if (!nextQuestion) {
       finishSession();
       router.push(`/problem/${problemSetId}/result`);
@@ -223,12 +172,14 @@ export default function ProblemQuestionView({
   };
 
   const handleOpenExitModal = () => {
+    if (isBusy) return;
     pauseSession();
     setIsTocOpen(false);
     setIsExitModalOpen(true);
   };
 
   const handleCloseExitModal = () => {
+    if (isBusy) return;
     setIsExitModalOpen(false);
 
     if (isReviewMode || !attempts[question.id]?.submitted) {
@@ -237,6 +188,7 @@ export default function ProblemQuestionView({
   };
 
   const handleHeaderBack = () => {
+    if (isBusy) return;
     if (isReviewMode) {
       pauseSession();
       router.push(`/problem/${problemSetId}/result`);
@@ -246,15 +198,15 @@ export default function ProblemQuestionView({
     handleOpenExitModal();
   };
 
-  const handleSaveAndExit = async () => {
-    const attempt = attempts[question.id] ?? apiAttempt;
-    const hasDraft =
-      question.type === 'shortAnswer'
-        ? Boolean(attempt.answer.trim())
-        : Boolean(attempt.selectedChoiceId);
+  const handleSaveAndNavigate = async (href: string) => {
+    if (isBusy || navigationPending.current) return;
+    navigationPending.current = true;
+    setIsNavigating(true);
+    pauseSession();
+    const attempt = initialAttempt;
 
     try {
-      if (!attempt.submitted && hasDraft) {
+      if (!attempt.submitted && !isReviewMode) {
         await saveAnswerMutation.mutateAsync({
           userId,
           problemSetId,
@@ -269,13 +221,17 @@ export default function ProblemQuestionView({
       }
 
       pauseSession();
-      router.push(`/problem/${problemSetId}`);
+      setIsTocOpen(false);
+      router.push(href);
     } catch (saveError) {
       window.alert(
         saveError instanceof Error
           ? saveError.message
           : '진행도를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
       );
+    } finally {
+      navigationPending.current = false;
+      setIsNavigating(false);
     }
   };
 
@@ -293,18 +249,19 @@ export default function ProblemQuestionView({
         current={completedCount}
         total={detail.questions.length}
         onMenuClick={() => {
-          setIsTocOpen(true);
+          if (!isBusy) setIsTocOpen(true);
         }}
       />
 
       <div className="flex min-h-[calc(100dvh-80px)] items-center justify-center py-[60px]">
         {isHydrated && (
           <ProblemQuestionCard
-            key={`${question.id}:${isReviewMode ? 'review' : 'solve'}`}
+            key={JSON.stringify([question.id, isReviewMode, question.status, question.myAnswer])}
             question={question}
             initialAttempt={initialAttempt}
             isLastQuestion={isLastQuestion}
             isReviewMode={isReviewMode}
+            isBusy={isBusy}
             onDraftChange={(draft) => {
               saveDraft(question.id, draft);
             }}
@@ -335,7 +292,10 @@ export default function ProblemQuestionView({
                   submittedQuestion.myAnswer?.selectedChoiceId ?? submission.selectedChoiceId,
               };
 
-              if (question.type === 'shortAnswer') {
+              if (
+                submittedQuestion.gradingMode === 'self' &&
+                submittedQuestion.status === 'awaitingSelfGrade'
+              ) {
                 submitQuestion(question.id, { ...submittedAnswer, status: 'pending' });
                 return null;
               }
@@ -348,12 +308,30 @@ export default function ProblemQuestionView({
 
               return status;
             }}
-            onSelfCheck={(status) => {
-              gradeQuestion(question.id, status);
+            onSelfCheck={async (status) => {
+              const gradedQuestion = await selfGradeMutation.mutateAsync({
+                userId,
+                problemSetId,
+                questionId: question.id,
+                status: status === 'correct' ? 'correct' : 'wrong',
+              });
+              if (gradedQuestion.status !== 'correct' && gradedQuestion.status !== 'incorrect') {
+                throw new Error('채점 결과를 확인할 수 없습니다.');
+              }
+              gradeQuestion(question.id, gradedQuestion.status);
             }}
-            onRetry={() => {
-              window.alert('문제별 다시풀기는 서버 API가 지원된 이후 연결될 예정입니다.');
-              return Promise.resolve(false);
+            onRetry={async () => {
+              await retryQuestionMutation.mutateAsync({
+                userId,
+                problemSetId,
+                questionId: question.id,
+              });
+              resetQuestion(question.id);
+              startQuestion(question.id);
+              if (isReviewMode) {
+                router.replace(`/problem/${problemSetId}/questions/${question.id}`);
+              }
+              return true;
             }}
             onNext={handleNext}
           />
@@ -379,15 +357,21 @@ export default function ProblemQuestionView({
           onExitClick: handleOpenExitModal,
         }}
         questionHrefSuffix={reviewQuery}
+        isBusy={isBusy}
+        onNavigate={(href) => {
+          void handleSaveAndNavigate(href);
+        }}
       />
 
       <ProblemExitConfirmModal
         isOpen={isExitModalOpen}
         onClose={handleCloseExitModal}
+        isPending={isBusy}
         onSaveAndExit={() => {
-          void handleSaveAndExit();
+          void handleSaveAndNavigate(`/problem/${problemSetId}`);
         }}
         onExitWithoutSave={() => {
+          if (isBusy) return;
           resetSession();
           router.push(`/problem/${problemSetId}`);
         }}

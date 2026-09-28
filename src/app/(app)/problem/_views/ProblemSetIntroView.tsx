@@ -25,10 +25,8 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
 
   const currentUserQuery = useCurrentUser();
-  const userId = currentUserQuery.data?.account.userId; // TODO: 타입 에러를 위한 임시 코드로, JWT 인증 방식 전환 시 id값 다시 확인
 
   const detailQuery = useProblemSetDetail({
-    userId,
     problemSetId,
     enabled: currentUserQuery.isSuccess,
   });
@@ -36,7 +34,7 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
   const detail = detailQuery.data;
   const error = currentUserQuery.error ?? detailQuery.error;
   const isLoading =
-    !error && (currentUserQuery.isPending || (Boolean(userId) && detailQuery.isPending));
+    !error && (currentUserQuery.isPending || (currentUserQuery.isSuccess && detailQuery.isPending));
 
   if (isLoading) {
     return (
@@ -71,7 +69,10 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
   const firstUnsolvedQuestion = detail.questions.find(
     (question) => question.status === 'notStarted',
   );
-  const firstQuestion = firstUnsolvedQuestion ?? detail.questions[0];
+  const firstQuestion =
+    detail.questions.find((question) => question.status === 'awaitingSelfGrade') ??
+    firstUnsolvedQuestion ??
+    detail.questions[0];
   const firstQuestionHref = firstQuestion
     ? `/problem/${problemSetId}/questions/${firstQuestion.id}`
     : `/problem/${problemSetId}`;
@@ -111,6 +112,7 @@ export default function ProblemSetIntroView({ problemSetId }: ProblemSetIntroVie
             summary={detail.summary}
             actionLabel={detail.summary.solvedCount > 0 ? '이어서 시작' : '시작하기'}
             actionHref={firstQuestionHref}
+            actionDisabled={!firstQuestion}
           />
 
           <ProblemTocCard problemSetId={problemSetId} questions={detail.questions} />
