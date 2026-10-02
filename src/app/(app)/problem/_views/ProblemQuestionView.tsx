@@ -19,6 +19,7 @@ import ProblemSolvingHeader from '../_components/ProblemSolvingHeader';
 import { useProblemSolvingSession } from '../_contexts/ProblemSolvingSessionContext';
 import { formatElapsedTime } from '../_utils/formatElapsedTime';
 import { mapProblemAttempt } from '../_utils/mapProblemAttempt';
+import { resolveProblemAttempt } from '../_utils/resolveProblemAttempt';
 
 type ProblemQuestionViewProps = {
   problemSetId: string;
@@ -155,9 +156,10 @@ export default function ProblemQuestionView({
       : undefined);
   const isLastQuestion = !nextQuestion;
   const reviewQuery = isReviewMode ? '?from=result' : '';
-  const sessionAttempt = attempts[question.id];
-  const initialAttempt =
-    apiAttempt.submitted || sessionAttempt?.submitted ? apiAttempt : (sessionAttempt ?? apiAttempt);
+  const initialAttempt = resolveProblemAttempt({
+    serverAttempt: apiAttempt,
+    sessionAttempt: attempts[question.id],
+  });
   const completedCount = detail.summary.solvedCount;
 
   const handleNext = () => {
