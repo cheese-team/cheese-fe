@@ -142,7 +142,7 @@ export function useProblemQuestionController({
       : undefined);
   const isLastQuestion = !nextQuestion;
   const reviewQuery = isReviewMode ? '?from=result' : '';
-  const initialAttempt = resolveProblemAttempt({
+  const attempt = resolveProblemAttempt({
     serverAttempt: apiAttempt,
     sessionAttempt: attempts[question.id],
   });
@@ -198,7 +198,6 @@ export function useProblemQuestionController({
     navigationPending.current = true;
     setIsNavigating(true);
     pauseSession();
-    const attempt = initialAttempt;
 
     try {
       if (!attempt.submitted && !isReviewMode) {
@@ -317,7 +316,7 @@ export function useProblemQuestionController({
     status: 'ready',
     question,
     questions: detail.questions,
-    initialAttempt,
+    attempt,
     totalElapsedSeconds,
     completedCount: detail.summary.solvedCount,
     isHydrated,

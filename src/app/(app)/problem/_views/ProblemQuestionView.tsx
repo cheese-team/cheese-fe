@@ -74,7 +74,7 @@ export default function ProblemQuestionView({
           <ProblemQuestionCard
             key={JSON.stringify([question.id, isReviewMode, question.status, question.myAnswer])}
             question={question}
-            initialAttempt={controller.initialAttempt}
+            attempt={controller.attempt}
             isLastQuestion={controller.isLastQuestion}
             isReviewMode={isReviewMode}
             isBusy={controller.isBusy}

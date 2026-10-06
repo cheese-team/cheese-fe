@@ -17,7 +17,7 @@ type GradedStatus = Exclude<ProblemSolveStatus, 'pending'>;
 
 type ProblemQuestionCardProps = {
   question: ProblemQuestion;
-  initialAttempt?: ProblemAttempt;
+  attempt: ProblemAttempt;
   isLastQuestion: boolean;
   isReviewMode?: boolean;
   isBusy?: boolean;
@@ -61,7 +61,7 @@ function AnswerResultMessage({ status, className }: { status: GradedStatus; clas
 
 export default function ProblemQuestionCard({
   question,
-  initialAttempt,
+  attempt,
   isLastQuestion,
   isReviewMode = false,
   isBusy = false,
@@ -71,16 +71,12 @@ export default function ProblemQuestionCard({
   onRetry,
   onNext,
 }: ProblemQuestionCardProps) {
-  const wasSubmitted = Boolean(initialAttempt?.submitted);
-  const initialGradedStatus =
-    wasSubmitted && initialAttempt && initialAttempt.status !== 'pending'
-      ? initialAttempt.status
-      : null;
+  const wasSubmitted = attempt.submitted;
+  const initialGradedStatus = wasSubmitted && attempt.status !== 'pending' ? attempt.status : null;
   const initialSelfCheck =
-    question.gradingMode === 'self' && initialAttempt?.selfChecked ? initialGradedStatus : null;
+    question.gradingMode === 'self' && attempt.selfChecked ? initialGradedStatus : null;
 
-  const [textAnswer, setTextAnswer] = useState(initialAttempt?.answer ?? '');
-  const [selectedChoiceId, setSelectedChoiceId] = useState(initialAttempt?.selectedChoiceId ?? '');
+  const { answer: textAnswer, selectedChoiceId } = attempt;
   const [isHintVisible, setIsHintVisible] = useState(isReviewMode);
   const [isSubmitted, setIsSubmitted] = useState(wasSubmitted);
   const [submissionStatus, setSubmissionStatus] = useState<GradedStatus | null>(
@@ -165,8 +161,6 @@ export default function ProblemQuestionCard({
         return;
       }
 
-      setTextAnswer('');
-      setSelectedChoiceId('');
       setIsHintVisible(false);
       setIsSubmitted(false);
       setSubmissionStatus(null);
@@ -229,9 +223,7 @@ export default function ProblemQuestionCard({
             aria-label="서술형 답안"
             className="h-[38px] w-full bg-transparent px-[12px] text-[18px] leading-[24px] font-medium tracking-normal text-gray-900 outline-none disabled:text-gray-900"
             onChange={(event) => {
-              const nextAnswer = event.target.value;
-              setTextAnswer(nextAnswer);
-              onDraftChange({ answer: nextAnswer });
+              onDraftChange({ answer: event.target.value });
             }}
           />
         </div>
@@ -262,7 +254,6 @@ export default function ProblemQuestionCard({
                     isSelected ? selectedTextClassName : 'text-gray-900',
                   )}
                   onClick={() => {
-                    setSelectedChoiceId(choice.id);
                     onDraftChange({ selectedChoiceId: choice.id });
                   }}
                 >
