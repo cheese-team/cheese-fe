@@ -10,7 +10,8 @@ export async function resolve(specifier, context, nextResolve) {
       ? new URL(specifier, context.parentURL)
       : null;
 
-  if (url && !/\.[a-z]+$/i.test(url.pathname)) {
+  // problem.api처럼 이름에 점이 있어도 실제 확장자가 없으면 .ts/.tsx를 찾는다.
+  if (url && !/\.(?:ts|tsx|js|jsx|mjs|cjs|json)$/i.test(url.pathname)) {
     for (const extension of ['.ts', '.tsx']) {
       const candidate = new URL(`${url.href}${extension}`);
       try {
