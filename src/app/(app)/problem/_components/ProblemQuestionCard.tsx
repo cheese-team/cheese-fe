@@ -20,14 +20,13 @@ type ProblemQuestionCardProps = {
   attempt: ProblemAttempt;
   isLastQuestion: boolean;
   isReviewMode?: boolean;
-  isBusy?: boolean;
+  isBusy: boolean;
+  isSubmitting: boolean;
+  isRetrying: boolean;
   onDraftChange: (draft: { answer?: string; selectedChoiceId?: string }) => void;
-  onSubmitAnswer: (submission: {
-    answer: string;
-    selectedChoiceId: string;
-  }) => Promise<GradedStatus | null>;
+  onSubmitAnswer: (submission: { answer: string; selectedChoiceId: string }) => Promise<void>;
   onSelfCheck: (status: GradedStatus) => Promise<void>;
-  onRetry: () => Promise<boolean>;
+  onRetry: () => Promise<void>;
   onNext: () => void;
 };
 
@@ -64,34 +63,25 @@ export default function ProblemQuestionCard({
   attempt,
   isLastQuestion,
   isReviewMode = false,
-  isBusy = false,
+  isBusy,
+  isSubmitting,
+  isRetrying,
   onDraftChange,
   onSubmitAnswer,
   onSelfCheck,
   onRetry,
   onNext,
 }: ProblemQuestionCardProps) {
-  const wasSubmitted = attempt.submitted;
-  const initialGradedStatus = wasSubmitted && attempt.status !== 'pending' ? attempt.status : null;
-  const initialSelfCheck =
-    question.gradingMode === 'self' && attempt.selfChecked ? initialGradedStatus : null;
-
-  const { answer: textAnswer, selectedChoiceId } = attempt;
+  const { answer: textAnswer, selectedChoiceId, submitted: isSubmitted } = attempt;
+  const submissionStatus = isSubmitted && attempt.status !== 'pending' ? attempt.status : null;
+  const selfCheck =
+    question.gradingMode === 'self' && attempt.selfChecked ? submissionStatus : null;
   const [isHintVisible, setIsHintVisible] = useState(isReviewMode);
-  const [isSubmitted, setIsSubmitted] = useState(wasSubmitted);
-  const [submissionStatus, setSubmissionStatus] = useState<GradedStatus | null>(
-    initialGradedStatus,
-  );
-  const [selfCheck, setSelfCheck] = useState<GradedStatus | null>(initialSelfCheck);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [isGrading, setIsGrading] = useState(false);
   const [actionError, setActionError] = useState('');
 
-  const isWorking = isBusy || isSubmitting || isRetrying || isGrading;
   const canSubmit =
     !isSubmitted &&
-    !isWorking &&
+    !isBusy &&
     (question.type === 'shortAnswer' ? textAnswer.trim().length > 0 : selectedChoiceId.length > 0);
   const canMoveNext =
     isSubmitted &&
@@ -114,65 +104,45 @@ export default function ProblemQuestionCard({
       return;
     }
 
-    setIsSubmitting(true);
     setActionError('');
 
     try {
-      const status = await onSubmitAnswer({ answer: textAnswer, selectedChoiceId });
-      setSubmissionStatus(status);
-      setIsSubmitted(true);
+      await onSubmitAnswer({ answer: textAnswer, selectedChoiceId });
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
           : '답안 제출에 실패했습니다. 잠시 후 다시 시도해 주세요.',
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleSelfCheck = async (status: GradedStatus) => {
-    if (selfCheck || isWorking) {
+    if (selfCheck || isBusy) {
       return;
     }
 
-    setIsGrading(true);
     setActionError('');
     try {
       await onSelfCheck(status);
-      setSelfCheck(status);
-      setSubmissionStatus(status);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : '채점 결과를 저장하지 못했습니다.');
-    } finally {
-      setIsGrading(false);
     }
   };
 
   const handleRetry = async () => {
-    if (isWorking) return;
-    setIsRetrying(true);
+    if (isBusy) return;
     setActionError('');
 
     try {
-      const didRetry = await onRetry();
-      if (!didRetry) {
-        return;
-      }
-
+      await onRetry();
       setIsHintVisible(false);
-      setIsSubmitted(false);
-      setSubmissionStatus(null);
-      setSelfCheck(null);
     } catch (error) {
       setActionError(
         error instanceof Error
           ? error.message
           : '다시 풀기를 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.',
       );
-    } finally {
-      setIsRetrying(false);
     }
   };
 
@@ -181,7 +151,7 @@ export default function ProblemQuestionCard({
       variant="outline"
       size={54}
       width={110}
-      disabled={!question.hint || isWorking}
+      disabled={!question.hint || isBusy}
       className="gap-[12px] leading-[24px]"
       onClick={() => {
         setIsHintVisible(true);
@@ -219,7 +189,7 @@ export default function ProblemQuestionCard({
         <div className="mt-[60px] border-b border-gray-400">
           <input
             value={textAnswer}
-            disabled={isSubmitted || isWorking}
+            disabled={isSubmitted || isBusy}
             aria-label="서술형 답안"
             className="h-[38px] w-full bg-transparent px-[12px] text-[18px] leading-[24px] font-medium tracking-normal text-gray-900 outline-none disabled:text-gray-900"
             onChange={(event) => {
@@ -248,7 +218,7 @@ export default function ProblemQuestionCard({
               <li key={choice.id}>
                 <button
                   type="button"
-                  disabled={isSubmitted || isWorking}
+                  disabled={isSubmitted || isBusy}
                   className={cn(
                     'flex items-center gap-[12px] text-[20px] leading-[24px] font-medium tracking-normal',
                     isSelected ? selectedTextClassName : 'text-gray-900',
@@ -307,7 +277,7 @@ export default function ProblemQuestionCard({
               <div className="mt-[16px] w-[330px] overflow-hidden rounded-[10px] border border-gray-300">
                 <button
                   type="button"
-                  disabled={isWorking}
+                  disabled={isBusy}
                   className="bg-bg-white flex h-[72px] w-full items-center gap-[16px] px-[20px] text-[16px] leading-[20px] font-medium text-gray-700"
                   onClick={() => {
                     void handleSelfCheck('correct');
@@ -322,7 +292,7 @@ export default function ProblemQuestionCard({
                 </button>
                 <button
                   type="button"
-                  disabled={isWorking}
+                  disabled={isBusy}
                   className="bg-bg-white flex h-[72px] w-full items-center gap-[16px] border-t border-gray-300 px-[20px] text-[16px] leading-[20px] font-medium text-gray-700"
                   onClick={() => {
                     void handleSelfCheck('incorrect');
@@ -375,7 +345,7 @@ export default function ProblemQuestionCard({
               variant="outline"
               size={54}
               width={110}
-              disabled={isWorking}
+              disabled={isBusy}
               className="gap-[12px] leading-[24px]"
               onClick={() => {
                 void handleRetry();
@@ -391,7 +361,7 @@ export default function ProblemQuestionCard({
             <Button
               size={54}
               width={isReviewMode && isLastQuestion ? 150 : 110}
-              disabled={!canMoveNext || isWorking}
+              disabled={!canMoveNext || isBusy}
               className="gap-[12px] leading-[24px]"
               onClick={onNext}
             >

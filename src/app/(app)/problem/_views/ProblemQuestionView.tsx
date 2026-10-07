@@ -72,12 +72,14 @@ export default function ProblemQuestionView({
       <div className="flex min-h-[calc(100dvh-80px)] items-center justify-center py-[60px]">
         {controller.isHydrated && (
           <ProblemQuestionCard
-            key={JSON.stringify([question.id, isReviewMode, question.status, question.myAnswer])}
+            key={`${question.id}:${isReviewMode}`}
             question={question}
             attempt={controller.attempt}
             isLastQuestion={controller.isLastQuestion}
             isReviewMode={isReviewMode}
             isBusy={controller.isBusy}
+            isSubmitting={controller.isSubmitting}
+            isRetrying={controller.isRetrying}
             onDraftChange={controller.handleDraftChange}
             onSubmitAnswer={controller.handleSubmitAnswer}
             onSelfCheck={controller.handleSelfCheck}

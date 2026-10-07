@@ -273,7 +273,7 @@ export function useProblemQuestionController({
       submittedQuestion.status === 'awaitingSelfGrade'
     ) {
       submitQuestion(question.id, { ...submittedAnswer, status: 'pending' });
-      return null;
+      return;
     }
 
     if (!status) {
@@ -281,8 +281,6 @@ export function useProblemQuestionController({
     }
 
     submitQuestion(question.id, { ...submittedAnswer, status });
-
-    return status;
   };
 
   const handleSelfCheck = async (status: GradedStatus) => {
@@ -309,7 +307,6 @@ export function useProblemQuestionController({
     if (isReviewMode) {
       router.replace(`/problem/${problemSetId}/questions/${question.id}`);
     }
-    return true;
   };
 
   return {
@@ -321,6 +318,8 @@ export function useProblemQuestionController({
     completedCount: detail.summary.solvedCount,
     isHydrated,
     isBusy,
+    isSubmitting: submitAnswerMutation.isPending,
+    isRetrying: retryQuestionMutation.isPending,
     isLastQuestion,
     isTocOpen,
     isExitModalOpen,
