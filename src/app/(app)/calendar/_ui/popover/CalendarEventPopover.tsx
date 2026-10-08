@@ -6,6 +6,7 @@ import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { CollapsibleColorPicker } from '@/components/common/CollapsibleColorPicker';
 import { CalendarDateField } from './CalendarDateField';
+import { CalendarTimeField } from './CalendarTimeField';
 
 import { cn } from '@/lib/cn';
 import { getTagColor } from '@/lib/tagPalette';
@@ -111,63 +112,6 @@ function CompactFieldIcon({ children }: { children: React.ReactNode }) {
     <span className="flex h-3 w-3 shrink-0 items-center justify-center text-gray-400">
       {children}
     </span>
-  );
-}
-
-type DisplayTimeFieldProps = {
-  value?: string;
-  onChange: (nextValue: string) => void;
-};
-
-function formatDisplayTime(value?: string) {
-  const inputValue = toTimeInputValue(value);
-  if (!inputValue) return '시간 선택';
-
-  const [hourText = '0', minute = '00'] = inputValue.split(':');
-  const hour = Number(hourText);
-  const period = hour < 12 ? '오전' : '오후';
-  const displayHour = hour % 12 || 12;
-
-  return `${period} ${displayHour}:${minute}`;
-}
-
-function DisplayTimeField({ value, onChange }: DisplayTimeFieldProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const inputValue = toTimeInputValue(value);
-
-  const openPicker = () => {
-    if (!inputRef.current) return;
-
-    if ('showPicker' in HTMLInputElement.prototype) {
-      (inputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
-      return;
-    }
-
-    inputRef.current.click();
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={openPicker}
-        className={cn(
-          'flex h-[25px] w-full items-center justify-center rounded-[5px] border border-gray-300 bg-white px-5 text-gray-700',
-          DATE_TIME_TEXT_CLASS_NAME,
-        )}
-      >
-        <span className="truncate">{formatDisplayTime(value)}</span>
-      </button>
-
-      <input
-        ref={inputRef}
-        type="time"
-        value={inputValue}
-        onChange={(event) => onChange(event.target.value)}
-        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-        tabIndex={-1}
-      />
-    </div>
   );
 }
 
@@ -432,7 +376,8 @@ export function CalendarEventPopover({
 
                 <div className="flex min-w-0 flex-1 items-center gap-1">
                   <div className="min-w-0 flex-1">
-                    <DisplayTimeField
+                    <CalendarTimeField
+                      label="시작 시간"
                       value={draft.start}
                       onChange={(nextValue) => updateTimedStart(timedStartDateValue, nextValue)}
                     />
@@ -441,7 +386,8 @@ export function CalendarEventPopover({
                   <RangeSeparatorIcon width={10.5} height={1} className="shrink-0" aria-hidden />
 
                   <div className="min-w-0 flex-1">
-                    <DisplayTimeField
+                    <CalendarTimeField
+                      label="종료 시간"
                       value={draft.end}
                       onChange={(nextValue) => updateTimedEnd(nextValue)}
                     />
