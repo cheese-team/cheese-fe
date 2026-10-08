@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import * as api from '../src/api/problem.api.ts';
 import { ApiError } from '../src/api/client.ts';
@@ -10,7 +13,13 @@ import {
   mapProblemStatus,
 } from '../src/app/(app)/problem/_utils/mapProblemApi.ts';
 import { mapProblemAttempt } from '../src/app/(app)/problem/_utils/mapProblemAttempt.ts';
+import {
+  createEmptyProblemAttempt,
+  resolveProblemAttempt,
+} from '../src/app/(app)/problem/_utils/resolveProblemAttempt.ts';
+import { authQueryKeys } from '../src/queries/auth/authQueryKeys.ts';
 import { problemQueryKeys } from '../src/queries/problem/problemQueryKeys.ts';
+import { useSubmitProblemAnswerMutation } from '../src/queries/problem/useProblemMutations.ts';
 
 const question = {
   id: 'question-1',
@@ -281,3 +290,92 @@ test('계정·문제집별 답안 및 결과 캐시가 분리된다', () => {
     problemQueryKeys.result('user-a', 'set-2'),
   );
 });
+
+const submissionCases = [
+  {
+    name: '객관식 응답에 myAnswer가 없으면 제출한 선택지를 유지한다',
+    response: { status: 'correct' },
+    answer: { selectedChoiceId: 'choice-1' },
+    expected: { selectedChoiceId: 'choice-1', answer: undefined },
+  },
+  {
+    name: '서술형 응답에 myAnswer가 없으면 제출한 텍스트를 유지한다',
+    response: { type: 'shortAnswer', status: 'wrong' },
+    answer: { answer: 'pop' },
+    expected: { selectedChoiceId: undefined, answer: 'pop' },
+  },
+  {
+    name: '직접 채점 대기 응답에서도 제출한 텍스트를 유지한다',
+    response: { type: 'shortAnswer', gradingMode: 'self', status: 'awaitingSelfGrade' },
+    answer: { answer: '작성한 답안' },
+    expected: { selectedChoiceId: undefined, answer: '작성한 답안' },
+  },
+  {
+    name: '응답에 선택지 문구만 있으면 누락된 선택지 ID만 보완한다',
+    response: { status: 'correct', myAnswer: { text: 'push' } },
+    answer: { selectedChoiceId: 'choice-1' },
+    expected: { selectedChoiceId: 'choice-1', answer: 'push' },
+  },
+  {
+    name: '서버가 반환한 답안은 제출값보다 우선한다',
+    response: { status: 'correct', myAnswer: { choiceId: 'choice-2', text: '서버 답안' } },
+    answer: { selectedChoiceId: 'choice-1', answer: '제출 답안' },
+    expected: { selectedChoiceId: 'choice-2', answer: '서버 답안' },
+  },
+  {
+    name: '서버가 명시한 빈 문자열을 제출값으로 덮어쓰지 않는다',
+    response: { status: 'wrong', myAnswer: { choiceId: '', text: '' } },
+    answer: { selectedChoiceId: 'choice-1', answer: '제출 답안' },
+    expected: { selectedChoiceId: '', answer: '' },
+  },
+];
+
+for (const scenario of submissionCases) {
+  test(`제출 캐시: ${scenario.name}`, async (t) => {
+    const client = new QueryClient();
+    t.after(() => client.clear());
+    client.setQueryData(authQueryKeys.me(), { account: { userId: request.userId } });
+    t.mock.method(globalThis, 'fetch', async () =>
+      Response.json({ ...question, elapsedSeconds: 21, ...scenario.response }),
+    );
+
+    // DOM 없이 실제 mutation 훅의 요청·캐시 갱신 경로를 실행한다.
+    let mutation;
+    function MutationHarness() {
+      // eslint-disable-next-line react-hooks/globals -- 단일 SSR 테스트 렌더에서 훅 반환값을 캡처한다.
+      mutation = useSubmitProblemAnswerMutation();
+      return null;
+    }
+    renderToStaticMarkup(
+      createElement(QueryClientProvider, { client }, createElement(MutationHarness)),
+    );
+    const result = await mutation.mutateAsync({
+      ...request,
+      answer: { ...scenario.answer, elapsedSeconds: 21 },
+    });
+    const cachedQuestion = client.getQueryData(
+      problemQueryKeys.question(request.userId, request.problemSetId, request.questionId),
+    );
+    assert.deepEqual(result.myAnswer, scenario.expected);
+    assert.deepEqual(cachedQuestion, result);
+
+    const displayedAttempt = resolveProblemAttempt({
+      serverAttempt: mapProblemAttempt(cachedQuestion),
+      sessionAttempt: {
+        ...createEmptyProblemAttempt(),
+        ...scenario.answer,
+        submitted: true,
+      },
+    });
+    assert.equal(displayedAttempt.answer, scenario.expected.answer ?? '');
+    assert.equal(displayedAttempt.selectedChoiceId, scenario.expected.selectedChoiceId ?? '');
+    assert.equal(displayedAttempt.submitted, true);
+    assert.equal(displayedAttempt.elapsedSeconds, 21);
+    assert.equal(
+      displayedAttempt.status,
+      scenario.response.status === 'awaitingSelfGrade'
+        ? 'pending'
+        : mapProblemStatus(scenario.response.status),
+    );
+  });
+}

@@ -13,6 +13,7 @@ import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
 import type { ProblemAttempt, ProblemSolveStatus } from '../_types/problemSolving';
 import { formatProgressDate } from '../_utils/formatProgressDate';
+import { createEmptyProblemAttempt, resolveProblemAttempt } from '../_utils/resolveProblemAttempt';
 
 const MAX_SESSION_SECONDS = 60 * 60;
 
@@ -51,15 +52,6 @@ type ProblemSolvingSessionContextValue = {
   resetSession: () => void;
   resetQuestion: (questionId: string) => void;
 };
-
-const createEmptyAttempt = (): ProblemAttempt => ({
-  answer: '',
-  selectedChoiceId: '',
-  status: 'pending',
-  elapsedSeconds: 0,
-  submitted: false,
-  selfChecked: false,
-});
 
 const createInitialState = (): ProblemSolvingSessionState => ({
   totalElapsedSeconds: 0,
@@ -198,7 +190,7 @@ function ProblemSolvingSession({
           ? {
               ...currentState.attempts,
               [activeQuestionId]: {
-                ...(currentState.attempts[activeQuestionId] ?? createEmptyAttempt()),
+                ...(currentState.attempts[activeQuestionId] ?? createEmptyProblemAttempt()),
                 elapsedSeconds: (currentState.attempts[activeQuestionId]?.elapsedSeconds ?? 0) + 1,
               },
             }
@@ -224,11 +216,10 @@ function ProblemSolvingSession({
     (questionId: string, options?: { review?: boolean; initialAttempt?: ProblemAttempt }) => {
       setState((currentState) => {
         const savedAttempt = currentState.attempts[questionId];
-        const serverAttempt = options?.initialAttempt;
-        const attempt =
-          serverAttempt?.submitted || savedAttempt?.submitted
-            ? (serverAttempt ?? savedAttempt)
-            : (savedAttempt ?? serverAttempt ?? createEmptyAttempt());
+        const attempt = resolveProblemAttempt({
+          serverAttempt: options?.initialAttempt,
+          sessionAttempt: savedAttempt,
+        });
         const shouldTrackQuestion = !options?.review && !attempt.submitted;
         const totalElapsedSeconds = Math.min(
           MAX_SESSION_SECONDS,
@@ -258,7 +249,7 @@ function ProblemSolvingSession({
       attempts: {
         ...currentState.attempts,
         [questionId]: {
-          ...(currentState.attempts[questionId] ?? createEmptyAttempt()),
+          ...(currentState.attempts[questionId] ?? createEmptyProblemAttempt()),
           ...draft,
         },
       },
@@ -271,7 +262,7 @@ function ProblemSolvingSession({
       attempts: {
         ...currentState.attempts,
         [questionId]: {
-          ...(currentState.attempts[questionId] ?? createEmptyAttempt()),
+          ...(currentState.attempts[questionId] ?? createEmptyProblemAttempt()),
           ...submission,
           submitted: true,
           selfChecked: submission.status !== 'pending',
@@ -290,7 +281,7 @@ function ProblemSolvingSession({
         attempts: {
           ...currentState.attempts,
           [questionId]: {
-            ...(currentState.attempts[questionId] ?? createEmptyAttempt()),
+            ...(currentState.attempts[questionId] ?? createEmptyProblemAttempt()),
             status,
             submitted: true,
             selfChecked: true,
@@ -325,7 +316,7 @@ function ProblemSolvingSession({
         0,
         currentState.totalElapsedSeconds - (currentState.attempts[questionId]?.elapsedSeconds ?? 0),
       ),
-      attempts: { ...currentState.attempts, [questionId]: createEmptyAttempt() },
+      attempts: { ...currentState.attempts, [questionId]: createEmptyProblemAttempt() },
       activeQuestionId: null,
       isRunning: false,
     }));

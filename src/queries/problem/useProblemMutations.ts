@@ -82,8 +82,16 @@ export function useSubmitProblemAnswerMutation() {
   const { updateQuestion, cancelQueries } = useUpdateProblemCaches();
 
   return useMutation({
-    mutationFn: async (variables: ProblemAnswerMutationVariables) =>
-      mapProblemQuestion(await submitProblemAnswer(variables)),
+    mutationFn: async (variables: ProblemAnswerMutationVariables) => {
+      const response = await submitProblemAnswer(variables);
+      return mapProblemQuestion({
+        ...response,
+        myAnswer: {
+          choiceId: response.myAnswer?.choiceId ?? variables.answer.selectedChoiceId,
+          text: response.myAnswer?.text ?? variables.answer.answer,
+        },
+      });
+    },
     onMutate: cancelQueries,
     onSuccess: (data, variables) => updateQuestion(variables, data),
   });
