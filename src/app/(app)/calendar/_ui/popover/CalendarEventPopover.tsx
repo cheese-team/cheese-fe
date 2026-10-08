@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { CollapsibleColorPicker } from '@/components/common/CollapsibleColorPicker';
+import { CalendarDateField } from './CalendarDateField';
 
 import { cn } from '@/lib/cn';
 import { getTagColor } from '@/lib/tagPalette';
@@ -12,7 +13,6 @@ import {
   addDaysToCalendarDate,
   addHoursToCalendarDateTime,
   combineDateAndTime,
-  formatDisplayDate,
   hasTimePart,
   parseCalendarDate,
   toDateInputValue,
@@ -111,52 +111,6 @@ function CompactFieldIcon({ children }: { children: React.ReactNode }) {
     <span className="flex h-3 w-3 shrink-0 items-center justify-center text-gray-400">
       {children}
     </span>
-  );
-}
-
-type DisplayDateFieldProps = {
-  value?: string;
-  onChange: (nextValue: string) => void;
-};
-
-function DisplayDateField({ value, onChange }: DisplayDateFieldProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const displayText = formatDisplayDate(value);
-  const inputValue = toDateInputValue(value);
-
-  const openPicker = () => {
-    if (!inputRef.current) return;
-
-    if ('showPicker' in HTMLInputElement.prototype) {
-      (inputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
-      return;
-    }
-
-    inputRef.current.click();
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={openPicker}
-        className={cn(
-          'flex h-[25px] w-full items-center justify-center rounded-[5px] border border-gray-300 bg-white px-5 text-gray-700',
-          DATE_TIME_TEXT_CLASS_NAME,
-        )}
-      >
-        <span className="whitespace-nowrap">{displayText}</span>
-      </button>
-
-      <input
-        ref={inputRef}
-        type="date"
-        value={inputValue}
-        onChange={(event) => onChange(event.target.value)}
-        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-        tabIndex={-1}
-      />
-    </div>
   );
 }
 
@@ -437,13 +391,21 @@ export function CalendarEventPopover({
 
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 <div className="min-w-0 flex-1">
-                  <DisplayDateField value={draft.start} onChange={updateAllDayStart} />
+                  <CalendarDateField
+                    label="시작 날짜"
+                    value={draft.start}
+                    onChange={updateAllDayStart}
+                  />
                 </div>
 
                 <RangeSeparatorIcon width={10.5} height={1} className="shrink-0" aria-hidden />
 
                 <div className="min-w-0 flex-1">
-                  <DisplayDateField value={allDayDisplayEndValue} onChange={updateAllDayEnd} />
+                  <CalendarDateField
+                    label="종료 날짜"
+                    value={allDayDisplayEndValue}
+                    onChange={updateAllDayEnd}
+                  />
                 </div>
               </div>
             </div>
@@ -454,7 +416,11 @@ export function CalendarEventPopover({
               </ScheduleFieldIcon>
 
               <div className="w-[106.75px] shrink-0">
-                <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
+                <CalendarDateField
+                  label="일정 날짜"
+                  value={draft.start}
+                  onChange={updateTimedDateOnlyDraft}
+                />
               </div>
             </div>
           ) : (
@@ -489,7 +455,11 @@ export function CalendarEventPopover({
                 </ScheduleFieldIcon>
 
                 <div className="w-[106.75px] shrink-0">
-                  <DisplayDateField value={draft.start} onChange={updateTimedDateOnlyDraft} />
+                  <CalendarDateField
+                    label="일정 날짜"
+                    value={draft.start}
+                    onChange={updateTimedDateOnlyDraft}
+                  />
                 </div>
               </div>
             </>
