@@ -66,7 +66,12 @@ function FieldPanel({
     return () => {
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
-      if (trigger.isConnected) trigger.focus({ preventScroll: true });
+      // 포털 제거 후 복원하되, 이미 다른 요소로 이동한 포커스는 유지한다.
+      requestAnimationFrame(() => {
+        if (!panel.isConnected && trigger.isConnected && document.activeElement === document.body) {
+          trigger.focus({ preventScroll: true });
+        }
+      });
     };
   }, [triggerRef, width]);
 
