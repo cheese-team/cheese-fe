@@ -9,6 +9,7 @@ import { notificationQueryKeys } from './notificationQueryKeys';
 
 export type NotificationQueryParams = {
   enabled?: boolean;
+  autoRefresh?: boolean;
 };
 
 export type NotificationListQueryParams = NotificationQueryParams & {
@@ -18,6 +19,41 @@ export type NotificationListQueryParams = NotificationQueryParams & {
 type NotificationUserParams = {
   userId?: string;
 };
+
+export const NOTIFICATION_REFETCH_INTERVAL = 30_000;
+
+type RefreshQuery = {
+  state: { error: Error | null; fetchStatus: 'fetching' | 'paused' | 'idle' };
+};
+
+function notificationRefreshOptions(
+  queryClient: QueryClient,
+  userId: string | undefined,
+  enabled: boolean,
+) {
+  const canRefresh = ({ state }: RefreshQuery) =>
+    enabled &&
+    isCurrentNotificationUser(queryClient, userId) &&
+    queryClient.isMutating({ mutationKey: notificationQueryKeys.actions(userId ?? '') }) === 0 &&
+    !(state.error instanceof ApiError && state.error.status >= 400 && state.error.status < 500);
+
+  const refetchOnReturn = (query: RefreshQuery) =>
+    canRefresh(query) ? ('always' as const) : false;
+
+  return {
+    staleTime: NOTIFICATION_REFETCH_INTERVAL,
+    // 오류가 있는 알림함을 다시 마운트해도 인증 실패 요청을 자동 반복하지 않는다.
+    retryOnMount: false,
+    refetchIntervalInBackground: false,
+    refetchInterval: (query: RefreshQuery) =>
+      canRefresh(query) && query.state.fetchStatus === 'idle'
+        ? NOTIFICATION_REFETCH_INTERVAL
+        : false,
+    refetchOnWindowFocus: refetchOnReturn,
+    refetchOnReconnect: refetchOnReturn,
+    refetchOnMount: refetchOnReturn,
+  };
+}
 
 function isCurrentNotificationUser(queryClient: QueryClient, userId: string | undefined) {
   const authState = queryClient.getQueryState<CurrentUser>(authQueryKeys.me());
@@ -52,9 +88,15 @@ function retryNotificationQuery(failureCount: number, error: Error) {
 
 export function notificationListOptions(
   queryClient: QueryClient,
-  { userId, enabled = true, limit = 20 }: NotificationListQueryParams & NotificationUserParams,
+  {
+    userId,
+    enabled = true,
+    autoRefresh = true,
+    limit = 20,
+  }: NotificationListQueryParams & NotificationUserParams,
 ) {
   return infiniteQueryOptions({
+    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh),
     queryKey: notificationQueryKeys.list(userId ?? '', limit),
     queryFn: ({ pageParam, signal }) =>
       fetchForNotificationUser(queryClient, userId, () =>
@@ -82,9 +124,10 @@ export function notificationListOptions(
 
 export function notificationUnreadCountOptions(
   queryClient: QueryClient,
-  { userId, enabled = true }: NotificationQueryParams & NotificationUserParams,
+  { userId, enabled = true, autoRefresh = true }: NotificationQueryParams & NotificationUserParams,
 ) {
   return queryOptions({
+    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh),
     queryKey: notificationQueryKeys.unreadCount(userId ?? ''),
     queryFn: ({ signal }) =>
       fetchForNotificationUser(queryClient, userId, () => getNotificationUnreadCount({ signal })),
