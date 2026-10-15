@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { ApiError } from '@/api/client';
+import { PublicProfileModal } from '@/components/common/PublicProfile/PublicProfileModal';
 import DoubleArrowIcon from '@/assets/icons/problem/double-arrow.svg';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import type { NotificationAction } from '@/queries/notification/notificationMutationOptions';
@@ -56,11 +57,15 @@ function NotificationFeedback({
   );
 }
 
-function NotificationList({ userId }: { userId: string }) {
+function NotificationList({ userId, onNavigate }: { userId: string; onNavigate: () => void }) {
   const notifications = useNotifications();
   const actions = useNotificationActions(userId);
   const listRef = useRef<HTMLDivElement>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<{
+    userId: string;
+    trigger: HTMLButtonElement;
+  } | null>(null);
   const { unread, read } = useMemo(
     () => groupNotifications(notifications.data?.pages ?? []),
     [notifications.data],
@@ -199,6 +204,10 @@ function NotificationList({ userId }: { userId: string }) {
                 actionsDisabled={actionsDisabled}
                 onRead={() => void runAction({ type: 'read', notificationId: item.id })}
                 onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
+                onNavigate={onNavigate}
+                onOpenProfile={(senderId, trigger) =>
+                  setSelectedProfile({ userId: senderId, trigger })
+                }
                 onToggleExpand={() =>
                   setExpandedId((previous) => (previous === item.id ? null : item.id))
                 }
@@ -231,6 +240,15 @@ function NotificationList({ userId }: { userId: string }) {
               ? '다음 알림 다시 시도'
               : '알림 더 보기'}
         </button>
+      ) : null}
+      {selectedProfile ? (
+        <PublicProfileModal
+          key={selectedProfile.userId}
+          viewerId={userId}
+          userId={selectedProfile.userId}
+          trigger={selectedProfile.trigger}
+          onClose={() => setSelectedProfile(null)}
+        />
       ) : null}
     </div>
   );
@@ -276,6 +294,7 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
         <NotificationList
           key={currentUser.data.account.userId}
           userId={currentUser.data.account.userId}
+          onNavigate={onClose}
         />
       )}
     </aside>

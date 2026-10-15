@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import Link from 'next/link';
 
 import DeleteIcon from '@/assets/icons/sidebar/delete.svg';
 import MessageIcon from '@/assets/icons/sidebar/message.svg';
+import SendIcon from '@/assets/icons/sidebar/send.svg';
 import { cn } from '@/lib/cn';
 
 type NotificationActionsProps = {
@@ -11,6 +13,8 @@ type NotificationActionsProps = {
   disabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
+  targetHref: string | null;
+  onNavigate: () => void;
 };
 
 const actionClassName =
@@ -21,6 +25,8 @@ export function NotificationActions({
   disabled,
   onRead,
   onDelete,
+  targetHref,
+  onNavigate,
 }: NotificationActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const confirmId = useId();
@@ -45,6 +51,18 @@ export function NotificationActions({
             'pointer-events-none opacity-0 group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:opacity-100 max-md:pointer-events-auto max-md:opacity-100',
         )}
       >
+        {targetHref ? (
+          <Link
+            href={targetHref}
+            prefetch={false}
+            onNavigate={onNavigate}
+            aria-label="관련 게시글로 이동"
+            title="관련 게시글로 이동"
+            className={actionClassName}
+          >
+            <SendIcon aria-hidden="true" className="h-[12px] w-[14px]" />
+          </Link>
+        ) : null}
         <button
           type="button"
           onClick={onRead}

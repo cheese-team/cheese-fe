@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn';
 
 import { NotificationActions } from './NotificationActions';
 import type { NotificationItem } from './notificationModel';
+import { getNotificationTargetHref } from './notificationNavigation';
 
 export function NotificationCard({
   item,
@@ -15,6 +16,8 @@ export function NotificationCard({
   actionsDisabled,
   onRead,
   onDelete,
+  onNavigate,
+  onOpenProfile,
 }: {
   item: NotificationItem;
   expanded: boolean;
@@ -22,13 +25,27 @@ export function NotificationCard({
   actionsDisabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
+  onNavigate: () => void;
+  onOpenProfile: (userId: string, trigger: HTMLButtonElement) => void;
 }) {
   const messageId = useId();
+  const senderId = item.sender?.id == null ? '' : String(item.sender.id).trim();
 
   return (
     <article className="group relative box-border w-full min-w-0 border-b border-gray-300 py-[12px]">
       <div className="absolute top-[12px] left-0">
-        <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
+        {senderId ? (
+          <button
+            type="button"
+            aria-label={`${item.senderName} 프로필 보기`}
+            onClick={(event) => onOpenProfile(senderId, event.currentTarget)}
+            className="focus-visible:outline-secondary-600 rounded-full focus-visible:outline-2"
+          >
+            <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
+          </button>
+        ) : (
+          <ProfileImage alt="" size={25} />
+        )}
       </div>
       <button
         type="button"
@@ -76,6 +93,8 @@ export function NotificationCard({
         disabled={actionsDisabled}
         onRead={onRead}
         onDelete={onDelete}
+        targetHref={getNotificationTargetHref(item.target)}
+        onNavigate={onNavigate}
       />
     </article>
   );
