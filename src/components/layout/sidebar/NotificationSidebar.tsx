@@ -57,7 +57,7 @@ function NotificationFeedback({
   );
 }
 
-function NotificationList({ userId, onNavigate }: { userId: string; onNavigate: () => void }) {
+function NotificationList({ userId }: { userId: string }) {
   const notifications = useNotifications();
   const actions = useNotificationActions(userId);
   const listRef = useRef<HTMLDivElement>(null);
@@ -204,7 +204,7 @@ function NotificationList({ userId, onNavigate }: { userId: string; onNavigate: 
                 actionsDisabled={actionsDisabled}
                 onRead={() => void runAction({ type: 'read', notificationId: item.id })}
                 onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
-                onNavigate={onNavigate}
+                viewerId={userId}
                 onOpenProfile={(senderId, trigger) =>
                   setSelectedProfile({ userId: senderId, trigger })
                 }
@@ -294,7 +294,6 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
         <NotificationList
           key={currentUser.data.account.userId}
           userId={currentUser.data.account.userId}
-          onNavigate={onClose}
         />
       )}
     </aside>

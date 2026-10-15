@@ -7,7 +7,6 @@ import { cn } from '@/lib/cn';
 
 import { NotificationActions } from './NotificationActions';
 import type { NotificationItem } from './notificationModel';
-import { getNotificationTargetHref } from './notificationNavigation';
 
 export function NotificationCard({
   item,
@@ -16,7 +15,7 @@ export function NotificationCard({
   actionsDisabled,
   onRead,
   onDelete,
-  onNavigate,
+  viewerId,
   onOpenProfile,
 }: {
   item: NotificationItem;
@@ -25,7 +24,7 @@ export function NotificationCard({
   actionsDisabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
-  onNavigate: () => void;
+  viewerId: string;
   onOpenProfile: (userId: string, trigger: HTMLButtonElement) => void;
 }) {
   const messageId = useId();
@@ -93,8 +92,8 @@ export function NotificationCard({
         disabled={actionsDisabled}
         onRead={onRead}
         onDelete={onDelete}
-        targetHref={getNotificationTargetHref(item.target)}
-        onNavigate={onNavigate}
+        viewerId={viewerId}
+        senderId={senderId}
       />
     </article>
   );

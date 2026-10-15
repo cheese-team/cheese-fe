@@ -99,6 +99,41 @@ test('같은 발신자도 조회 계정별 캐시를 분리한다', async (t) =>
   assert.equal(client.getQueryData(second.queryKey), undefined);
 });
 
+for (const [contactMethod, contactUrl, expected] of [
+  ['email', 'https://example.com/not-selected', 'mailto:user%40example.com'],
+  ['kakaoOpenChat', 'https://open.kakao.com/o/contact', 'https://open.kakao.com/o/contact'],
+  ['googleForm', 'https://forms.gle/contact', 'https://forms.gle/contact'],
+]) {
+  test(`알림 연락 버튼: 발신자가 지정한 ${contactMethod} 연락처를 사용한다`, async (t) => {
+    const client = setup(t);
+    t.mock.method(globalThis, 'fetch', async (url) => {
+      assert.equal(url, '/backend-api/users/sender-id/profile');
+      return Response.json({ ...personal, contactMethod, contactUrl });
+    });
+    const profile = await client.fetchQuery(
+      publicProfileOptions(client, { viewerId: 'viewer-a', userId: 'sender-id' }),
+    );
+    assert.equal(getPublicProfileContactHref(profile), expected);
+  });
+}
+
+test('선택한 외부 연락처가 누락되면 이메일로 임의 대체하지 않는다', () => {
+  for (const contactMethod of ['kakaoOpenChat', 'googleForm']) {
+    assert.equal(getPublicProfileContactHref({ ...personal, contactMethod, contactUrl: '' }), null);
+  }
+});
+
+test('알 수 없는 연락 방식으로 외부 주소를 열지 않는다', () => {
+  assert.equal(
+    getPublicProfileContactHref({
+      ...personal,
+      contactMethod: 'unsupported',
+      contactUrl: 'https://example.com',
+    }),
+    null,
+  );
+});
+
 test('로그인/발신자 정보가 없거나 계정이 다르면 요청을 보내지 않는다', async (t) => {
   const client = setup(t);
   const mock = t.mock.method(globalThis, 'fetch', async () => Response.json(personal));
