@@ -7,4 +7,5 @@ export const notificationQueryKeys = {
     [...notificationQueryKeys.lists(userId), { limit }] as const,
   unreadCount: (userId: string) =>
     [...notificationQueryKeys.byUser(userId), 'unread-count'] as const,
+  actions: (userId: string) => [...notificationQueryKeys.byUser(userId), 'actions'] as const,
 };

@@ -5,21 +5,28 @@ import { useId } from 'react';
 import ProfileImage from '@/components/common/ProfileImage';
 import { cn } from '@/lib/cn';
 
+import { NotificationActions } from './NotificationActions';
 import type { NotificationItem } from './notificationModel';
 
 export function NotificationCard({
   item,
   expanded,
   onToggleExpand,
+  actionsDisabled,
+  onRead,
+  onDelete,
 }: {
   item: NotificationItem;
   expanded: boolean;
   onToggleExpand: () => void;
+  actionsDisabled: boolean;
+  onRead: () => void;
+  onDelete: () => Promise<boolean>;
 }) {
   const messageId = useId();
 
   return (
-    <article className="relative box-border w-full min-w-0 border-b border-gray-300 py-[12px]">
+    <article className="group relative box-border w-full min-w-0 border-b border-gray-300 py-[12px]">
       <div className="absolute top-[12px] left-0">
         <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
       </div>
@@ -37,7 +44,7 @@ export function NotificationCard({
           <span className="min-w-0 flex-1 truncate text-[14px] leading-[24px] font-medium text-gray-950">
             {item.senderName}
           </span>
-          <span className="flex shrink-0 items-center gap-[8px]">
+          <span className="flex shrink-0 items-center gap-[8px] group-focus-within:opacity-0 group-hover:opacity-0 max-md:opacity-0">
             <time dateTime={item.dateTime} className="text-[12px] leading-[24px] text-gray-700">
               {item.dateLabel}
             </time>
@@ -64,6 +71,12 @@ export function NotificationCard({
           </span>
         </span>
       </button>
+      <NotificationActions
+        isRead={item.isRead}
+        disabled={actionsDisabled}
+        onRead={onRead}
+        onDelete={onDelete}
+      />
     </article>
   );
 }

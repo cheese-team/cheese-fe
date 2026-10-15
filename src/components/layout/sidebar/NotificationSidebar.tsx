@@ -1,11 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { ApiError } from '@/api/client';
 import DoubleArrowIcon from '@/assets/icons/problem/double-arrow.svg';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import type { NotificationAction } from '@/queries/notification/notificationMutationOptions';
+import { useNotificationActions } from '@/queries/notification/useNotificationActions';
 import { useNotifications } from '@/queries/notification/useNotificationQueries';
 
 import { NotificationCard } from './notification/NotificationCard';
@@ -54,8 +56,10 @@ function NotificationFeedback({
   );
 }
 
-function NotificationList() {
+function NotificationList({ userId }: { userId: string }) {
   const notifications = useNotifications();
+  const actions = useNotificationActions(userId);
+  const listRef = useRef<HTMLDivElement>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { unread, read } = useMemo(
     () => groupNotifications(notifications.data?.pages ?? []),
@@ -66,19 +70,33 @@ function NotificationList() {
     if (!notifications.isFetching) void notifications.refetch();
   };
   const loadMore = () => {
-    if (notifications.hasNextPage && !notifications.isFetching) {
+    if (notifications.hasNextPage && !notifications.isFetching && !actions.isPending) {
       void notifications.fetchNextPage({ cancelRefetch: false });
     }
   };
 
+  const runAction = async (action: NotificationAction) => {
+    const succeeded = await actions.execute(action);
+    if (succeeded) {
+      if (action.type === 'delete') {
+        setExpandedId((previous) => (previous === action.notificationId ? null : previous));
+      }
+      requestAnimationFrame(() => {
+        // 읽음 그룹으로 이동하거나 삭제되어 포커스된 버튼이 사라진 경우만 복원한다.
+        if (document.activeElement === document.body)
+          listRef.current?.focus({ preventScroll: true });
+      });
+    }
+    return succeeded;
+  };
+
   // 인증/권한 오류에서는 이전에 받은 알림도 표시하지 않는다.
-  if (notifications.error instanceof ApiError) {
-    if (notifications.error.status === 401) {
-      return <NotificationFeedback message="다시 로그인해 주세요." isError showLogin />;
-    }
-    if (notifications.error.status === 403) {
-      return <NotificationFeedback message="알림을 확인할 권한이 없습니다." isError />;
-    }
+  const errors = [notifications.error, actions.error];
+  if (errors.some((error) => error instanceof ApiError && error.status === 401)) {
+    return <NotificationFeedback message="다시 로그인해 주세요." isError showLogin />;
+  }
+  if (errors.some((error) => error instanceof ApiError && error.status === 403)) {
+    return <NotificationFeedback message="알림을 확인할 권한이 없습니다." isError />;
   }
 
   if (!notifications.data) {
@@ -95,9 +113,52 @@ function NotificationList() {
   }
 
   const isEmpty = unread.length + read.length === 0;
+  const actionsDisabled = actions.isPending || notifications.isFetching;
+  const actionLabel = actions.action?.type === 'delete' ? '알림 삭제' : '읽음 처리';
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-[20px]">
+    <div
+      ref={listRef}
+      role="region"
+      aria-label="알림 목록"
+      tabIndex={-1}
+      className="flex w-full min-w-0 flex-col gap-[20px] outline-none"
+    >
+      {!isEmpty || notifications.hasNextPage ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => void runAction({ type: 'readAll' })}
+            disabled={actionsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
+            title="불러오지 않은 알림까지 모두 읽음 처리"
+            className={retryButtonClassName}
+          >
+            모두 읽음
+          </button>
+        </div>
+      ) : null}
+      {actions.isPending ? (
+        <p role="status" className="text-[12px] text-gray-600">
+          알림을 처리하는 중입니다…
+        </p>
+      ) : null}
+      {actions.error ? (
+        <div className="flex items-start justify-between gap-[8px] rounded-[5px] border border-gray-300 p-[12px]">
+          <p role="alert" className="text-[14px] leading-[24px] text-gray-700">
+            {actions.error instanceof ApiError && actions.error.status === 404
+              ? '이미 삭제되었거나 찾을 수 없는 알림입니다. 목록을 다시 확인해 주세요.'
+              : `${actionLabel}에 실패했습니다. 다시 시도해 주세요.`}
+          </p>
+          <button
+            type="button"
+            onClick={actions.reset}
+            aria-label="알림 처리 오류 닫기"
+            className="shrink-0 text-[12px] text-gray-600"
+          >
+            닫기
+          </button>
+        </div>
+      ) : null}
       {notifications.isRefetchError && !notifications.isFetchNextPageError ? (
         <NotificationFeedback
           message="알림을 새로 불러오지 못했습니다."
@@ -135,6 +196,9 @@ function NotificationList() {
                 key={item.id}
                 item={item}
                 expanded={expandedId === item.id}
+                actionsDisabled={actionsDisabled}
+                onRead={() => void runAction({ type: 'read', notificationId: item.id })}
+                onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
                 onToggleExpand={() =>
                   setExpandedId((previous) => (previous === item.id ? null : item.id))
                 }
@@ -158,7 +222,7 @@ function NotificationList() {
         <button
           type="button"
           onClick={loadMore}
-          disabled={notifications.isFetching}
+          disabled={notifications.isFetching || actions.isPending}
           className={retryButtonClassName}
         >
           {notifications.isFetchingNextPage
@@ -209,7 +273,10 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
           }}
         />
       ) : (
-        <NotificationList key={currentUser.data.account.userId} />
+        <NotificationList
+          key={currentUser.data.account.userId}
+          userId={currentUser.data.account.userId}
+        />
       )}
     </aside>
   );
