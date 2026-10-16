@@ -24,7 +24,7 @@ import type { CreateGroupPostRequest } from '@/api/community.api';
 type GroupPostFormProps = {
   mode: 'create' | 'edit';
   groupId?: string;
-  initialValues?: GroupPost;
+  initialValues?: Omit<GroupPost, 'author'>;
 };
 
 export default function GroupPostForm({ mode, groupId, initialValues }: GroupPostFormProps) {

@@ -29,7 +29,7 @@ const INFO_CATEGORY_OPTIONS = INFO_SORT_OPTIONS.filter((option) => option.value 
 
 type InfoPostFormProps = {
   mode: 'create' | 'edit';
-  initialValues?: InfoPost;
+  initialValues?: Omit<InfoPost, 'author'>;
 };
 
 export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps) {

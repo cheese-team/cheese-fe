@@ -7,65 +7,28 @@ import PostDetailHeader from '../../_components/PostDetail';
 
 import { ApiError } from '@/api/client';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useMypage } from '@/queries/mypage/useMypage';
 import { useDeleteGroupPost } from '@/queries/community/useDeleteGroupPost';
-import { useUpdateActiveProfileType } from '@/queries/mypage/useUpdateActiveProfileType';
 
-import type { GroupPost } from '@/types/community/community';
+import type { GroupPostDetail } from '@/types/community/community';
 
 type GroupDetailHeaderProps = {
-  groupPost: GroupPost;
+  groupPost: GroupPostDetail;
 };
 
-// TODO: author.id 식별 기준 확정 필요
-// 현재 author.id 기반 isMine 판별은 신뢰할 수 없으므로,
-// 스펙 확정 후 본인 작성 글은 수정·삭제, 타인 작성 글은 신고 메뉴로 분기
 export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage();
   const { mutate: deleteGroupPost, isPending: isDeletePending } = useDeleteGroupPost();
-  const { mutate: updateActiveProfileType, isPending: isProfileSwitchPending } =
-    useUpdateActiveProfileType();
 
-  const isMine =
-    (groupPost.author.profileType === 'personal' &&
-      groupPost.author.id === mypage?.personalProfile?.id) ||
-    (groupPost.author.profileType === 'company' &&
-      groupPost.author.id === mypage?.companyProfile?.id);
+  const isMine = !!user && groupPost.author.userId === user.account.userId;
 
   const handleEdit = () => {
-    if (!user || !isMine || isProfileSwitchPending || isDeletePending) return;
+    if (!user || !isMine || isDeletePending) return;
 
-    const authorProfileType = groupPost.author.profileType;
-
-    if (authorProfileType === user.account.profileType) {
-      router.push(`/community/groups/${groupPost.id}/edit`);
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `이 게시글은 ${authorProfileType === 'company' ? '기업' : '개인'} 프로필로 작성되었습니다.\n수정하려면 해당 프로필로 전환해야 합니다. 전환하시겠습니까?`,
-    );
-
-    if (!confirmed) return;
-
-    updateActiveProfileType(
-      {
-        activeProfileType: authorProfileType,
-      },
-      {
-        onSuccess: () => {
-          router.push(`/community/groups/${groupPost.id}/edit`);
-        },
-        onError: (error) => {
-          alert(error instanceof ApiError ? error.message : '프로필 전환에 실패했습니다.');
-        },
-      },
-    );
+    router.push(`/community/groups/${groupPost.id}/edit`);
   };
 
   return (
@@ -79,7 +42,7 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
       onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={handleEdit}
       onDelete={() => {
-        if (!user || !isMine || isDeletePending || isProfileSwitchPending) return;
+        if (!user || !isMine || isDeletePending) return;
         if (!window.confirm('삭제하시겠습니까?')) return;
 
         deleteGroupPost(

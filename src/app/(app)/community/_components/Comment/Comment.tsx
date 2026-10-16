@@ -9,7 +9,6 @@ import { ApiError } from '@/api/client';
 import { useComments } from '@/queries/community/useComments';
 import { useCommentMutations } from '@/queries/community/useCommentMutations';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
-import { useMypage } from '@/queries/mypage/useMypage';
 import type { CommunityCommentCategory, CommunityCommentResult } from '@/types/community/comment';
 
 type CommentProps = { category: CommunityCommentCategory; postId: string };
@@ -27,7 +26,6 @@ export default function Comment({ category, postId }: CommentProps) {
   } = useComments({ category, postId });
   const { create, update, remove } = useCommentMutations({ category, postId });
   const { data: user } = useCurrentUser();
-  const { data: mypage } = useMypage();
 
   const [openCommentId, setOpenCommentId] = useState<string | null>(null);
   const [commentValue, setCommentValue] = useState('');
@@ -43,8 +41,7 @@ export default function Comment({ category, postId }: CommentProps) {
 
   const comments = data?.pages.flatMap((page) => page.items) ?? [];
 
-  const profile =
-    user?.account.profileType === 'company' ? mypage?.companyProfile : mypage?.personalProfile;
+  const profile = user?.profile;
 
   useEffect(() => {
     if (editingCommentId) editingTextareaRef.current?.focus();
@@ -89,25 +86,22 @@ export default function Comment({ category, postId }: CommentProps) {
       key={comment.id}
       comment={comment}
       disabled={disabled}
-      isMine={
-        (comment.author.profileType === 'personal' &&
-          comment.author.id === mypage?.personalProfile?.id) ||
-        (comment.author.profileType === 'company' &&
-          comment.author.id === mypage?.companyProfile?.id)
-      }
+      isMine={!!user && comment.author.userId === user.account.userId}
       isEditing={editingCommentId === comment.id}
       isMenuOpen={openCommentId === comment.id}
       editingValue={editingValue}
       textareaRef={editingTextareaRef}
       onToggleMenu={(id) => setOpenCommentId((current) => (current === id ? null : id))}
       onStartEdit={(item) => {
+        if (disabled || item.author.userId !== user?.account.userId) return;
         setEditingCommentId(item.id);
         setEditingValue(item.content);
         setOpenCommentId(null);
       }}
       onChangeEditingValue={setEditingValue}
       onUpdate={(commentId) => {
-        if (disabled || !editingValue.trim()) return;
+        if (disabled || comment.author.userId !== user?.account.userId || !editingValue.trim())
+          return;
         update.mutate(
           { commentId, content: editingValue.trim() },
           {
@@ -124,7 +118,7 @@ export default function Comment({ category, postId }: CommentProps) {
         setEditingValue('');
       }}
       onDelete={(commentId) => {
-        if (disabled) return;
+        if (disabled || comment.author.userId !== user?.account.userId) return;
         remove.mutate(commentId, {
           onSuccess: () => {
             setOpenCommentId(null);

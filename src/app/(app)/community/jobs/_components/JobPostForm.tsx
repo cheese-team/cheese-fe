@@ -28,11 +28,9 @@ import type { JobPost } from '@/types/community/community';
 type JobPostFormProps = {
   mode: 'create' | 'edit';
   jobId?: string;
-  initialValues?: JobPost;
+  initialValues?: Omit<JobPost, 'author'>;
 };
 
-// TODO: (논의필요) 채용공고 수정 진입 시 작성 프로필과 현재 활성 프로필을 비교하고,
-// 불일치하면 프로필 전환 확인 후 수정 페이지로 이동하도록 처리
 export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormProps) {
   const router = useRouter();
   const [field, setField] = useState(toFieldSelectValue(initialValues?.field));
