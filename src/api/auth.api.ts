@@ -77,15 +77,25 @@ export function logout() {
 }
 
 export type SignupRequest = {
-  nickname: string;
   email: string;
   password: string;
   passwordConfirmation: string;
   termsAgreed: boolean;
+} & (
+  | { profileType: 'personal'; nickname: string; companyName?: never }
+  | { profileType: 'company'; companyName: string; nickname?: never }
+);
+
+export type SignupResponse = {
+  id: string;
+  nickname?: string;
+  email: string;
+  profileType: ProfileType;
+  companyName?: string;
 };
 
 export function signup(data: SignupRequest) {
-  return apiClient<AuthUser>('/backend-api/auth/signup', {
+  return apiClient<SignupResponse>('/backend-api/auth/signup', {
     method: 'POST',
     body: JSON.stringify(data),
   });
