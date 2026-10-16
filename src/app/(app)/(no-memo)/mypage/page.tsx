@@ -2,6 +2,7 @@
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
+import { Chip } from '@/components/common/Chip';
 
 import PersonalProfiles from './_components/Profiles/PersonalProfiles';
 import CompanyProfiles from './_components/Profiles/CompanyProfiles';
@@ -229,7 +230,13 @@ export default function MyPage() {
             <ProfileImage src={profileHeader.imageUrl} />
 
             <div className="flex flex-col text-gray-700">
-              <span className="text-[20px] font-bold">{profileHeader.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] font-bold">{profileHeader.name}</span>
+
+                <Chip size="sm" className="bg-primary-600 shrink-0">
+                  {mypage.profileType === 'personal' ? '개인' : '기업'}
+                </Chip>
+              </div>
               <span className="text-[14px]">{profileHeader.subText}</span>
             </div>
           </div>
