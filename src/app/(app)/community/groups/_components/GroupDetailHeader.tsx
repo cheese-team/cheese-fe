@@ -42,7 +42,7 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
 
     const authorProfileType = groupPost.author.profileType;
 
-    if (authorProfileType === user.account.activeProfileType) {
+    if (authorProfileType === user.account.profileType) {
       router.push(`/community/groups/${groupPost.id}/edit`);
       return;
     }

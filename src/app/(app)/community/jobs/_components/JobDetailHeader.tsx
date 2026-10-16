@@ -43,7 +43,7 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
 
     const authorProfileType = jobPost.author.profileType;
 
-    if (authorProfileType === user.account.activeProfileType) {
+    if (authorProfileType === user.account.profileType) {
       router.push(`/community/jobs/${jobId}/edit`);
       return;
     }

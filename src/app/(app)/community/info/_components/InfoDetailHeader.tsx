@@ -42,7 +42,7 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
 
     const authorProfileType = infoPost.author.profileType;
 
-    if (authorProfileType === user.account.activeProfileType) {
+    if (authorProfileType === user.account.profileType) {
       router.push(`/community/info/${infoPost.id}/edit`);
       return;
     }

@@ -48,7 +48,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
   const { mutate: createJobPost, isPending: isCreatePending } = useCreateJobPost();
   const { mutate: updateJobPost, isPending: isUpdatePending } = useUpdateJobPost();
 
-  const isCompanyProfile = user?.account.activeProfileType === 'company';
+  const isCompanyProfile = user?.account.profileType === 'company';
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();

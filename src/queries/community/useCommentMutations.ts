@@ -81,7 +81,7 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
       return updateComment({
         ...data,
-        authorProfileType: user.account.activeProfileType,
+        authorProfileType: user.account.profileType,
       });
     },
 

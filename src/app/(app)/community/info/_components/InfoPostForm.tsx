@@ -105,7 +105,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
           title,
           content,
           tags,
-          authorProfileType: user.account.activeProfileType,
+          authorProfileType: user.account.profileType,
           ...(uploadedFile
             ? { attachmentFileId: uploadedFile.id }
             : isExistingFileRemoved

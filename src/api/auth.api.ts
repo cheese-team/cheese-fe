@@ -9,20 +9,20 @@ export type LoginRequest = {
 
 export type AuthUser = {
   id: string;
-  nickname: string;
   email: string;
-  activeProfileType: ProfileType;
+  profileType: ProfileType;
+  nickname?: string;
+  companyName?: string;
 };
 
 export type CurrentUser = {
   account: {
     userId: string;
     email: string;
-    activeProfileType: ProfileType;
+    profileType: ProfileType;
     isAdmin: boolean;
   };
   profile: {
-    id: number;
     profileType: ProfileType;
     displayName: string;
     profileImageUrl: string;
@@ -86,16 +86,8 @@ export type SignupRequest = {
   | { profileType: 'company'; companyName: string; nickname?: never }
 );
 
-export type SignupResponse = {
-  id: string;
-  nickname?: string;
-  email: string;
-  profileType: ProfileType;
-  companyName?: string;
-};
-
 export function signup(data: SignupRequest) {
-  return apiClient<SignupResponse>('/backend-api/auth/signup', {
+  return apiClient<AuthUser>('/backend-api/auth/signup', {
     method: 'POST',
     body: JSON.stringify(data),
   });

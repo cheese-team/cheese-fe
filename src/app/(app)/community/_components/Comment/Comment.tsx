@@ -44,9 +44,7 @@ export default function Comment({ category, postId }: CommentProps) {
   const comments = data?.pages.flatMap((page) => page.items) ?? [];
 
   const profile =
-    user?.account.activeProfileType === 'company'
-      ? mypage?.companyProfile
-      : mypage?.personalProfile;
+    user?.account.profileType === 'company' ? mypage?.companyProfile : mypage?.personalProfile;
 
   useEffect(() => {
     if (editingCommentId) editingTextareaRef.current?.focus();
