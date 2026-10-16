@@ -5,13 +5,7 @@ import type { GroupPostResponse, InfoPostResponse } from '@/api/community.api';
 import type { GroupPost, JobPost, InfoPost } from '@/types/community/community';
 import type { ApplicationSort } from '@/app/(app)/(no-memo)/mypage/applications/_constants/applications';
 
-import type {
-  PersonalProfile,
-  Mypage,
-  CompanyProfile,
-  ProfileType,
-  AccountSettings,
-} from '@/types/profile';
+import type { PersonalProfile, Mypage, CompanyProfile, AccountSettings } from '@/types/profile';
 
 export async function getMypage(signal?: AbortSignal) {
   return apiClient<Mypage>('/backend-api/mypage', {
@@ -21,21 +15,19 @@ export async function getMypage(signal?: AbortSignal) {
   });
 }
 
-export type UpdateActiveProfileTypeRequest = {
-  activeProfileType: ProfileType;
-};
-
-export async function updateActiveProfileType({
-  activeProfileType,
-}: UpdateActiveProfileTypeRequest) {
-  return apiClient<Mypage>('/backend-api/mypage/active-profile', {
-    method: 'PATCH',
-    body: JSON.stringify({ activeProfileType }),
-  });
-}
-
 export type UpdatePersonalProfileRequest = {
-  data: Omit<PersonalProfile, 'id' | 'email'>;
+  data: Pick<
+    PersonalProfile,
+    | 'nickname'
+    | 'profileImageUrl'
+    | 'interestedJob'
+    | 'coverLetter'
+    | 'additionalDocument'
+    | 'skills'
+    | 'interests'
+    | 'contactMethod'
+    | 'contactUrl'
+  >;
 };
 
 export async function updatePersonalProfile({ data }: UpdatePersonalProfileRequest) {
@@ -46,7 +38,19 @@ export async function updatePersonalProfile({ data }: UpdatePersonalProfileReque
 }
 
 export type UpdateCompanyProfileRequest = {
-  data: Omit<CompanyProfile, 'id' | 'email'>;
+  data: Pick<
+    CompanyProfile,
+    | 'companyName'
+    | 'profileImageUrl'
+    | 'representativeName'
+    | 'companyType'
+    | 'resumeTemplate'
+    | 'industryType'
+    | 'employeeCount'
+    | 'foundedAt'
+    | 'contactMethod'
+    | 'contactUrl'
+  >;
 };
 
 export async function updateCompanyProfile({ data }: UpdateCompanyProfileRequest) {

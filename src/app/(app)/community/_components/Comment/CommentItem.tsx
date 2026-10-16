@@ -30,7 +30,7 @@ export default function CommentItem({
 
       <div className="flex w-full gap-2.5">
         <div className="flex flex-1 flex-col gap-1">
-          <h3 className="font-medium">{comment.author.nickname}</h3>
+          <h3 className="font-medium">{comment.author.displayName}</h3>
 
           {isEditing ? (
             <div className="flex flex-col gap-3">

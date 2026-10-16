@@ -4,7 +4,11 @@ import { likeGroupPost, unlikeGroupPost, type GroupPostsResponse } from '@/api/c
 import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
-import type { GroupPost, ToggleGroupPostLikeParams } from '@/types/community/community';
+import type {
+  GroupPost,
+  GroupPostDetail,
+  ToggleGroupPostLikeParams,
+} from '@/types/community/community';
 import type { InfiniteData } from '@tanstack/react-query';
 import type { GroupBookmarksResponse } from '@/api/mypage.api';
 
@@ -34,7 +38,7 @@ export function useToggleGroupPostLike() {
     },
 
     onSuccess: async (response, variables) => {
-      const updateLike = (post: GroupPost): GroupPost => ({
+      const updateLike = <T extends GroupPost | GroupPostDetail>(post: T): T => ({
         ...post,
         isLiked: response.isLiked,
         likeCount: Math.max(
@@ -43,7 +47,7 @@ export function useToggleGroupPostLike() {
         ),
       });
 
-      queryClient.setQueryData<GroupPost>(
+      queryClient.setQueryData<GroupPostDetail>(
         communityQueryKeys.groupDetail(variables.groupId),
         (current) => (current ? updateLike(current) : current),
       );

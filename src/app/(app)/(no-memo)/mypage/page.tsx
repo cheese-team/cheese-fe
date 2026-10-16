@@ -1,49 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
-import CategoryTabs, { type CategoryTabItem } from '@/components/common/CategoryTabs';
+import { Chip } from '@/components/common/Chip';
 
 import PersonalProfiles from './_components/Profiles/PersonalProfiles';
 import CompanyProfiles from './_components/Profiles/CompanyProfiles';
 import AccountSettings from './_components/Profiles/AccountSettings';
 import MypageModalRenderer from './_components/Modal/MypageModalRenderer';
 import { useMypageModal } from './_components/Modal/useMypageModal';
-import ConfirmModal from './_components/Modal/ConfirmModal';
 
 import { useMypage } from '@/queries/mypage/useMypage';
-import { useUpdateActiveProfileType } from '@/queries/mypage/useUpdateActiveProfileType';
 import { useUpdatePersonalProfile } from '@/queries/mypage/useUpdatePersonalProfile';
 import { useUpdateCompanyProfile } from '@/queries/mypage/useUpdateCompanyProfile';
 import { useUpdateAccountSettings } from '@/queries/mypage/useUpdateAccountSettings';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
-import { CompanyIcon, PersonalIcon } from '@/assets/icons/settings';
-
-import type { ContactSettings, ProfileDocument, ProfileType } from '@/types/profile';
+import type { ContactSettings, ProfileDocument } from '@/types/profile';
 import type { MypageItemField, MypageItemSection } from './_components/Modal/types';
-
-const PROFILE_SWITCH_OPTIONS: CategoryTabItem<ProfileType>[] = [
-  {
-    label: '개인 프로필',
-    value: 'personal',
-    icon: PersonalIcon,
-  },
-  {
-    label: '기업 프로필',
-    value: 'company',
-    icon: CompanyIcon,
-  },
-];
 
 // TODO: 연락용 이메일 변경 플로우 연동 (contact-change 이메일 인증 후 요청)
 export default function MyPage() {
   const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage();
 
-  const { mutateAsync: updateActiveProfileType, isPending: isActiveProfilePending } =
-    useUpdateActiveProfileType();
   const { mutateAsync: updatePersonalProfile, isPending: isPersonalProfilePending } =
     useUpdatePersonalProfile();
   const { mutateAsync: updateCompanyProfile, isPending: isCompanyProfilePending } =
@@ -51,8 +30,6 @@ export default function MyPage() {
   const { mutateAsync: updateAccountSettings, isPending: isAccountSettingsPending } =
     useUpdateAccountSettings();
   const { mutateAsync: uploadFile, isPending: isUploadFilePending } = useUploadFile();
-
-  const [pendingProfileType, setPendingProfileType] = useState<ProfileType | null>(null);
 
   const { editingItem, openModal, closeModal } = useMypageModal();
 
@@ -64,80 +41,47 @@ export default function MyPage() {
     return <div>마이페이지 정보를 불러오지 못했습니다.</div>;
   }
 
-  const activeProfileType = mypage.activeProfileType;
-  const isPersonalProfile = activeProfileType === 'personal';
-  const nextProfileLabel = PROFILE_SWITCH_OPTIONS.find(
-    (option) => option.value === pendingProfileType,
-  )?.label;
-
-  const profileHeader = isPersonalProfile
-    ? {
-        imageUrl: mypage.personalProfile.profileImageUrl,
-        name: mypage.personalProfile.nickname,
-        subText: mypage.personalProfile.interestedJob,
-      }
-    : {
-        imageUrl: mypage.companyProfile.profileImageUrl,
-        name: mypage.companyProfile.companyName,
-        subText: mypage.companyProfile.companyType,
-      };
+  const profileHeader =
+    mypage.profileType === 'personal'
+      ? {
+          imageUrl: mypage.profile.profileImageUrl,
+          name: mypage.profile.nickname,
+          subText: mypage.profile.interestedJob,
+        }
+      : {
+          imageUrl: mypage.profile.profileImageUrl,
+          name: mypage.profile.companyName,
+          subText: mypage.profile.companyType,
+        };
 
   const isMypageMutating =
-    isActiveProfilePending ||
     isPersonalProfilePending ||
     isCompanyProfilePending ||
     isAccountSettingsPending ||
     isUploadFilePending;
 
-  const handleChangeProfileType = (value: ProfileType) => {
-    if (isMypageMutating || value === activeProfileType) return;
-
-    setPendingProfileType(value);
-  };
-
-  const handleConfirmProfileChange = async () => {
-    if (!pendingProfileType) return;
-
-    try {
-      await updateActiveProfileType({
-        activeProfileType: pendingProfileType,
-      });
-
-      setPendingProfileType(null);
-    } catch (error) {
-      console.error('Failed to update active profile type:', error);
-      alert('프로필 타입 변경에 실패했습니다. 다시 시도해 주세요.');
-    }
-  };
-
-  const handleCancelProfileChange = () => {
-    if (isMypageMutating) return;
-
-    setPendingProfileType(null);
-  };
-
   const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const input = event.target;
     const file = event.target.files?.[0];
 
-    if (!file) return;
+    if (!file || isMypageMutating) return;
 
     try {
       const uploadedFile = await uploadFile({
         file,
       });
 
-      if (isPersonalProfile) {
+      if (mypage.profileType === 'personal') {
         const personalProfileData = {
-          nickname: mypage.personalProfile.nickname,
+          nickname: mypage.profile.nickname,
           profileImageUrl: uploadedFile.url,
-          interestedJob: mypage.personalProfile.interestedJob,
-          coverLetter: mypage.personalProfile.coverLetter,
-          additionalDocument: mypage.personalProfile.additionalDocument,
-          skills: mypage.personalProfile.skills,
-          interests: mypage.personalProfile.interests,
-          contactMethod: mypage.personalProfile.contactMethod,
-          contactUrl: mypage.personalProfile.contactUrl,
+          interestedJob: mypage.profile.interestedJob,
+          coverLetter: mypage.profile.coverLetter,
+          additionalDocument: mypage.profile.additionalDocument,
+          skills: mypage.profile.skills,
+          interests: mypage.profile.interests,
+          contactMethod: mypage.profile.contactMethod,
+          contactUrl: mypage.profile.contactUrl,
         };
 
         await updatePersonalProfile({
@@ -145,16 +89,16 @@ export default function MyPage() {
         });
       } else {
         const companyProfileData = {
-          companyName: mypage.companyProfile.companyName,
+          companyName: mypage.profile.companyName,
           profileImageUrl: uploadedFile.url,
-          representativeName: mypage.companyProfile.representativeName,
-          companyType: mypage.companyProfile.companyType,
-          resumeTemplate: mypage.companyProfile.resumeTemplate,
-          industryType: mypage.companyProfile.industryType,
-          employeeCount: mypage.companyProfile.employeeCount,
-          foundedAt: mypage.companyProfile.foundedAt,
-          contactMethod: mypage.companyProfile.contactMethod,
-          contactUrl: mypage.companyProfile.contactUrl,
+          representativeName: mypage.profile.representativeName,
+          companyType: mypage.profile.companyType,
+          resumeTemplate: mypage.profile.resumeTemplate,
+          industryType: mypage.profile.industryType,
+          employeeCount: mypage.profile.employeeCount,
+          foundedAt: mypage.profile.foundedAt,
+          contactMethod: mypage.profile.contactMethod,
+          contactUrl: mypage.profile.contactUrl,
         };
 
         await updateCompanyProfile({
@@ -174,10 +118,10 @@ export default function MyPage() {
     field: MypageItemField,
     value: string | ProfileDocument | ContactSettings,
   ) => {
-    if (section === 'accountAction') return;
+    if (isMypageMutating || section === 'accountAction') return;
 
     try {
-      if (section === 'personalProfile') {
+      if (section === 'personalProfile' && mypage.profileType === 'personal') {
         let nextValue: unknown = value;
 
         if ((field === 'skills' || field === 'interests') && typeof value === 'string') {
@@ -188,15 +132,15 @@ export default function MyPage() {
         }
 
         const personalProfileData = {
-          nickname: mypage.personalProfile.nickname,
-          profileImageUrl: mypage.personalProfile.profileImageUrl,
-          interestedJob: mypage.personalProfile.interestedJob,
-          coverLetter: mypage.personalProfile.coverLetter,
-          additionalDocument: mypage.personalProfile.additionalDocument,
-          skills: mypage.personalProfile.skills,
-          interests: mypage.personalProfile.interests,
-          contactMethod: mypage.personalProfile.contactMethod,
-          contactUrl: mypage.personalProfile.contactUrl,
+          nickname: mypage.profile.nickname,
+          profileImageUrl: mypage.profile.profileImageUrl,
+          interestedJob: mypage.profile.interestedJob,
+          coverLetter: mypage.profile.coverLetter,
+          additionalDocument: mypage.profile.additionalDocument,
+          skills: mypage.profile.skills,
+          interests: mypage.profile.interests,
+          contactMethod: mypage.profile.contactMethod,
+          contactUrl: mypage.profile.contactUrl,
         };
 
         await updatePersonalProfile({
@@ -206,7 +150,7 @@ export default function MyPage() {
         closeModal();
       }
 
-      if (section === 'companyProfile') {
+      if (section === 'companyProfile' && mypage.profileType === 'company') {
         let nextValue: unknown = value;
 
         if (field === 'industryType' && typeof value === 'string') {
@@ -227,16 +171,16 @@ export default function MyPage() {
         }
 
         const companyProfileData = {
-          companyName: mypage.companyProfile.companyName,
-          profileImageUrl: mypage.companyProfile.profileImageUrl,
-          representativeName: mypage.companyProfile.representativeName,
-          companyType: mypage.companyProfile.companyType,
-          resumeTemplate: mypage.companyProfile.resumeTemplate,
-          industryType: mypage.companyProfile.industryType,
-          employeeCount: mypage.companyProfile.employeeCount,
-          foundedAt: mypage.companyProfile.foundedAt,
-          contactMethod: mypage.companyProfile.contactMethod,
-          contactUrl: mypage.companyProfile.contactUrl,
+          companyName: mypage.profile.companyName,
+          profileImageUrl: mypage.profile.profileImageUrl,
+          representativeName: mypage.profile.representativeName,
+          companyType: mypage.profile.companyType,
+          resumeTemplate: mypage.profile.resumeTemplate,
+          industryType: mypage.profile.industryType,
+          employeeCount: mypage.profile.employeeCount,
+          foundedAt: mypage.profile.foundedAt,
+          contactMethod: mypage.profile.contactMethod,
+          contactUrl: mypage.profile.contactUrl,
         };
 
         await updateCompanyProfile({
@@ -286,7 +230,13 @@ export default function MyPage() {
             <ProfileImage src={profileHeader.imageUrl} />
 
             <div className="flex flex-col text-gray-700">
-              <span className="text-[20px] font-bold">{profileHeader.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] font-bold">{profileHeader.name}</span>
+
+                <Chip size="sm" className="bg-primary-600 shrink-0">
+                  {mypage.profileType === 'personal' ? '개인' : '기업'}
+                </Chip>
+              </div>
               <span className="text-[14px]">{profileHeader.subText}</span>
             </div>
           </div>
@@ -309,17 +259,10 @@ export default function MyPage() {
         <div className="flex flex-col gap-5">
           <h2 className="text-[20px] font-medium text-gray-700">프로필 설정</h2>
 
-          <CategoryTabs
-            items={PROFILE_SWITCH_OPTIONS}
-            activeValue={activeProfileType}
-            onChange={handleChangeProfileType}
-            size="sm"
-          />
-
-          {isPersonalProfile ? (
-            <PersonalProfiles profile={mypage.personalProfile} onOpenModal={openModal} />
+          {mypage.profileType === 'personal' ? (
+            <PersonalProfiles profile={mypage.profile} onOpenModal={openModal} />
           ) : (
-            <CompanyProfiles profile={mypage.companyProfile} onOpenModal={openModal} />
+            <CompanyProfiles profile={mypage.profile} onOpenModal={openModal} />
           )}
 
           <AccountSettings profile={mypage.accountSettings} onOpenModal={openModal} />
@@ -332,16 +275,6 @@ export default function MyPage() {
           />
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={pendingProfileType !== null}
-        onClose={handleCancelProfileChange}
-        onConfirm={handleConfirmProfileChange}
-        title="프로필을 전환하시겠습니까?"
-        description={`전환 후 ${nextProfileLabel}로 서비스가 이용됩니다.`}
-        buttonText="전환하기"
-        disabled={isMypageMutating}
-      />
     </>
   );
 }

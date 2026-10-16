@@ -10,10 +10,15 @@ import EditIcon from '@/assets/icons/common/edit.svg';
 import FileIcon from '@/assets/icons/common/file.svg';
 import LinkIcon from '@/assets/icons/common/link.svg';
 
-import type { JobPost, GroupPost } from '@/types/community/community';
+import type {
+  JobPost,
+  JobPostDetail,
+  GroupPost,
+  GroupPostDetail,
+} from '@/types/community/community';
 
 type ApplyFormContentProps = {
-  post: JobPost | GroupPost;
+  post: JobPost | JobPostDetail | GroupPost | GroupPostDetail;
   onClose: () => void;
   onApply: () => Promise<void>;
   isApplyPending?: boolean;
@@ -38,30 +43,35 @@ export default function ApplyFormContent({
     return null;
   }
 
-  const { personalProfile, accountSettings } = mypage;
+  const { profile, accountSettings } = mypage;
+  const personalProfile = mypage.profileType === 'personal' ? mypage.profile : undefined;
 
-  const documentLinks = [
-    {
-      href: personalProfile.additionalDocument.fileUrl,
-      label: personalProfile.additionalDocument.fileName,
-      icon: <FileIcon className="h-3" />,
-    },
-    {
-      href: personalProfile.additionalDocument.url,
-      label: `${personalProfile.nickname}의 이력서 URL`,
-      icon: <LinkIcon className="h-[6px]" />,
-    },
-    {
-      href: personalProfile.coverLetter.fileUrl,
-      label: personalProfile.coverLetter.fileName,
-      icon: <FileIcon className="h-3" />,
-    },
-    {
-      href: personalProfile.coverLetter.url,
-      label: `${personalProfile.nickname}의 자기소개서 URL`,
-      icon: <LinkIcon className="h-[6px]" />,
-    },
-  ].filter((item): item is typeof item & { href: string } => Boolean(item.href));
+  const documentLinks = (
+    personalProfile
+      ? [
+          {
+            href: personalProfile.additionalDocument.fileUrl,
+            label: personalProfile.additionalDocument.fileName,
+            icon: <FileIcon className="h-3" />,
+          },
+          {
+            href: personalProfile.additionalDocument.url,
+            label: `${personalProfile.nickname}의 이력서 URL`,
+            icon: <LinkIcon className="h-[6px]" />,
+          },
+          {
+            href: personalProfile.coverLetter.fileUrl,
+            label: personalProfile.coverLetter.fileName,
+            icon: <FileIcon className="h-3" />,
+          },
+          {
+            href: personalProfile.coverLetter.url,
+            label: `${personalProfile.nickname}의 자기소개서 URL`,
+            icon: <LinkIcon className="h-[6px]" />,
+          },
+        ]
+      : []
+  ).filter((item): item is typeof item & { href: string } => Boolean(item.href));
 
   const handleMoveToMyPage = () => {
     onClose();
@@ -116,7 +126,7 @@ export default function ApplyFormContent({
 
             <div className="flex justify-between px-3">
               <ul className="flex flex-col gap-2 text-[14px] leading-[30px] text-gray-700">
-                <li>{personalProfile.email || '등록된 이메일이 없습니다.'}</li>
+                <li>{profile.email || '등록된 이메일이 없습니다.'}</li>
                 <li>{accountSettings.address || '등록된 주소가 없습니다.'}</li>
               </ul>
 

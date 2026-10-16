@@ -10,12 +10,16 @@ export function useUpdateGroupPost() {
   return useMutation({
     mutationFn: (request: UpdateGroupPostRequest) => updateGroupPost(request),
 
-    onSuccess: async (updatedGroupPost, variables) => {
-      queryClient.setQueryData(communityQueryKeys.groupDetail(variables.groupId), updatedGroupPost);
-
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.groupLists(),
-      });
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.groupDetail(variables.groupId),
+          exact: true,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.groupLists(),
+        }),
+      ]);
     },
   });
 }

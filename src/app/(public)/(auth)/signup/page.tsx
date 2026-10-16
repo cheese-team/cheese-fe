@@ -24,9 +24,14 @@ import {
 import CheckIcon from '@/assets/icons/common/check.svg';
 import ChevronIcon from '@/assets/icons/common/chevron.svg';
 
+import type { SignupRequest } from '@/api/auth.api';
+import type { ProfileType } from '@/types/profile';
+
 type NicknameStatus = 'idle' | 'checking' | 'available' | 'duplicated';
 
 type SignupErrors = {
+  profileType?: string;
+  companyName?: string;
   nickname?: string;
   email?: string;
   password?: string;
@@ -36,6 +41,8 @@ type SignupErrors = {
 export default function SignupPage() {
   const router = useRouter();
 
+  const [profileType, setProfileType] = useState<ProfileType>();
+  const [companyName, setCompanyName] = useState('');
   const [nickname, setNickname] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState<NicknameStatus>('idle');
   const [verifiedEmail, setVerifiedEmail] = useState('');
@@ -50,6 +57,9 @@ export default function SignupPage() {
   const [isDoneOpen, setIsDoneOpen] = useState(false);
 
   const nicknameRef = useRef<HTMLInputElement>(null);
+  const profileTypeRef = useRef<HTMLInputElement>(null);
+  const companyNameRef = useRef<HTMLInputElement>(null);
+  const nicknameRequestIdRef = useRef(0);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const passwordConfirmationRef = useRef<HTMLInputElement>(null);
@@ -68,7 +78,24 @@ export default function SignupPage() {
   const openTerms = () => setIsTermsOpen(true);
   const closeTerms = () => setIsTermsOpen(false);
 
+  const handleProfileTypeChange = (value: ProfileType) => {
+    nicknameRequestIdRef.current += 1;
+
+    setProfileType(value);
+    setNickname('');
+    setCompanyName('');
+    setNicknameStatus('idle');
+
+    setSignupErrors((prev) => ({
+      ...prev,
+      profileType: undefined,
+      nickname: undefined,
+      companyName: undefined,
+    }));
+  };
+
   const handleNicknameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    nicknameRequestIdRef.current += 1;
     setNickname(event.target.value);
     setNicknameStatus('idle');
 
@@ -107,6 +134,8 @@ export default function SignupPage() {
   };
 
   const handleCheckNickname = async () => {
+    if (profileType !== 'personal' || nicknameStatus === 'checking') return;
+
     const normalizedNickname = nickname.trim();
     const nicknameError = validateNickname(normalizedNickname);
 
@@ -118,10 +147,13 @@ export default function SignupPage() {
       return;
     }
 
+    const requestId = ++nicknameRequestIdRef.current;
     setNicknameStatus('checking');
 
     try {
       const checkNicknameResult = await checkNickname(normalizedNickname);
+
+      if (requestId !== nicknameRequestIdRef.current) return;
 
       setNicknameStatus(checkNicknameResult.available ? 'available' : 'duplicated');
 
@@ -130,6 +162,8 @@ export default function SignupPage() {
         nickname: checkNicknameResult.available ? undefined : AUTH_MESSAGE.NICKNAME.DUPLICATED,
       }));
     } catch {
+      if (requestId !== nicknameRequestIdRef.current) return;
+
       setNicknameStatus('idle');
 
       setSignupErrors((prev) => ({
@@ -165,8 +199,13 @@ export default function SignupPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (isSignupPending || !termsAgreed) return;
+
     const nextErrors: SignupErrors = {
-      nickname: getNicknameError(),
+      profileType: profileType ? undefined : '프로필 타입을 선택해 주세요',
+      nickname: profileType === 'personal' ? getNicknameError() : undefined,
+      companyName:
+        profileType === 'company' && !companyName.trim() ? '회사명을 입력해 주세요' : undefined,
       email: verifiedEmail ? undefined : AUTH_MESSAGE.VERIFICATION.EMAIL_REQUIRED,
       password: validatePassword(password),
       passwordConfirmation: validatePasswordConfirmation(password, passwordConfirmation),
@@ -177,8 +216,12 @@ export default function SignupPage() {
     const hasError = Object.values(nextErrors).some(Boolean);
 
     if (hasError) {
-      if (nextErrors.nickname) {
+      if (nextErrors.profileType) {
+        profileTypeRef.current?.focus();
+      } else if (nextErrors.nickname) {
         nicknameRef.current?.focus();
+      } else if (nextErrors.companyName) {
+        companyNameRef.current?.focus();
       } else if (nextErrors.email) {
         emailRef.current?.focus();
       } else if (nextErrors.password) {
@@ -190,8 +233,12 @@ export default function SignupPage() {
       return;
     }
 
-    const signupData = {
-      nickname: nickname.trim(),
+    if (!profileType) return;
+
+    const signupData: SignupRequest = {
+      ...(profileType === 'personal'
+        ? { profileType, nickname: nickname.trim() }
+        : { profileType, companyName: companyName.trim() }),
       email: verifiedEmail,
       password,
       passwordConfirmation,
@@ -226,29 +273,86 @@ export default function SignupPage() {
 
         <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-5">
-            <Input
-              ref={nicknameRef}
-              label="닉네임"
-              name="nickname"
-              type="text"
-              value={nickname}
-              onChange={handleNicknameChange}
-              placeholder="닉네임 입력"
-              errorMessage={signupErrors.nickname}
-              successMessage={
-                nicknameStatus === 'available' ? AUTH_MESSAGE.NICKNAME.AVAILABLE : undefined
-              }
-              rightAddon={
-                <InputActionButton
-                  onClick={handleCheckNickname}
-                  disabled={!nickname.trim() || nicknameStatus === 'checking'}
-                >
-                  중복확인
-                </InputActionButton>
-              }
-              className="h-10 px-2 font-medium tracking-normal"
-              showMessageSpace
-            />
+            <fieldset
+              disabled={isSignupPending}
+              aria-describedby="profile-type-description profile-type-error"
+              className="flex flex-col gap-2"
+            >
+              <legend className="mb-2 font-medium">
+                <span>프로필 타입</span>
+                <span className="text-text-muted ml-2 text-xs font-normal">
+                  회원가입 이후에는 프로필 타입을 변경할 수 없습니다
+                </span>
+              </legend>
+
+              <div className="flex gap-5">
+                {(
+                  [
+                    { value: 'personal', label: '개인 회원' },
+                    { value: 'company', label: '기업 회원' },
+                  ] as const
+                ).map((option) => (
+                  <label key={option.value} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      ref={option.value === 'personal' ? profileTypeRef : undefined}
+                      type="radio"
+                      name="profileType"
+                      value={option.value}
+                      checked={profileType === option.value}
+                      onChange={() => handleProfileTypeChange(option.value)}
+                      className="border-primary-700 checked:border-secondary-600 checked:after:bg-secondary-600 grid h-4 w-4 appearance-none place-content-center rounded-full border after:h-2 after:w-2 after:scale-0 after:rounded-full checked:after:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+
+              <p id="profile-type-error" className="text-text-error text-xs">
+                {signupErrors.profileType}
+              </p>
+            </fieldset>
+            {profileType === 'personal' && (
+              <Input
+                ref={nicknameRef}
+                label="닉네임"
+                name="nickname"
+                type="text"
+                value={nickname}
+                onChange={handleNicknameChange}
+                placeholder="닉네임 입력"
+                errorMessage={signupErrors.nickname}
+                successMessage={
+                  nicknameStatus === 'available' ? AUTH_MESSAGE.NICKNAME.AVAILABLE : undefined
+                }
+                rightAddon={
+                  <InputActionButton
+                    onClick={handleCheckNickname}
+                    disabled={!nickname.trim() || nicknameStatus === 'checking'}
+                  >
+                    중복확인
+                  </InputActionButton>
+                }
+                className="h-10 px-2 font-medium tracking-normal"
+                showMessageSpace
+              />
+            )}
+            {profileType === 'company' && (
+              <Input
+                ref={companyNameRef}
+                label="회사명"
+                name="companyName"
+                type="text"
+                value={companyName}
+                onChange={(event) => {
+                  setCompanyName(event.target.value);
+                  setSignupErrors((prev) => ({ ...prev, companyName: undefined }));
+                }}
+                placeholder="회사명 입력"
+                errorMessage={signupErrors.companyName}
+                className="h-10 px-2 font-medium tracking-normal"
+                showMessageSpace
+              />
+            )}
             <Input
               ref={emailRef}
               readOnly

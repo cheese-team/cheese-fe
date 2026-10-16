@@ -4,7 +4,7 @@ import { likeJobPost, unlikeJobPost, type JobPostsResponse } from '@/api/communi
 import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
-import type { JobPost, ToggleJobPostLikeParams } from '@/types/community/community';
+import type { JobPost, JobPostDetail, ToggleJobPostLikeParams } from '@/types/community/community';
 import type { InfiniteData } from '@tanstack/react-query';
 import type { JobBookmarksResponse } from '@/api/mypage.api';
 
@@ -38,7 +38,7 @@ export function useToggleJobPostLike() {
         queryKey: mypageQueryKeys.jobApplications(),
       });
 
-      const updateLike = (post: JobPost): JobPost => ({
+      const updateLike = <T extends JobPost | JobPostDetail>(post: T): T => ({
         ...post,
         isLiked: response.isLiked,
         likeCount: Math.max(
@@ -47,8 +47,9 @@ export function useToggleJobPostLike() {
         ),
       });
 
-      queryClient.setQueryData<JobPost>(communityQueryKeys.jobDetail(variables.jobId), (current) =>
-        current ? updateLike(current) : current,
+      queryClient.setQueryData<JobPostDetail>(
+        communityQueryKeys.jobDetail(variables.jobId),
+        (current) => (current ? updateLike(current) : current),
       );
 
       queryClient.setQueriesData<InfiniteData<JobPostsResponse>>(

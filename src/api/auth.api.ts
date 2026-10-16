@@ -9,20 +9,20 @@ export type LoginRequest = {
 
 export type AuthUser = {
   id: string;
-  nickname: string;
   email: string;
-  activeProfileType: ProfileType;
+  profileType: ProfileType;
+  nickname?: string;
+  companyName?: string;
 };
 
 export type CurrentUser = {
   account: {
     userId: string;
     email: string;
-    activeProfileType: ProfileType;
+    profileType: ProfileType;
     isAdmin: boolean;
   };
   profile: {
-    id: number;
     profileType: ProfileType;
     displayName: string;
     profileImageUrl: string;
@@ -77,12 +77,14 @@ export function logout() {
 }
 
 export type SignupRequest = {
-  nickname: string;
   email: string;
   password: string;
   passwordConfirmation: string;
   termsAgreed: boolean;
-};
+} & (
+  | { profileType: 'personal'; nickname: string; companyName?: never }
+  | { profileType: 'company'; companyName: string; nickname?: never }
+);
 
 export function signup(data: SignupRequest) {
   return apiClient<AuthUser>('/backend-api/auth/signup', {

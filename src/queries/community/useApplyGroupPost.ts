@@ -4,7 +4,7 @@ import { applyGroupPost, type GroupPostsResponse } from '@/api/community.api';
 import { communityQueryKeys } from './communityQueryKeys';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
-import type { GroupPost } from '@/types/community/community';
+import type { GroupPost, GroupPostDetail } from '@/types/community/community';
 import type { InfiniteData } from '@tanstack/react-query';
 
 export function useApplyGroupPost() {
@@ -22,13 +22,13 @@ export function useApplyGroupPost() {
         queryClient.cancelQueries({ queryKey: listQueryKey }),
       ]);
 
-      const updateApplied = (post: GroupPost): GroupPost => ({
+      const updateApplied = <T extends GroupPost | GroupPostDetail>(post: T): T => ({
         ...post,
         isApplied: response.isApplied,
         applicantCount: post.applicantCount + (!post.isApplied && response.isApplied ? 1 : 0),
       });
 
-      queryClient.setQueryData<GroupPost>(queryKey, (current) =>
+      queryClient.setQueryData<GroupPostDetail>(queryKey, (current) =>
         current ? updateApplied(current) : current,
       );
 

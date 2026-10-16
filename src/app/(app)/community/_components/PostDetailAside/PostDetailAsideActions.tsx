@@ -10,10 +10,15 @@ import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
 import ShareIcon from '@/assets/icons/common/contact.svg';
 
-import type { JobPost, GroupPost } from '@/types/community/community';
+import type {
+  JobPost,
+  JobPostDetail,
+  GroupPost,
+  GroupPostDetail,
+} from '@/types/community/community';
 
 type PostDetailAsideActionsProps = {
-  post: JobPost | GroupPost;
+  post: JobPost | JobPostDetail | GroupPost | GroupPostDetail;
   isClosed?: boolean;
   buttonText?: string;
   onToggleLike?: () => void;

@@ -10,16 +10,16 @@ export function useUpdateInfoPost() {
   return useMutation({
     mutationFn: (request: UpdateInfoPostRequest) => updateInfoPost(request),
 
-    onSuccess: async (updatedInfoPost, variables) => {
-      queryClient.removeQueries({
-        queryKey: [...communityQueryKeys.infoDetails(), variables.infoId],
-      });
-
-      queryClient.setQueryData(communityQueryKeys.infoDetail(variables.infoId), updatedInfoPost);
-
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.infoLists(),
-      });
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.infoDetail(variables.infoId),
+          exact: true,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.infoLists(),
+        }),
+      ]);
     },
   });
 }
