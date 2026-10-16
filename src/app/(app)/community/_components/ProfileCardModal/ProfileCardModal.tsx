@@ -37,6 +37,7 @@ type ProfileCardModalProps = {
   profileItems: ProfileItem[];
 
   onContact: () => void;
+  contactDisabled?: boolean;
 };
 
 export default function ProfileCardModal({
@@ -49,6 +50,7 @@ export default function ProfileCardModal({
   gradientClassName,
   profileItems,
   onContact,
+  contactDisabled = false,
 }: ProfileCardModalProps) {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} scope="content" hasOverlay>
@@ -86,7 +88,13 @@ export default function ProfileCardModal({
                     </div>
                   </div>
 
-                  <Button onClick={onContact} width={182} size={54} className="gap-3">
+                  <Button
+                    onClick={onContact}
+                    disabled={contactDisabled}
+                    width={182}
+                    size={54}
+                    className="gap-3"
+                  >
                     <ContactIcon className="h-[13px]" />
                     메시지 보내기
                   </Button>
