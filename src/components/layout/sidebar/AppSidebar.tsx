@@ -6,17 +6,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import {
-  AlarmIcon,
-  CalendarIcon,
-  CommunityIcon,
-  MemoIcon,
-  ProblemSolvingIcon,
-} from '@/assets/icons/sidebar';
+import { CalendarIcon, CommunityIcon, MemoIcon, ProblemSolvingIcon } from '@/assets/icons/sidebar';
 import { MiniCalendar } from '@/app/(app)/calendar/_ui/sidebar/MiniCalendar';
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { NotificationSidebar } from './NotificationSidebar';
+import { NotificationNavButton } from './notification/NotificationNavButton';
 
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
@@ -27,7 +22,7 @@ import {
   isSidebarItemActive,
 } from '@/components/layout/sidebar/utils';
 
-type NavigationIconType = 'bell' | 'calendar' | 'memo' | 'pencil' | 'community';
+type NavigationIconType = 'calendar' | 'memo' | 'pencil' | 'community';
 
 type LinkNavigationItem = {
   label: string;
@@ -44,8 +39,6 @@ const linkNavigationItems: LinkNavigationItem[] = [
 
 function SidebarIcon({ type }: { type: NavigationIconType }) {
   switch (type) {
-    case 'bell':
-      return <AlarmIcon width={16} height={20} aria-hidden="true" className="shrink-0" />;
     case 'calendar':
       return <CalendarIcon width={16} height={18} aria-hidden="true" className="shrink-0" />;
     case 'memo':
@@ -103,26 +96,10 @@ export default function AppSidebar() {
           <nav>
             <ul className="flex flex-col gap-2">
               <li>
-                <button
-                  type="button"
-                  aria-pressed={isNotificationSidebarOpen}
-                  onClick={() => setIsNotificationSidebarOpen((prev) => !prev)}
-                  className={cn(
-                    'h-[38px] gap-2 p-1',
-                    getSidebarItemClassName(isNotificationSidebarOpen),
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'h-[30px] w-[30px]',
-                      getSidebarIconClassName(isNotificationSidebarOpen),
-                    )}
-                  >
-                    <SidebarIcon type="bell" />
-                  </span>
-
-                  <span>알림</span>
-                </button>
+                <NotificationNavButton
+                  isOpen={isNotificationSidebarOpen}
+                  onToggle={() => setIsNotificationSidebarOpen((prev) => !prev)}
+                />
               </li>
             </ul>
 
