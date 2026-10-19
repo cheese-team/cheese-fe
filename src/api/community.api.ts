@@ -57,12 +57,21 @@ type GetJobPostParams = {
   signal?: AbortSignal;
 };
 
-export function getJobPost({ jobId, signal }: GetJobPostParams) {
-  return apiClient<JobPostDetail>(`/backend-api/community/jobs/${jobId}`, {
-    method: 'GET',
-    cache: 'no-store',
-    signal,
-  });
+export type JobPostDetailResponse = Omit<JobPostDetail, 'author'> & {
+  author: DetailAuthorResponse;
+};
+
+export async function getJobPost({ jobId, signal }: GetJobPostParams): Promise<JobPostDetail> {
+  const response = await apiClient<JobPostDetailResponse>(
+    `/backend-api/community/jobs/${encodeURIComponent(jobId)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    },
+  );
+
+  return { ...response, author: mapDetailAuthor(response.author) };
 }
 
 export type CreateJobPostRequest = {
@@ -185,9 +194,8 @@ type GetGroupPostParams = {
   signal?: AbortSignal;
 };
 
-// TODO: 그룹·정보 상세 author.profileImageUrl의 실제 응답 타입 확인 필요.
 type DetailAuthorResponse = Omit<CommunityAuthor, 'profileImageUrl'> & {
-  profileImageUrl: unknown;
+  profileImageUrl: string | null;
 };
 
 export type GroupPostDetailResponse = Omit<GroupPostDetail, 'author'> & {
@@ -197,7 +205,7 @@ export type GroupPostDetailResponse = Omit<GroupPostDetail, 'author'> & {
 function mapDetailAuthor(author: DetailAuthorResponse): CommunityAuthor {
   return {
     ...author,
-    profileImageUrl: typeof author.profileImageUrl === 'string' ? author.profileImageUrl : '',
+    profileImageUrl: author.profileImageUrl ?? '',
   };
 }
 
