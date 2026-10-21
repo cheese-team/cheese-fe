@@ -1,3 +1,5 @@
+import type { Ref } from 'react';
+
 import { DocumentLinkItemList } from '@/components/common/DocumentLink';
 
 import ProfileCardModal from './ProfileCardModal';
@@ -11,12 +13,14 @@ import type { PublicPersonalProfile } from '@/api/users.api';
 type PersonalProfileCardModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  dialogRef?: Ref<HTMLDivElement>;
   profile: PublicPersonalProfile;
 };
 
 export default function PersonalProfileCardModal({
   isOpen,
   onClose,
+  dialogRef,
   profile,
 }: PersonalProfileCardModalProps) {
   const profileItems = [
@@ -65,6 +69,7 @@ export default function PersonalProfileCardModal({
 
   return (
     <ProfileCardModal
+      dialogRef={dialogRef}
       isOpen={isOpen}
       onClose={onClose}
       profileType="personal"

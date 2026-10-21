@@ -2,6 +2,8 @@ import { DocumentLinkItem, DocumentLinkItemList } from '@/components/common/Docu
 import FileIcon from '@/assets/icons/common/file.svg';
 import LinkIcon from '@/assets/icons/common/link.svg';
 
+import type { Ref } from 'react';
+
 import ProfileCardModal from './ProfileCardModal';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
@@ -13,12 +15,14 @@ import type { PublicCompanyProfile } from '@/api/users.api';
 type CompanyProfileCardModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  dialogRef?: Ref<HTMLDivElement>;
   profile: PublicCompanyProfile;
 };
 
 export default function CompanyProfileCardModal({
   isOpen,
   onClose,
+  dialogRef,
   profile,
 }: CompanyProfileCardModalProps) {
   const profileItems = [
@@ -60,6 +64,7 @@ export default function CompanyProfileCardModal({
 
   return (
     <ProfileCardModal
+      dialogRef={dialogRef}
       isOpen={isOpen}
       onClose={onClose}
       profileType="company"

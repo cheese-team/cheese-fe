@@ -1,10 +1,13 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 
 import BaseModal from '@/components/common/Modal';
-import { Button } from '@/components/common/Button';
 
 import PersonalProfileCardModal from './PersonalProfileCardModal';
 import CompanyProfileCardModal from './CompanyProfileCardModal';
+import { usePublicProfileDialogFocus } from './usePublicProfileDialogFocus';
 
 import { ApiError } from '@/api/client';
 import { usePublicProfile } from '@/queries/users/usePublicProfile';
@@ -22,58 +25,77 @@ export default function PublicProfileCardModal({
 }: PublicProfileCardModalProps) {
   const router = useRouter();
 
-  const { data: profile, isPending, error, refetch, isFetching } = usePublicProfile(userId, isOpen);
+  const dialogRef = usePublicProfileDialogFocus(isOpen);
+  const alertedErrorRef = useRef<Error | null>(null);
+
+  const { data: profile, error } = usePublicProfile(userId, isOpen);
+
+  useEffect(() => {
+    if (!isOpen) {
+      alertedErrorRef.current = null;
+      return;
+    }
+
+    if (!error && userId) return;
+
+    if (error && alertedErrorRef.current === error) return;
+
+    const status = error instanceof ApiError ? error.status : undefined;
+
+    const message =
+      !userId || status === 404
+        ? '프로필 정보가 없습니다.'
+        : status === 401
+          ? '로그인 정보가 만료되었습니다. 다시 로그인해 주세요.'
+          : status === 403
+            ? '프로필을 확인할 권한이 없습니다.'
+            : '프로필을 불러오지 못했습니다.';
+
+    if (error) {
+      alertedErrorRef.current = error;
+    }
+
+    window.alert(message);
+
+    if (status === 401) {
+      onClose();
+      router.replace('/login');
+      return;
+    }
+
+    onClose();
+  }, [isOpen, userId, error, onClose, router]);
 
   if (!isOpen) return null;
 
   if (!error && profile) {
     return profile.profileType === 'personal' ? (
-      <PersonalProfileCardModal isOpen onClose={onClose} profile={profile} />
+      <PersonalProfileCardModal isOpen onClose={onClose} dialogRef={dialogRef} profile={profile} />
     ) : (
-      <CompanyProfileCardModal isOpen onClose={onClose} profile={profile} />
+      <CompanyProfileCardModal isOpen onClose={onClose} dialogRef={dialogRef} profile={profile} />
     );
   }
 
-  const status = error instanceof ApiError ? error.status : undefined;
-
-  const notFound = !userId || status === 404;
-
-  const message = notFound
-    ? '프로필 정보가 없습니다.'
-    : status === 401
-      ? '로그인 정보가 만료되었습니다. 다시 로그인해 주세요.'
-      : status === 403
-        ? '프로필을 확인할 권한이 없습니다.'
-        : error
-          ? '프로필을 불러오지 못했습니다.'
-          : isPending
-            ? '프로필을 불러오는 중입니다.'
-            : '프로필 정보가 없습니다.';
-
-  const canRetry = Boolean(error) && !notFound && status !== 401 && status !== 403;
+  if (error || !userId) return null;
 
   return (
     <BaseModal isOpen onClose={onClose} scope="content" hasOverlay>
-      <div className="bg-bg-2 flex flex-col gap-6 rounded-[10px] p-10">
-        <h2 className="text-[24px] font-bold">프로필</h2>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="프로필 불러오는 중"
+        tabIndex={-1}
+        className="bg-bg-2 flex flex-col items-center gap-4 rounded-[10px] px-12 py-10"
+      >
+        <div
+          className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-gray-700"
+          aria-hidden="true"
+        />
 
-        <p role={error && !notFound ? 'alert' : 'status'}>{message}</p>
-
-        <div className="flex justify-end gap-2">
-          {canRetry && (
-            <Button disabled={isFetching} onClick={() => void refetch()}>
-              다시 시도
-            </Button>
-          )}
-
-          {status === 401 ? (
-            <Button onClick={() => router.replace('/login')}>로그인하기</Button>
-          ) : (
-            <Button variant="outlineGray" onClick={onClose}>
-              닫기
-            </Button>
-          )}
-        </div>
+        <p role="status" className="text-[16px] text-gray-700">
+          프로필을 불러오는 중입니다.
+        </p>
       </div>
     </BaseModal>
   );
