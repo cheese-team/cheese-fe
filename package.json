@@ -10,6 +10,7 @@
     "build": "next build",
     "test:problem": "node --import ./tests/register-typescript.mjs --test tests/problem-api.test.mjs tests/problem-attempt.test.mjs tests/typescript-loader.test.mjs",
     "test:calendar": "node --import ./tests/register-typescript.mjs --test tests/calendar-picker.test.mjs",
+    "test:notification": "node --import ./tests/register-typescript.mjs --test tests/notification-api.test.mjs tests/notification-query.test.mjs tests/notification-model.test.mjs tests/notification-mutation.test.mjs tests/notification-refresh.test.mjs tests/public-profile.test.mjs",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint --fix",

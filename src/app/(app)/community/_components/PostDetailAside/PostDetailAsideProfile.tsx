@@ -44,7 +44,7 @@ export default function PostDetailAsideProfile({ author }: PostDetailAsideProfil
         className="border-gray-400"
         size={44}
       >
-        {author.profileType === 'personal' ? '프로필 보기' : '기업 정보 알아보기'}
+        {author.profileType === 'company' ? '기업 정보 알아보기' : '프로필 보기'}
       </Button>
 
       <PublicProfileCardModal

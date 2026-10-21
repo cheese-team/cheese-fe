@@ -1,431 +1,275 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
-import PersonalProfileCardModal from '@/app/(app)/community/_components/ProfileCardModal/PersonalProfileCardModal';
+import { ApiError } from '@/api/client';
+import { PublicProfileModal } from '@/components/common/PublicProfile/PublicProfileModal';
 import DoubleArrowIcon from '@/assets/icons/problem/double-arrow.svg';
-import DeleteIcon from '@/assets/icons/sidebar/delete.svg';
-import MessageIcon from '@/assets/icons/sidebar/message.svg';
-import SendIcon from '@/assets/icons/sidebar/send.svg';
-import { cn } from '@/lib/cn';
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import type { NotificationAction } from '@/queries/notification/notificationMutationOptions';
+import { useNotificationActions } from '@/queries/notification/useNotificationActions';
+import { useNotifications } from '@/queries/notification/useNotificationQueries';
 
-type NotificationItem = {
-  id: string;
-  sender: string;
-  message: string;
-  category: string;
-  content: string;
-  date: string;
-  unread?: boolean;
-  showContentBullet?: boolean;
-  avatarSrc?: string;
-  avatarClassName?: string;
-  href?: string;
-  profileId?: number;
-};
+import { NotificationCard } from './notification/NotificationCard';
+import { groupNotifications } from './notification/notificationModel';
 
 type NotificationSidebarProps = {
   onClose: () => void;
 };
 
-const initialRecentNotifications: NotificationItem[] = [
-  {
-    id: 'recent-1',
-    sender: '유혹천',
-    message: ' 님이 지원했습니다',
-    category: '그룹모집',
-    content:
-      '- 이곳저곳 널리 퍼져있는 디저트를 한 눈에 편리하게 볼 수 있는 베이커리 플랫폼 프로젝트 입니다.\n- 함께하실 기획자 모집합니다 !☺\n\n🍰 건강 디저트 e-커머스 🍰\n건강 디저트 좋아하시는 분 계신가요~?\n건강 디저트 덕후들의 다양한 불편/불만 사항을 고려하여 기획한 건강 디저트 프로젝트입니다\n핵심 비전을 이끌어 내주실 역량 보유자들을 기다립니다!',
-    date: '2월 10일',
-    unread: true,
-    avatarSrc: '/mock/profile-1.png',
-    href: '/community/groups/1',
-    profileId: 1,
-  },
-  {
-    id: 'recent-2',
-    sender: '치즈공장',
-    message: ' 님이 지원했습니다',
-    category: '채용공고',
-    content: '텍스트로 시간 표시...',
-    date: '2월 10일',
-    unread: true,
-    showContentBullet: true,
-    avatarClassName: 'bg-error-subtle',
-    href: '/community/jobs/1',
-    profileId: 1,
-  },
-  {
-    id: 'recent-3',
-    sender: '치즈',
-    message: ' 새로운 업데이트가 있습니다',
-    category: '업데이트',
-    content: '26.02.10 업데이트 내역입니다. 새로운 업데이트 소식이 있습니다.',
-    date: '2월 10일',
-    unread: true,
-    avatarClassName: 'bg-primary-800',
-    href: '/community',
-  },
-];
+const retryButtonClassName =
+  'rounded-[5px] border border-gray-300 px-[12px] py-[6px] text-[12px] text-gray-700 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-wait disabled:opacity-50';
 
-const initialReadNotifications: NotificationItem[] = [
-  {
-    id: 'read-1',
-    sender: '한창우',
-    message: ' 님이 지원했습니다',
-    category: '그룹모집',
-    content: '런칭되어 있는 위치 기반 서비스에서 운영과 개선을 함께할 백엔드 개발자분을 모십니다.',
-    date: '2월 10일',
-    avatarSrc: '/mock/profile-2.png',
-    href: '/community/groups/1',
-    profileId: 1,
-  },
-  {
-    id: 'read-2',
-    sender: '한영만',
-    message: ' 님이 지원했습니다',
-    category: '정보/자료공유',
-    content: '보내주신 자료 잘봤습니다.',
-    date: '2월 10일',
-    avatarSrc: '/mock/profile-3.png',
-    href: '/community/info/1',
-    profileId: 1,
-  },
-  {
-    id: 'read-3',
-    sender: '치즈회사',
-    message: ' 님이 지원했습니다',
-    category: '채용공고',
-    content: '홈페이지 마지막 마무리 페이지 작업자를 찾고 있습니다.',
-    date: '2월 10일',
-    avatarSrc: '/mock/profile-4.png',
-    href: '/community/jobs/1',
-    profileId: 1,
-  },
-];
-
-function NotificationAvatar({ item, onClick }: { item: NotificationItem; onClick?: () => void }) {
-  const avatar = item.avatarSrc ? (
-    <Image
-      src={item.avatarSrc}
-      alt=""
-      width={25}
-      height={25}
-      className="h-[25px] w-[25px] shrink-0 rounded-full object-cover"
-    />
-  ) : (
-    <span
-      className={cn(
-        'block h-[25px] w-[25px] shrink-0 rounded-full',
-        item.avatarClassName ?? 'bg-gray-300',
-      )}
-      aria-hidden="true"
-    />
-  );
-
-  if (!onClick) {
-    return avatar;
-  }
-
-  return (
-    <button
-      type="button"
-      aria-label={`${item.sender} 프로필 보기`}
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      className="shrink-0"
-    >
-      {avatar}
-    </button>
-  );
-}
-
-function NotificationActionMenu({
-  open,
-  onOpen,
-  onClose,
-  onMarkAsRead,
-  onConfirmDelete,
-  onNavigate,
-  showMarkAsRead,
+function NotificationFeedback({
+  message,
+  isError = false,
+  isRetrying = false,
+  onRetry,
+  showLogin = false,
 }: {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onMarkAsRead: () => void;
-  onConfirmDelete: () => void;
-  onNavigate: () => void;
-  showMarkAsRead: boolean;
+  message: string;
+  isError?: boolean;
+  isRetrying?: boolean;
+  onRetry?: () => void;
+  showLogin?: boolean;
 }) {
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleOutsidePointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && !menuRef.current?.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('pointerdown', handleOutsidePointerDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleOutsidePointerDown);
-    };
-  }, [onClose, open]);
-
   return (
-    <div ref={menuRef} className="absolute top-[12px] right-0 z-20">
-      <div
-        className={cn(
-          'items-center gap-[4px] rounded-[5px] border border-gray-400 bg-gray-50 p-[4px]',
-          open ? 'flex' : 'hidden group-focus-within:flex group-hover:flex',
-        )}
-      >
-        {showMarkAsRead ? (
-          <button
-            type="button"
-            onClick={onMarkAsRead}
-            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[4px] text-gray-500 transition-colors hover:bg-gray-200"
-            aria-label="읽음 처리"
-          >
-            <MessageIcon aria-hidden="true" className="block h-[12px] w-[14px] shrink-0" />
-          </button>
-        ) : (
-          <span className="flex h-[24px] w-[24px] shrink-0 items-center justify-center text-gray-300">
-            <MessageIcon aria-hidden="true" className="block h-[12px] w-[14px] shrink-0" />
-          </span>
-        )}
-
+    <div className="flex flex-col items-center gap-[12px] py-[24px] text-center">
+      <p role={isError ? 'alert' : 'status'} className="text-[14px] leading-[24px] text-gray-600">
+        {message}
+      </p>
+      {showLogin ? (
+        <Link href="/login" className={retryButtonClassName}>
+          로그인하기
+        </Link>
+      ) : onRetry ? (
         <button
           type="button"
-          onClick={onOpen}
-          className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[4px] text-gray-500 transition-colors hover:bg-gray-200"
-          aria-label="삭제"
+          disabled={isRetrying}
+          onClick={onRetry}
+          className={retryButtonClassName}
         >
-          <DeleteIcon aria-hidden="true" className="block h-[12px] w-[11px] shrink-0" />
+          {isRetrying ? '다시 불러오는 중…' : '다시 시도'}
         </button>
-
-        <button
-          type="button"
-          onClick={onNavigate}
-          className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-[4px] text-gray-500 transition-colors hover:bg-gray-200"
-          aria-label="이동"
-        >
-          <SendIcon aria-hidden="true" className="block h-[12px] w-[11px] shrink-0" />
-        </button>
-      </div>
-
-      {open ? (
-        <div className="absolute top-[40px] right-0 z-30 box-border flex w-[157px] flex-col gap-[8px] overflow-hidden rounded-[5px] border border-gray-400 bg-gray-50 p-[12px]">
-          <p className="text-[12px] leading-[20px] font-medium whitespace-nowrap text-gray-700">
-            <span className="block">삭제하면 복구할 수 없습니다.</span>
-            <span className="block">정말 삭제하시겠습니까?</span>
-          </p>
-
-          <div className="flex flex-col gap-[8px]">
-            <button
-              type="button"
-              onClick={onConfirmDelete}
-              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium text-gray-950 transition-colors hover:bg-gray-200"
-            >
-              네
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-[20px] w-full items-center rounded-[5px] bg-transparent px-[8px] text-left text-[12px] leading-[20px] font-medium text-gray-950 transition-colors hover:bg-gray-200"
-            >
-              아니오
-            </button>
-          </div>
-        </div>
       ) : null}
     </div>
   );
 }
 
-function NotificationCard({
-  item,
-  expanded,
-  onToggleExpand,
-  onMarkAsRead,
-  onDelete,
-  onNavigate,
-  onOpenProfile,
-}: {
-  item: NotificationItem;
-  expanded: boolean;
-  onToggleExpand: () => void;
-  onMarkAsRead: () => void;
-  onDelete: () => void;
-  onNavigate: () => void;
-  onOpenProfile?: () => void;
-}) {
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+function NotificationList({ userId }: { userId: string }) {
+  const notifications = useNotifications();
+  const actions = useNotificationActions(userId);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<{
+    userId: string;
+    trigger: HTMLButtonElement;
+  } | null>(null);
+  const { unread, read } = useMemo(
+    () => groupNotifications(notifications.data?.pages ?? []),
+    [notifications.data],
+  );
+
+  const retry = () => {
+    if (!notifications.isFetching) void notifications.refetch();
+  };
+  const loadMore = () => {
+    if (notifications.hasNextPage && !notifications.isFetching && !actions.isPending) {
+      void notifications.fetchNextPage({ cancelRefetch: false });
+    }
+  };
+
+  const runAction = async (action: NotificationAction) => {
+    const succeeded = await actions.execute(action);
+    if (succeeded) {
+      if (action.type === 'delete') {
+        setExpandedId((previous) => (previous === action.notificationId ? null : previous));
+      }
+      requestAnimationFrame(() => {
+        // 읽음 그룹으로 이동하거나 삭제되어 포커스된 버튼이 사라진 경우만 복원한다.
+        if (document.activeElement === document.body)
+          listRef.current?.focus({ preventScroll: true });
+      });
+    }
+    return succeeded;
+  };
+
+  // 인증/권한 오류에서는 이전에 받은 알림도 표시하지 않는다.
+  const errors = [notifications.error, actions.error];
+  if (errors.some((error) => error instanceof ApiError && error.status === 401)) {
+    return <NotificationFeedback message="다시 로그인해 주세요." isError showLogin />;
+  }
+  if (errors.some((error) => error instanceof ApiError && error.status === 403)) {
+    return <NotificationFeedback message="알림을 확인할 권한이 없습니다." isError />;
+  }
+
+  if (!notifications.data) {
+    return notifications.isError ? (
+      <NotificationFeedback
+        message="알림을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+        isError
+        isRetrying={notifications.isFetching}
+        onRetry={retry}
+      />
+    ) : (
+      <NotificationFeedback message="알림을 불러오는 중입니다…" />
+    );
+  }
+
+  const isEmpty = unread.length + read.length === 0;
+  const actionsDisabled = actions.isPending || notifications.isFetching;
+  const actionLabel = actions.action?.type === 'delete' ? '알림 삭제' : '읽음 처리';
 
   return (
-    <article
-      className={cn(
-        'group relative box-border w-full min-w-0 border-b border-gray-300',
-        expanded ? 'py-[12px]' : 'h-[87px] py-[12px]',
-      )}
+    <div
+      ref={listRef}
+      role="region"
+      aria-label="알림 목록"
+      tabIndex={-1}
+      className="flex w-full min-w-0 flex-col gap-[20px] outline-none"
     >
-      <NotificationActionMenu
-        open={isDeleteConfirmOpen}
-        onOpen={() => setIsDeleteConfirmOpen(true)}
-        onClose={() => setIsDeleteConfirmOpen(false)}
-        onMarkAsRead={onMarkAsRead}
-        onConfirmDelete={() => {
-          setIsDeleteConfirmOpen(false);
-          onDelete();
-        }}
-        onNavigate={onNavigate}
-        showMarkAsRead={Boolean(item.unread)}
-      />
-
-      <div className="relative h-full w-full min-w-0 text-left">
-        <div className="absolute top-0 left-0 z-10 flex">
-          <NotificationAvatar item={item} onClick={onOpenProfile} />
+      {!isEmpty || notifications.hasNextPage ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => void runAction({ type: 'readAll' })}
+            disabled={actionsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
+            title="불러오지 않은 알림까지 모두 읽음 처리"
+            className={retryButtonClassName}
+          >
+            모두 읽음
+          </button>
         </div>
+      ) : null}
+      {actions.isPending ? (
+        <p role="status" className="text-[12px] text-gray-600">
+          알림을 처리하는 중입니다…
+        </p>
+      ) : null}
+      {actions.error ? (
+        <div className="flex items-start justify-between gap-[8px] rounded-[5px] border border-gray-300 p-[12px]">
+          <p role="alert" className="text-[14px] leading-[24px] text-gray-700">
+            {actions.error instanceof ApiError && actions.error.status === 404
+              ? '이미 삭제되었거나 찾을 수 없는 알림입니다. 목록을 다시 확인해 주세요.'
+              : `${actionLabel}에 실패했습니다. 다시 시도해 주세요.`}
+          </p>
+          <button
+            type="button"
+            onClick={actions.reset}
+            aria-label="알림 처리 오류 닫기"
+            className="shrink-0 text-[12px] text-gray-600"
+          >
+            닫기
+          </button>
+        </div>
+      ) : null}
+      {notifications.isRefetchError && !notifications.isFetchNextPageError ? (
+        <NotificationFeedback
+          message="알림을 새로 불러오지 못했습니다."
+          isError
+          isRetrying={notifications.isFetching}
+          onRetry={retry}
+        />
+      ) : null}
 
+      {isEmpty && !notifications.isError ? (
+        <NotificationFeedback
+          message={
+            notifications.hasNextPage
+              ? '불러온 알림이 없습니다. 다음 알림을 확인해 주세요.'
+              : '아직 받은 알림이 없습니다.'
+          }
+        />
+      ) : null}
+
+      {[
+        { title: '읽지 않음', items: unread },
+        { title: '읽음', items: read },
+      ].map(({ title, items }) =>
+        items.length > 0 ? (
+          <section
+            key={title}
+            aria-label={title}
+            className="flex w-full min-w-0 flex-col gap-[8px]"
+          >
+            <h3 className="px-[20px] text-[14px] leading-[30px] font-medium text-gray-500">
+              {title}
+            </h3>
+            {items.map((item) => (
+              <NotificationCard
+                key={item.id}
+                item={item}
+                expanded={expandedId === item.id}
+                actionsDisabled={actionsDisabled}
+                onRead={() => void runAction({ type: 'read', notificationId: item.id })}
+                onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
+                viewerId={userId}
+                onOpenProfile={(senderId, trigger) =>
+                  setSelectedProfile({ userId: senderId, trigger })
+                }
+                onToggleExpand={() =>
+                  setExpandedId((previous) => (previous === item.id ? null : item.id))
+                }
+              />
+            ))}
+          </section>
+        ) : null,
+      )}
+
+      {notifications.isFetchNextPageError ? (
+        <p role="alert" className="text-center text-[14px] leading-[24px] text-gray-600">
+          다음 알림을 불러오지 못했습니다. 다시 시도해 주세요.
+        </p>
+      ) : null}
+      {notifications.isFetchingNextPage ? (
+        <p role="status" className="sr-only">
+          다음 알림을 불러오는 중입니다.
+        </p>
+      ) : null}
+      {notifications.hasNextPage ? (
         <button
           type="button"
-          aria-expanded={expanded}
-          onClick={onToggleExpand}
-          className={cn(
-            'focus-visible:ring-secondary-600 flex w-full min-w-0 flex-col items-stretch text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-            expanded ? 'gap-[4px]' : 'gap-[14px]',
-          )}
+          onClick={loadMore}
+          disabled={notifications.isFetching || actions.isPending}
+          className={retryButtonClassName}
         >
-          <div className="flex min-h-[25px] w-full min-w-0 items-center justify-between gap-[8px] pl-[37px]">
-            <p className="min-w-0 truncate text-[14px] leading-[24px] font-normal text-gray-700">
-              <span className="font-medium text-gray-950">{item.sender}</span>
-              {item.message}
-            </p>
-
-            <div className="flex shrink-0 items-center gap-[8px]">
-              <span
-                className={cn(
-                  'text-[12px] leading-[24px] font-normal text-black transition-opacity',
-                  'group-hover:opacity-0',
-                  isDeleteConfirmOpen && 'opacity-0',
-                )}
-              >
-                {item.date}
-              </span>
-
-              <span
-                className={cn(
-                  'h-[8px] w-[8px] rounded-full',
-                  item.unread ? 'bg-secondary-600' : 'bg-gray-400',
-                )}
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-
-          <div className="flex w-full min-w-0 items-start gap-[4px] text-[14px] leading-[24px]">
-            <span className="shrink-0 font-medium text-gray-950">[{item.category}]</span>
-
-            <p
-              className={cn(
-                'min-w-0 flex-1 font-normal text-gray-600',
-                expanded ? 'break-words whitespace-pre-line' : 'truncate whitespace-nowrap',
-              )}
-            >
-              {item.showContentBullet ? '· ' : ''}
-              {item.content}
-            </p>
-          </div>
+          {notifications.isFetchingNextPage
+            ? '불러오는 중…'
+            : notifications.isFetchNextPageError
+              ? '다음 알림 다시 시도'
+              : '알림 더 보기'}
         </button>
-      </div>
-    </article>
+      ) : null}
+      {selectedProfile ? (
+        <PublicProfileModal
+          key={selectedProfile.userId}
+          viewerId={userId}
+          userId={selectedProfile.userId}
+          trigger={selectedProfile.trigger}
+          onClose={() => setSelectedProfile(null)}
+        />
+      ) : null}
+    </div>
   );
 }
 
 export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
-  const router = useRouter();
-  const [recentItems, setRecentItems] = useState(initialRecentNotifications);
-  const [readItems, setReadItems] = useState(initialReadNotifications);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [profileCardOpen, setProfileCardOpen] = useState(false);
-  const [selectedProfileId, setSelectedProfileId] = useState(1);
-
-  const selectedProfile = useMemo(
-    () => getMockPersonalProfile(selectedProfileId),
-    [selectedProfileId],
-  );
-
-  const handleMarkAsRead = (item: NotificationItem) => {
-    if (!item.unread) return;
-
-    setRecentItems((prev) => prev.filter((notification) => notification.id !== item.id));
-    setReadItems((prev) => [{ ...item, unread: false }, ...prev]);
-  };
-
-  const handleDelete = (itemId: string) => {
-    setRecentItems((prev) => prev.filter((notification) => notification.id !== itemId));
-    setReadItems((prev) => prev.filter((notification) => notification.id !== itemId));
-
-    if (expandedId === itemId) {
-      setExpandedId(null);
-    }
-  };
-
-  const handleNavigate = (item: NotificationItem) => {
-    if (!item.href) return;
-
-    router.push(item.href);
-    onClose();
-  };
-
-  const renderSection = (title: string, items: NotificationItem[], hasContentGap = false) => (
-    <section className={cn('flex w-full min-w-0 flex-col', hasContentGap && 'gap-[8px]')}>
-      <h3 className="px-[20px] text-[14px] leading-[30px] font-medium text-gray-500">{title}</h3>
-
-      <div className="flex w-full min-w-0 flex-col">
-        {items.map((item) => (
-          <NotificationCard
-            key={item.id}
-            item={item}
-            expanded={expandedId === item.id}
-            onToggleExpand={() => setExpandedId((prev) => (prev === item.id ? null : item.id))}
-            onMarkAsRead={() => handleMarkAsRead(item)}
-            onDelete={() => handleDelete(item.id)}
-            onNavigate={() => handleNavigate(item)}
-            onOpenProfile={
-              item.profileId
-                ? () => {
-                    setSelectedProfileId(item.profileId!);
-                    setProfileCardOpen(true);
-                  }
-                : undefined
-            }
-          />
-        ))}
-      </div>
-    </section>
-  );
+  const currentUser = useCurrentUser();
+  const needsLogin = currentUser.error instanceof ApiError && currentUser.error.status === 401;
 
   return (
-    <aside className="box-border flex h-dvh w-[388px] shrink-0 flex-col gap-[20px] overflow-x-hidden overflow-y-auto border-r-2 border-gray-300 bg-gray-50 p-[20px] shadow-[0_4px_25px_rgba(85,85,85,0.1)]">
+    <aside
+      aria-label="알림"
+      className="box-border flex h-dvh w-[388px] shrink-0 flex-col gap-[20px] overflow-x-hidden overflow-y-auto border-r-2 border-gray-300 bg-gray-50 p-[20px] shadow-[0_4px_25px_rgba(85,85,85,0.1)]"
+    >
       <header className="flex min-h-[30px] w-full shrink-0 items-center justify-between">
         <h2 className="text-[16px] leading-[30px] font-bold text-gray-950">알림</h2>
-
         <button
           type="button"
           onClick={onClose}
           aria-label="알림 사이드바 닫기"
-          className="flex h-[30px] w-[24px] items-center justify-center text-gray-500"
+          className="focus-visible:outline-secondary-600 flex h-[30px] w-[24px] items-center justify-center text-gray-500 focus-visible:outline-2"
         >
           <DoubleArrowIcon
             aria-hidden="true"
@@ -434,16 +278,24 @@ export function NotificationSidebar({ onClose }: NotificationSidebarProps) {
         </button>
       </header>
 
-      <div className="flex w-full min-w-0 flex-col gap-[20px]">
-        {renderSection('최신', recentItems, true)}
-        {renderSection('읽음', readItems)}
-      </div>
-
-      <PersonalProfileCardModal
-        isOpen={profileCardOpen}
-        onClose={() => setProfileCardOpen(false)}
-        profile={selectedProfile}
-      />
+      {currentUser.isPending ? (
+        <NotificationFeedback message="알림을 불러오는 중입니다…" />
+      ) : currentUser.isError ? (
+        <NotificationFeedback
+          message={needsLogin ? '다시 로그인해 주세요.' : '로그인 정보를 확인하지 못했습니다.'}
+          isError
+          showLogin={needsLogin}
+          isRetrying={currentUser.isFetching}
+          onRetry={() => {
+            if (!currentUser.isFetching) void currentUser.refetch();
+          }}
+        />
+      ) : (
+        <NotificationList
+          key={currentUser.data.account.userId}
+          userId={currentUser.data.account.userId}
+        />
+      )}
     </aside>
   );
 }
