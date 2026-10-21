@@ -28,7 +28,7 @@ export default function PublicProfileCardModal({
   const dialogRef = usePublicProfileDialogFocus(isOpen);
   const alertedErrorRef = useRef<Error | null>(null);
 
-  const { data: profile, error } = usePublicProfile(userId, isOpen);
+  const { data: profile, error, isSuccess } = usePublicProfile(userId, isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -36,14 +36,14 @@ export default function PublicProfileCardModal({
       return;
     }
 
-    if (!error && userId) return;
+    if (!error && userId && !(isSuccess && profile === null)) return;
 
     if (error && alertedErrorRef.current === error) return;
 
     const status = error instanceof ApiError ? error.status : undefined;
 
     const message =
-      !userId || status === 404
+      !userId || (isSuccess && profile === null) || status === 404
         ? '프로필 정보가 없습니다.'
         : status === 401
           ? '로그인 정보가 만료되었습니다. 다시 로그인해 주세요.'
@@ -64,7 +64,7 @@ export default function PublicProfileCardModal({
     }
 
     onClose();
-  }, [isOpen, userId, error, onClose, router]);
+  }, [isOpen, userId, error, isSuccess, profile, onClose, router]);
 
   if (!isOpen) return null;
 
@@ -76,7 +76,7 @@ export default function PublicProfileCardModal({
     );
   }
 
-  if (error || !userId) return null;
+  if (error || !userId || isSuccess) return null;
 
   return (
     <BaseModal isOpen onClose={onClose} scope="content" hasOverlay>
