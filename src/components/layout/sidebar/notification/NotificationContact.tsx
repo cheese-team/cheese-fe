@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { ApiError } from '@/api/client';
 import { getPublicProfileContactHref } from '@/components/common/PublicProfile/publicProfileModel';
 import { CONTACT_METHOD_OPTIONS } from '@/constants/profileOptions';
+
+import { ApiError } from '@/api/client';
 import { publicProfileOptions } from '@/queries/profile/publicProfileQueryOptions';
 
 export function NotificationContact({

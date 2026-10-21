@@ -15,8 +15,8 @@ export function NotificationCard({
   actionsDisabled,
   onRead,
   onDelete,
-  viewerId,
-  onOpenProfile,
+  // viewerId,
+  // onOpenProfile,
 }: {
   item: NotificationItem;
   expanded: boolean;
@@ -28,12 +28,16 @@ export function NotificationCard({
   onOpenProfile: (userId: string, trigger: HTMLButtonElement) => void;
 }) {
   const messageId = useId();
-  const senderId = item.sender?.id == null ? '' : String(item.sender.id).trim();
+
+  // TODO: 알림 API의 sender.userId(UUID) 적용 후 참조 변경
+  // const senderId = item.sender?.id == null ? '' : String(item.sender.id).trim();
 
   return (
     <article className="group relative box-border w-full min-w-0 border-b border-gray-300 py-[12px]">
       <div className="absolute top-[12px] left-0">
-        {senderId ? (
+        {/* TODO: 알림 API에서 sender.userId(UUID)를 제공하면 프로필 조회 기능 복구 */}
+        <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
+        {/* {senderId ? (
           <button
             type="button"
             aria-label={`${item.senderName} 프로필 보기`}
@@ -44,8 +48,9 @@ export function NotificationCard({
           </button>
         ) : (
           <ProfileImage alt="" size={25} />
-        )}
+        )} */}
       </div>
+
       <button
         type="button"
         aria-expanded={expanded}
@@ -87,13 +92,15 @@ export function NotificationCard({
           </span>
         </span>
       </button>
+
       <NotificationActions
         isRead={item.isRead}
         disabled={actionsDisabled}
         onRead={onRead}
         onDelete={onDelete}
-        viewerId={viewerId}
-        senderId={senderId}
+        // TODO: sender.userId(UUID) 적용 후 복구
+        // viewerId={viewerId}
+        // senderId={senderId}
       />
     </article>
   );
