@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 import BaseModal from '@/components/common/Modal';
 import ProfileImage from '@/components/common/ProfileImage';
@@ -27,6 +27,7 @@ type ProfileItem = {
 type ProfileCardModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  dialogRef?: Ref<HTMLDivElement>;
 
   profileType: ProfileType;
   name: string;
@@ -37,11 +38,13 @@ type ProfileCardModalProps = {
   profileItems: ProfileItem[];
 
   onContact: () => void;
+  contactDisabled?: boolean;
 };
 
 export default function ProfileCardModal({
   isOpen,
   onClose,
+  dialogRef,
   profileType,
   name,
   email,
@@ -49,11 +52,19 @@ export default function ProfileCardModal({
   gradientClassName,
   profileItems,
   onContact,
+  contactDisabled = false,
 }: ProfileCardModalProps) {
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} scope="content" hasOverlay>
-      {/* 100vw - sidebar (260px) - modal horizontal margins (298px) */}
-      <div className="w-[calc(100vw-558px)] max-w-[1362px] min-w-[720px] overflow-hidden rounded-[10px]">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${name} 님의 프로필`}
+        tabIndex={-1}
+        // width = 100vw - sidebar (260px) - modal horizontal margins (298px)
+        className="w-[calc(100vw-558px)] max-w-[1362px] min-w-[720px] overflow-hidden rounded-[10px]"
+      >
         <div className="max-h-[901px] overflow-auto">
           <div className="bg-bg-2 flex w-full flex-col gap-6 px-10 py-13">
             <header className="flex items-center justify-between">
@@ -86,7 +97,13 @@ export default function ProfileCardModal({
                     </div>
                   </div>
 
-                  <Button onClick={onContact} width={182} size={54} className="gap-3">
+                  <Button
+                    onClick={onContact}
+                    disabled={contactDisabled}
+                    width={182}
+                    size={54}
+                    className="gap-3"
+                  >
                     <ContactIcon className="h-[13px]" />
                     메시지 보내기
                   </Button>

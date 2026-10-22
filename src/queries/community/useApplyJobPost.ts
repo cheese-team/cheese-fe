@@ -4,7 +4,7 @@ import { applyJobPost, type JobPostsResponse } from '@/api/community.api';
 import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 import { communityQueryKeys } from './communityQueryKeys';
 
-import type { JobPost } from '@/types/community/community';
+import type { JobPostDetail } from '@/types/community/community';
 import type { InfiniteData } from '@tanstack/react-query';
 
 export function useApplyJobPost() {
@@ -22,7 +22,7 @@ export function useApplyJobPost() {
         queryClient.cancelQueries({ queryKey: listQueryKey }),
       ]);
 
-      queryClient.setQueryData<JobPost>(queryKey, (current) =>
+      queryClient.setQueryData<JobPostDetail>(queryKey, (current) =>
         current ? { ...current, isApplied: response.isApplied } : current,
       );
 

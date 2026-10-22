@@ -6,7 +6,11 @@ import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 
 import type { InfiniteData } from '@tanstack/react-query';
 import type { InfoBookmarksResponse } from '@/api/mypage.api';
-import type { InfoPost, ToggleInfoPostLikeParams } from '@/types/community/community';
+import type {
+  InfoPost,
+  InfoPostDetail,
+  ToggleInfoPostLikeParams,
+} from '@/types/community/community';
 
 export function useToggleInfoPostLike() {
   const queryClient = useQueryClient();
@@ -32,7 +36,7 @@ export function useToggleInfoPostLike() {
     },
 
     onSuccess: async (response, variables) => {
-      const updateLike = (post: InfoPost): InfoPost => ({
+      const updateLike = <T extends InfoPost | InfoPostDetail>(post: T): T => ({
         ...post,
         isLiked: response.isLiked,
         likeCount: Math.max(
@@ -41,7 +45,7 @@ export function useToggleInfoPostLike() {
         ),
       });
 
-      queryClient.setQueryData<InfoPost>(
+      queryClient.setQueryData<InfoPostDetail>(
         communityQueryKeys.infoDetail(variables.infoId),
         (current) => (current ? updateLike(current) : current),
       );

@@ -1,16 +1,19 @@
 import { apiClient } from '@/api/client';
 import type {
   CommunityCommentCategory,
-  CommunityCommentReply,
   CommunityCommentResult,
   CommunityCommentsResponse,
 } from '@/types/community/comment';
 
 import type {
   ApplyInfo,
+  CommunityAuthor,
   GroupPost,
+  GroupPostDetail,
   InfoPost,
+  InfoPostDetail,
   JobPost,
+  JobPostDetail,
   UserSummary,
 } from '@/types/community/community';
 import type {
@@ -54,12 +57,21 @@ type GetJobPostParams = {
   signal?: AbortSignal;
 };
 
-export function getJobPost({ jobId, signal }: GetJobPostParams) {
-  return apiClient<JobPost>(`/backend-api/community/jobs/${jobId}`, {
-    method: 'GET',
-    cache: 'no-store',
-    signal,
-  });
+export type JobPostDetailResponse = Omit<JobPostDetail, 'author'> & {
+  author: DetailAuthorResponse;
+};
+
+export async function getJobPost({ jobId, signal }: GetJobPostParams): Promise<JobPostDetail> {
+  const response = await apiClient<JobPostDetailResponse>(
+    `/backend-api/community/jobs/${encodeURIComponent(jobId)}`,
+    {
+      method: 'GET',
+      cache: 'no-store',
+      signal,
+    },
+  );
+
+  return { ...response, author: mapDetailAuthor(response.author) };
 }
 
 export type CreateJobPostRequest = {
@@ -182,8 +194,26 @@ type GetGroupPostParams = {
   signal?: AbortSignal;
 };
 
-export async function getGroupPost({ groupId, signal }: GetGroupPostParams): Promise<GroupPost> {
-  const response = await apiClient<GroupPostResponse>(
+type DetailAuthorResponse = Omit<CommunityAuthor, 'profileImageUrl'> & {
+  profileImageUrl: string | null;
+};
+
+export type GroupPostDetailResponse = Omit<GroupPostDetail, 'author'> & {
+  author: DetailAuthorResponse;
+};
+
+function mapDetailAuthor(author: DetailAuthorResponse): CommunityAuthor {
+  return {
+    ...author,
+    profileImageUrl: author.profileImageUrl ?? '',
+  };
+}
+
+export async function getGroupPost({
+  groupId,
+  signal,
+}: GetGroupPostParams): Promise<GroupPostDetail> {
+  const response = await apiClient<GroupPostDetailResponse>(
     `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
     {
       method: 'GET',
@@ -192,7 +222,7 @@ export async function getGroupPost({ groupId, signal }: GetGroupPostParams): Pro
     },
   );
 
-  return mapGroupPost(response);
+  return { ...response, author: mapDetailAuthor(response.author) };
 }
 
 export type CreateGroupPostRequest = Pick<
@@ -333,8 +363,12 @@ type GetInfoPostParams = {
   signal?: AbortSignal;
 };
 
-export async function getInfoPost({ infoId, signal }: GetInfoPostParams): Promise<InfoPost> {
-  const response = await apiClient<InfoPostResponse>(
+export type InfoPostDetailResponse = Omit<InfoPostDetail, 'author'> & {
+  author: DetailAuthorResponse;
+};
+
+export async function getInfoPost({ infoId, signal }: GetInfoPostParams): Promise<InfoPostDetail> {
+  const response = await apiClient<InfoPostDetailResponse>(
     `/backend-api/community/info/${encodeURIComponent(infoId)}`,
     {
       method: 'GET',
@@ -343,7 +377,7 @@ export async function getInfoPost({ infoId, signal }: GetInfoPostParams): Promis
     },
   );
 
-  return mapInfoPost(response);
+  return { ...response, author: mapDetailAuthor(response.author) };
 }
 
 export type CreateInfoPostRequest = Pick<InfoPost, 'category' | 'title' | 'content' | 'tags'> & {
@@ -426,18 +460,12 @@ export function unlikeInfoPost({ infoId }: InfoPostLikeRequest) {
       Comment
    ================================ */
 
+// TODO: 댓글 생성·수정 응답의 작성자 구조는 별도 확인 필요. GET 응답과 분리해 유지합니다.
 type CommentResponse = Omit<CommunityCommentResult, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
 };
 
-type CommentsListResponse = Omit<CommunityCommentsResponse, 'items'> & {
-  items: (CommentResponse & {
-    parentId: null;
-    replies: (CommentResponse & { parentId: string })[];
-  })[];
-};
-
-function mapComment({ author, ...comment }: CommentResponse): CommunityCommentResult {
+function mapComment({ author, ...comment }: CommentResponse) {
   const { type, ...profile } = author;
   return { ...comment, author: { ...profile, profileType: type } };
 }
@@ -455,20 +483,10 @@ export async function getComments({
   limit?: string;
   signal?: AbortSignal;
 }): Promise<CommunityCommentsResponse> {
-  const response = await apiClient<CommentsListResponse>(
+  return apiClient<CommunityCommentsResponse>(
     `/backend-api/community/${category}/${postId}/comments`,
     { method: 'GET', cache: 'no-store', query: { cursor, limit }, signal },
   );
-  return {
-    ...response,
-    items: response.items.map((comment) => ({
-      ...mapComment(comment),
-      parentId: null,
-      replies: comment.replies.map(
-        (reply): CommunityCommentReply => ({ ...mapComment(reply), parentId: reply.parentId }),
-      ),
-    })),
-  };
 }
 export type CreateCommentRequest = CommentsParams & {
   content: string;

@@ -10,12 +10,16 @@ export function useUpdateJobPost() {
   return useMutation({
     mutationFn: (request: UpdateJobPostRequest) => updateJobPost(request),
 
-    onSuccess: async (updatedJobPost, variables) => {
-      queryClient.setQueryData(communityQueryKeys.jobDetail(variables.jobId), updatedJobPost);
-
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.jobLists(),
-      });
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.jobDetail(variables.jobId),
+          exact: true,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.jobLists(),
+        }),
+      ]);
     },
   });
 }

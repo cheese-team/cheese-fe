@@ -11,10 +11,15 @@ import ApplyCompleteContent from './ApplyCompleteContent';
 
 import CloseIcon from '@/assets/icons/common/close.svg';
 
-import type { JobPost, GroupPost } from '@/types/community/community';
+import type {
+  JobPost,
+  JobPostDetail,
+  GroupPost,
+  GroupPostDetail,
+} from '@/types/community/community';
 
 export type ApplyModalProps = {
-  post: JobPost | GroupPost;
+  post: JobPost | JobPostDetail | GroupPost | GroupPostDetail;
   isOpen: boolean;
   onClose: () => void;
   onApply: () => Promise<void>;

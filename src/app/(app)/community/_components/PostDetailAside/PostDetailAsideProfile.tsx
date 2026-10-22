@@ -4,26 +4,23 @@ import { useState } from 'react';
 
 import { Button } from '@/components/common/Button';
 import ProfileImage from '@/components/common/ProfileImage';
-import { PublicProfileModal } from '@/components/common/PublicProfile/PublicProfileModal';
-import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
-import type { UserSummary } from '@/types/community/community';
+import PublicProfileCardModal from '../ProfileCardModal/PublicProfileCardModal';
+
+import type { CommunityAuthor, UserSummary } from '@/types/community/community';
 
 type PostDetailAsideProfileProps = {
-  // 공개 작성자 응답은 UUID userId/displayName을 사용한다. 기존 목록 모델도 수용한다.
-  author: UserSummary & { userId?: string; displayName?: string };
+  author: UserSummary | CommunityAuthor;
 };
 
 export default function PostDetailAsideProfile({ author }: PostDetailAsideProfileProps) {
-  const currentUser = useCurrentUser();
-  const viewerId = currentUser.isSuccess ? currentUser.data.account.userId : undefined;
-  const userId = author.userId ?? (author.id == null ? '' : String(author.id));
-  const name = author.displayName || author.nickname || '사용자';
-  const [openedProfile, setOpenedProfile] = useState<{
-    viewerId: string;
-    userId: string;
-    trigger: HTMLButtonElement;
-  } | null>(null);
+  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
+
+  const userId = 'userId' in author ? author.userId : undefined;
+
+  const handleProfileButtonClick = () => {
+    setIsProfileCardOpen(true);
+  };
 
   return (
     <div className="flex w-full flex-col items-center gap-4 py-10">
@@ -31,17 +28,17 @@ export default function PostDetailAsideProfile({ author }: PostDetailAsideProfil
         <ProfileImage size={100} src={author.profileImageUrl} />
 
         <div className="flex flex-col gap-1 text-center leading-[30px]">
-          <span className="text-[20px] font-bold break-words">{name}</span>
+          <span className="text-[20px] font-bold break-words">
+            {'displayName' in author ? author.displayName : author.nickname}
+          </span>
           <span className="break-all">{author.email}</span>
         </div>
       </div>
 
       <Button
-        onClick={(event) => {
-          if (viewerId && userId)
-            setOpenedProfile({ viewerId, userId, trigger: event.currentTarget });
-        }}
-        disabled={!viewerId || !userId}
+        disabled={!userId}
+        title={!userId ? '작성자 사용자 ID를 확인할 수 없습니다.' : undefined}
+        onClick={handleProfileButtonClick}
         fullWidth
         variant="outlineGray"
         className="border-gray-400"
@@ -50,14 +47,12 @@ export default function PostDetailAsideProfile({ author }: PostDetailAsideProfil
         {author.profileType === 'company' ? '기업 정보 알아보기' : '프로필 보기'}
       </Button>
 
-      {openedProfile && viewerId === openedProfile.viewerId && userId === openedProfile.userId ? (
-        <PublicProfileModal
-          viewerId={viewerId}
-          userId={userId}
-          trigger={openedProfile.trigger}
-          onClose={() => setOpenedProfile(null)}
-        />
-      ) : null}
+      <PublicProfileCardModal
+        key={userId}
+        userId={userId}
+        isOpen={isProfileCardOpen}
+        onClose={() => setIsProfileCardOpen(false)}
+      />
     </div>
   );
 }

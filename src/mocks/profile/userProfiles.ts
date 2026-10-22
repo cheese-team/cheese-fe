@@ -34,7 +34,8 @@ export function getMockCompanyProfile(id: number): CompanyProfile {
   return profile;
 }
 
-const mockPersonalProfiles: PersonalProfile[] = [
+// 기존 작성자/알림 mock 조회용 ID이며, 마이페이지 API의 프로필 식별자가 아닙니다.
+const mockPersonalProfiles: (PersonalProfile & { id: number })[] = [
   // 로그인 유저
   {
     id: 1,
@@ -78,7 +79,7 @@ const mockPersonalProfiles: PersonalProfile[] = [
     })),
 ];
 
-const mockCompanyProfiles: CompanyProfile[] = [
+const mockCompanyProfiles: (CompanyProfile & { id: number })[] = [
   // 로그인 유저
   {
     id: 1,
@@ -130,8 +131,8 @@ const mockAccountSettings: AccountSettings = {
 const MOCK_LOGIN_USER_ID = 1;
 
 export const mockMypage: Mypage = {
-  activeProfileType: 'personal',
-  personalProfile: getMockPersonalProfile(MOCK_LOGIN_USER_ID),
-  companyProfile: getMockCompanyProfile(MOCK_LOGIN_USER_ID),
+  profileType: 'personal',
+  loginEmail: 'cheese@test.com',
+  profile: getMockPersonalProfile(MOCK_LOGIN_USER_ID),
   accountSettings: mockAccountSettings,
 };

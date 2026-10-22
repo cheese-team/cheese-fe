@@ -1,10 +1,10 @@
-import type { UserSummary } from './community';
+import type { CommunityAuthor } from './community';
 
 export type CommunityCommentCategory = 'jobs' | 'groups' | 'info';
 
 export type CommunityCommentReply = {
   id: string;
-  author: UserSummary;
+  author: CommunityAuthor;
   content: string;
   createdAt: string;
   parentId: string;

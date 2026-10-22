@@ -1,3 +1,11 @@
+export type CommunityAuthor = {
+  userId: string;
+  profileType: 'personal' | 'company';
+  displayName: string;
+  email: string;
+  profileImageUrl: string;
+};
+
 export type UserSummary = {
   id: number;
   profileType: 'personal' | 'company';
@@ -45,6 +53,8 @@ export type JobPost = {
   isApplied: boolean;
 };
 
+export type JobPostDetail = Omit<JobPost, 'author'> & { author: CommunityAuthor };
+
 export type GroupPost = {
   id: string;
   field: Field[];
@@ -69,6 +79,8 @@ export type GroupPost = {
   isLiked: boolean;
   isApplied: boolean;
 };
+
+export type GroupPostDetail = Omit<GroupPost, 'author'> & { author: CommunityAuthor };
 
 export type InfoPost = {
   id: string;
@@ -99,6 +111,8 @@ export type InfoPost = {
 
   isLiked: boolean;
 };
+
+export type InfoPostDetail = Omit<InfoPost, 'author'> & { author: CommunityAuthor };
 
 export type ToggleInfoPostLikeParams = {
   infoId: string;

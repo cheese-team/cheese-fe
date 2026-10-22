@@ -81,7 +81,7 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
       return updateComment({
         ...data,
-        authorProfileType: user.account.activeProfileType,
+        authorProfileType: user.account.profileType,
       });
     },
 
@@ -99,7 +99,6 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
                 ? {
                     ...comment,
                     content: response.content,
-                    author: response.author,
                     createdAt: response.createdAt,
                   }
                 : {
@@ -109,7 +108,6 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
                         ? {
                             ...reply,
                             content: response.content,
-                            author: response.author,
                             createdAt: response.createdAt,
                           }
                         : reply,
