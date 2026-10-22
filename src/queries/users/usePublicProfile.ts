@@ -15,6 +15,8 @@ export function usePublicProfile(userId: string | undefined, enabled = true) {
 
     enabled: enabled && Boolean(userId),
 
+    refetchOnMount: 'always',
+
     retry: (failureCount, error) => {
       if (error.name === 'AbortError') return false;
 

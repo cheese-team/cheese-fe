@@ -23,27 +23,43 @@ export default function PublicProfileCardModal({
   isOpen,
   onClose,
 }: PublicProfileCardModalProps) {
+  if (!isOpen) return null;
+
+  return <PublicProfileCardContent key={userId} userId={userId} onClose={onClose} />;
+}
+
+function PublicProfileCardContent({
+  userId,
+  onClose,
+}: {
+  userId: string | undefined;
+  onClose: () => void;
+}) {
   const router = useRouter();
 
-  const dialogRef = usePublicProfileDialogFocus(isOpen);
+  const dialogRef = usePublicProfileDialogFocus(true);
   const alertedErrorRef = useRef<Error | null>(null);
 
-  const { data: profile, error, isSuccess } = usePublicProfile(userId, isOpen);
+  const {
+    data: profile,
+    error,
+    isSuccess,
+    isFetching,
+    isPending,
+    isFetchedAfterMount,
+  } = usePublicProfile(userId);
+
+  const isConfirmedNull = isSuccess && isFetchedAfterMount && !isFetching && profile === null;
 
   useEffect(() => {
-    if (!isOpen) {
-      alertedErrorRef.current = null;
-      return;
-    }
-
-    if (!error && userId && !(isSuccess && profile === null)) return;
+    if (userId && !error && !isConfirmedNull) return;
 
     if (error && alertedErrorRef.current === error) return;
 
     const status = error instanceof ApiError ? error.status : undefined;
 
     const message =
-      !userId || (isSuccess && profile === null) || status === 404
+      !userId || isConfirmedNull || status === 404
         ? '프로필 정보가 없습니다.'
         : status === 401
           ? '로그인 정보가 만료되었습니다. 다시 로그인해 주세요.'
@@ -57,18 +73,16 @@ export default function PublicProfileCardModal({
 
     window.alert(message);
 
-    if (status === 401) {
-      onClose();
-      router.replace('/login');
-      return;
-    }
-
     onClose();
-  }, [isOpen, userId, error, isSuccess, profile, onClose, router]);
 
-  if (!isOpen) return null;
+    if (status === 401) {
+      router.replace('/login');
+    }
+  }, [userId, error, isConfirmedNull, onClose, router]);
 
-  if (!error && profile) {
+  if (!userId || error || isConfirmedNull) return null;
+
+  if (profile) {
     return profile.profileType === 'personal' ? (
       <PersonalProfileCardModal isOpen onClose={onClose} dialogRef={dialogRef} profile={profile} />
     ) : (
@@ -76,8 +90,20 @@ export default function PublicProfileCardModal({
     );
   }
 
-  if (error || !userId || isSuccess) return null;
+  if (isPending || isFetching || !isFetchedAfterMount) {
+    return <ProfileLoadingModal dialogRef={dialogRef} onClose={onClose} />;
+  }
 
+  return null;
+}
+
+function ProfileLoadingModal({
+  dialogRef,
+  onClose,
+}: {
+  dialogRef: ReturnType<typeof usePublicProfileDialogFocus>;
+  onClose: () => void;
+}) {
   return (
     <BaseModal isOpen onClose={onClose} scope="content" hasOverlay>
       <div
