@@ -7,6 +7,7 @@ import Image from 'next/image';
 
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
+import PasswordInput from '../../_components/PasswordInput';
 
 import { useLogin } from '@/queries/auth/useLogin';
 
@@ -56,10 +57,9 @@ export default function LoginPage() {
             className="h-10 px-2 font-medium tracking-normal"
             showMessageSpace
           />
-          <Input
+          <PasswordInput
             label="비밀번호"
             name="password"
-            type="password"
             placeholder="비밀번호"
             errorMessage={loginError}
             className="h-10 px-2 font-medium tracking-normal"

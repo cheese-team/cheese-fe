@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Input, InputActionButton } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 
+import PasswordInput from '../../_components/PasswordInput';
+import AuthConfirmModal from '../../_components/AuthConfirmModal';
 import TermsModal from './_components/TermsModal';
 import EmailVerifyModal from '../_components/EmailVerifyModal';
-import AuthConfirmModal from '../../_components/AuthConfirmModal';
 
 import { useSignup } from '@/queries/auth/useSignup';
 import { useCheckNickname } from '@/queries/auth/useCheckNickname';
@@ -372,11 +373,10 @@ export default function SignupPage() {
               className="h-10 px-2 font-medium tracking-normal"
               showMessageSpace
             />
-            <Input
+            <PasswordInput
               ref={passwordRef}
               label="비밀번호"
               name="password"
-              type="password"
               value={password}
               onChange={handlePasswordChange}
               placeholder="비밀번호 입력"
@@ -384,11 +384,10 @@ export default function SignupPage() {
               className="h-10 px-2 font-medium tracking-normal"
               showMessageSpace
             />
-            <Input
+            <PasswordInput
               ref={passwordConfirmationRef}
               label="비밀번호 확인"
               name="passwordConfirmation"
-              type="password"
               value={passwordConfirmation}
               onChange={handlePasswordConfirmationChange}
               placeholder="비밀번호 재입력"
