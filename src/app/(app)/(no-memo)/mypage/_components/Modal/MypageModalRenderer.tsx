@@ -152,6 +152,7 @@ export default function MypageModalRenderer({
         title={`${editingItem.label} 추가`}
         inputLabel={editingItem.label}
         document={editingItem.document}
+        purpose={editingItem.field === 'coverLetter' ? 'coverLetter' : 'additionalDocument'}
         disabled={isPending}
         onClose={handleEditModalClose}
         onSave={(document) => {

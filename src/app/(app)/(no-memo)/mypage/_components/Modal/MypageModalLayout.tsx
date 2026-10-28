@@ -51,6 +51,7 @@ export default function MypageModalLayout({
             {title}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close modal"
             className="flex h-5 w-5 items-center justify-center"
