@@ -297,7 +297,7 @@ export default function MyPage() {
 
             <div className="flex flex-col text-gray-700">
               <div className="flex items-center gap-2">
-                <span className="text-[20px] font-bold">{profileHeader.name}</span>
+                <span className="text-[20px] leading-[30px] font-bold">{profileHeader.name}</span>
 
                 <Chip
                   size="sm"
@@ -306,6 +306,7 @@ export default function MyPage() {
                   {mypage.profileType === 'personal' ? '개인' : '기업'}
                 </Chip>
               </div>
+              <span className="text-[14px]">{mypage.loginEmail}</span>
               <span className="text-[14px]">{profileHeader.subText}</span>
             </div>
           </div>
