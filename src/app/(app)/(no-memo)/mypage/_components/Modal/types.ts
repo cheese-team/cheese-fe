@@ -28,6 +28,7 @@ export type MypageModalItem = {
   label: string;
   value?: string;
   contactUrl?: string;
+  contactEmail?: string;
   document?: ProfileDocument;
   buttonText: string;
   options?: string[];

@@ -8,10 +8,11 @@ import ConfirmModal from './ConfirmModal';
 import { useLogout } from '@/queries/auth/useLogout';
 import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 
-import type { ContactSettings, ProfileDocument } from '@/types/profile';
-import type { MypageModalItem } from './types';
 import { validateCompanyName, validateNickname } from '@/lib/validation';
 import { formatDate } from '@/lib/formatDate';
+
+import type { ContactSettings, ProfileDocument } from '@/types/profile';
+import type { MypageModalItem } from './types';
 
 const maxLengthByField: Record<string, number> = {
   nickname: 10,
@@ -66,7 +67,7 @@ export default function MypageModalRenderer({
   const isSelectModal = editingItem?.modalType === 'select';
   const isConfirmModal = editingItem?.modalType === 'confirm';
 
-  const hasOpenKakaoInput =
+  const hasContactInput =
     editingItem.section === 'accountSettings' && editingItem.field === 'contactMethod';
   const isLogout = isConfirmModal && editingItem.field === 'logout';
   const isDeleteAccount = isConfirmModal && editingItem.field === 'deleteAccount';
@@ -201,8 +202,9 @@ export default function MypageModalRenderer({
         inputLabel={editingItem.label}
         value={editingItem.value}
         contactUrl={editingItem.contactUrl}
+        contactEmail={editingItem.contactEmail}
         options={editingItem.options ?? []}
-        hasOpenKakaoInput={hasOpenKakaoInput}
+        hasContactInput={hasContactInput}
         disabled={isPending}
         onClose={handleEditModalClose}
         onSave={(value) => {

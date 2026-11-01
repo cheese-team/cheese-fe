@@ -50,7 +50,9 @@ export type AccountSettings = {
   address: string;
 };
 
-export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUrl'>;
+export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUrl'> & {
+  contactEmail?: string;
+};
 
 export type Mypage = {
   loginEmail: string;

@@ -75,7 +75,6 @@ export type UpdateContactEmailRequest = {
   contactEmail: string;
 };
 
-// TODO: 연락용 이메일 변경 플로우 연동
 export function updateContactEmail(data: UpdateContactEmailRequest) {
   return apiClient<Mypage>('/backend-api/mypage/contact-email', {
     method: 'PATCH',

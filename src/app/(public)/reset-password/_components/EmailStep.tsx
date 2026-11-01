@@ -2,16 +2,12 @@ import { useState } from 'react';
 
 import { Input, InputActionButton } from '@/components/common/Input';
 
-import { useSendEmailCode } from '@/queries/auth/useSendEmailCode';
-
-import { AUTH_MESSAGE } from '../../(auth)/_constants/authMessage';
 import { validateEmail } from '../../(auth)/_lib/validation';
-import { getSendEmailErrorMessage } from '../../(auth)/_lib/emailVerification';
 
 type EmailStepProps = {
   email: string;
   onEmailChange: (email: string) => void;
-  onNext: (expiresInSeconds: number) => void;
+  onNext: () => void;
   emailDisabled?: boolean;
   actionDisabled?: boolean;
 };
@@ -25,9 +21,8 @@ export default function EmailStep({
 }: EmailStepProps) {
   const [emailError, setEmailError] = useState<string>();
 
-  const { mutateAsync: sendEmailCode, isPending: isSending } = useSendEmailCode();
-
-  const handleSendEmail = async () => {
+  const handleSendEmail = () => {
+    if (actionDisabled) return;
     const normalizedEmail = email.trim();
     const error = validateEmail(normalizedEmail);
 
@@ -38,22 +33,8 @@ export default function EmailStep({
 
     setEmailError(undefined);
 
-    try {
-      const sendEmailCodeResult = await sendEmailCode({
-        email: normalizedEmail,
-        purpose: 'password-reset',
-      });
-
-      if (!sendEmailCodeResult.success) {
-        setEmailError(AUTH_MESSAGE.EMAIL.SEND_FAILED);
-        return;
-      }
-
-      onEmailChange(normalizedEmail);
-      onNext(sendEmailCodeResult.expiresInSeconds);
-    } catch (error) {
-      setEmailError(getSendEmailErrorMessage(error, 'password-reset'));
-    }
+    onEmailChange(normalizedEmail);
+    onNext();
   };
 
   return (
@@ -70,14 +51,10 @@ export default function EmailStep({
           onEmailChange(e.target.value);
         }}
         placeholder="이메일 입력"
-        disabled={emailDisabled || isSending}
+        disabled={emailDisabled}
         errorMessage={emailError}
         rightAddon={
-          <InputActionButton
-            type="button"
-            onClick={handleSendEmail}
-            disabled={actionDisabled || isSending}
-          >
+          <InputActionButton type="button" onClick={handleSendEmail} disabled={actionDisabled}>
             메일발송
           </InputActionButton>
         }

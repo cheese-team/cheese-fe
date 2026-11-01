@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
 import { Chip } from '@/components/common/Chip';
@@ -11,16 +12,18 @@ import MypageModalRenderer from './_components/Modal/MypageModalRenderer';
 import { useMypageModal } from './_components/Modal/useMypageModal';
 
 import { useMypage } from '@/queries/mypage/useMypage';
+import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 import { useUpdatePersonalProfile } from '@/queries/mypage/useUpdatePersonalProfile';
 import { useUpdateCompanyProfile } from '@/queries/mypage/useUpdateCompanyProfile';
 import { useUpdateAccountSettings } from '@/queries/mypage/useUpdateAccountSettings';
+import { useUpdateContactEmail } from '@/queries/mypage/useUpdateContactEmail';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
-import type { ContactSettings, ProfileDocument } from '@/types/profile';
+import type { ContactSettings, Mypage, ProfileDocument } from '@/types/profile';
 import type { MypageItemField, MypageItemSection } from './_components/Modal/types';
 
-// TODO: 연락용 이메일 변경 플로우 연동 (contact-change 이메일 인증 후 요청)
 export default function MyPage() {
+  const queryClient = useQueryClient();
   const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage();
 
   const { mutateAsync: updatePersonalProfile, isPending: isPersonalProfilePending } =
@@ -29,6 +32,8 @@ export default function MyPage() {
     useUpdateCompanyProfile();
   const { mutateAsync: updateAccountSettings, isPending: isAccountSettingsPending } =
     useUpdateAccountSettings();
+  const { mutateAsync: updateContactEmail, isPending: isContactEmailPending } =
+    useUpdateContactEmail();
   const { mutateAsync: uploadFile, isPending: isUploadFilePending } = useUploadFile();
 
   const { editingItem, openModal, closeModal } = useMypageModal();
@@ -58,6 +63,7 @@ export default function MyPage() {
     isPersonalProfilePending ||
     isCompanyProfilePending ||
     isAccountSettingsPending ||
+    isContactEmailPending ||
     isUploadFilePending;
 
   const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,28 +195,65 @@ export default function MyPage() {
       }
 
       if (section === 'accountSettings') {
+        const currentSettings =
+          queryClient.getQueryData<Mypage>(mypageQueryKeys.user())?.accountSettings ??
+          mypage.accountSettings;
+        const contactSettings =
+          field === 'contactMethod' && typeof value === 'object' && 'contactMethod' in value
+            ? value
+            : undefined;
+        const nextEmail =
+          contactSettings?.contactMethod === 'email'
+            ? contactSettings.contactEmail?.trim()
+            : undefined;
+        const hasEmailChanged =
+          nextEmail !== undefined && nextEmail !== currentSettings.contactEmail.trim();
         const accountSettingsData = {
-          contactMethod: mypage.accountSettings.contactMethod,
-          contactUrl: mypage.accountSettings.contactUrl,
-          passwordUpdatedAt: mypage.accountSettings.passwordUpdatedAt,
-          address: mypage.accountSettings.address,
+          contactMethod: currentSettings.contactMethod,
+          contactUrl: currentSettings.contactUrl,
+          passwordUpdatedAt: currentSettings.passwordUpdatedAt,
+          address: currentSettings.address,
         };
 
-        const nextAccountSettingsData =
-          field === 'contactMethod' && typeof value === 'object' && 'contactMethod' in value
-            ? {
-                ...accountSettingsData,
-                contactMethod: value.contactMethod,
-                contactUrl: value.contactUrl,
-              }
-            : {
-                ...accountSettingsData,
-                [field]: value,
-              };
+        const nextAccountSettingsData = contactSettings
+          ? {
+              ...accountSettingsData,
+              contactMethod: contactSettings.contactMethod,
+              contactUrl: contactSettings.contactUrl,
+            }
+          : {
+              ...accountSettingsData,
+              [field]: value,
+            };
 
-        await updateAccountSettings({
-          data: nextAccountSettingsData,
-        });
+        const hasSettingsChanged =
+          nextAccountSettingsData.contactMethod !== currentSettings.contactMethod ||
+          (nextAccountSettingsData.contactUrl ?? '').trim() !==
+            (currentSettings.contactUrl ?? '').trim() ||
+          nextAccountSettingsData.address !== currentSettings.address ||
+          nextAccountSettingsData.passwordUpdatedAt !== currentSettings.passwordUpdatedAt;
+
+        if (hasEmailChanged && nextEmail !== undefined) {
+          try {
+            await updateContactEmail({ contactEmail: nextEmail });
+          } catch {
+            alert('연락용 이메일 변경에 실패했습니다. 다시 시도해 주세요.');
+            return;
+          }
+        }
+
+        if (hasSettingsChanged) {
+          try {
+            await updateAccountSettings({ data: nextAccountSettingsData });
+          } catch {
+            alert(
+              hasEmailChanged
+                ? '연락용 이메일은 변경되었지만 계정 설정 저장에 실패했습니다. 다시 저장해 주세요.'
+                : '계정 설정 변경에 실패했습니다. 다시 시도해 주세요.',
+            );
+            return;
+          }
+        }
 
         closeModal();
       }
@@ -269,7 +312,11 @@ export default function MyPage() {
           <AccountSettings profile={mypage.accountSettings} onOpenModal={openModal} />
 
           <MypageModalRenderer
-            editingItem={editingItem}
+            editingItem={
+              editingItem?.section === 'accountSettings' && editingItem.field === 'contactMethod'
+                ? { ...editingItem, contactEmail: mypage.accountSettings.contactEmail }
+                : editingItem
+            }
             onClose={closeModal}
             onSave={handleSaveMypageItem}
             isPending={isMypageMutating}

@@ -21,7 +21,6 @@ export default function ResetPasswordPage() {
   const [step, setStep] = useState<Step>('EMAIL');
   const [email, setEmail] = useState('');
   const [verifiedEmail, setVerifiedEmail] = useState('');
-  const [expiresInSeconds, setExpiresInSeconds] = useState(0);
 
   const [isDoneOpen, setIsDoneOpen] = useState(false);
 
@@ -39,8 +38,7 @@ export default function ResetPasswordPage() {
         <EmailStep
           email={displayedEmail}
           onEmailChange={setEmail}
-          onNext={(expiresInSeconds) => {
-            setExpiresInSeconds(expiresInSeconds);
+          onNext={() => {
             setStep('VERIFY');
           }}
           emailDisabled={isPending || !!user}
@@ -56,7 +54,6 @@ export default function ResetPasswordPage() {
             setVerifiedEmail(email);
             setStep('NEW_PASSWORD');
           }}
-          initialRemainingSeconds={expiresInSeconds}
         />
       )}
 

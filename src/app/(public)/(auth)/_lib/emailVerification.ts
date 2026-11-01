@@ -11,6 +11,13 @@ export function getSendEmailErrorMessage(
     return AUTH_MESSAGE.EMAIL.SEND_FAILED;
   }
 
+  if (
+    purpose === 'contact-change' &&
+    error.message === 'Cannot use a registered login email as contact email'
+  ) {
+    return '이미 등록된 이메일입니다. 다른 이메일을 입력해 주세요.';
+  }
+
   if (purpose === 'signup' && error.message === 'Email is already registered') {
     return AUTH_MESSAGE.EMAIL.ALREADY_REGISTERED;
   }
