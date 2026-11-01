@@ -19,6 +19,8 @@ import { useUpdateAccountSettings } from '@/queries/mypage/useUpdateAccountSetti
 import { useUpdateContactEmail } from '@/queries/mypage/useUpdateContactEmail';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
+import DeleteIcon from '@/assets/icons/common/close.svg';
+
 import type { ContactSettings, Mypage, ProfileDocument } from '@/types/profile';
 import type { MypageItemField, MypageItemSection } from './_components/Modal/types';
 
@@ -66,21 +68,12 @@ export default function MyPage() {
     isContactEmailPending ||
     isUploadFilePending;
 
-  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = event.target;
-    const file = event.target.files?.[0];
-
-    if (!file || isMypageMutating) return;
-
-    try {
-      const uploadedFile = await uploadFile({
-        file,
-      });
-
-      if (mypage.profileType === 'personal') {
-        const personalProfileData = {
+  const updateProfileImage = async (profileImageUrl: string) => {
+    if (mypage.profileType === 'personal') {
+      await updatePersonalProfile({
+        data: {
           nickname: mypage.profile.nickname,
-          profileImageUrl: uploadedFile.url,
+          profileImageUrl,
           interestedJob: mypage.profile.interestedJob,
           coverLetter: mypage.profile.coverLetter,
           additionalDocument: mypage.profile.additionalDocument,
@@ -88,15 +81,13 @@ export default function MyPage() {
           interests: mypage.profile.interests,
           contactMethod: mypage.profile.contactMethod,
           contactUrl: mypage.profile.contactUrl,
-        };
-
-        await updatePersonalProfile({
-          data: personalProfileData,
-        });
-      } else {
-        const companyProfileData = {
+        },
+      });
+    } else {
+      await updateCompanyProfile({
+        data: {
           companyName: mypage.profile.companyName,
-          profileImageUrl: uploadedFile.url,
+          profileImageUrl,
           representativeName: mypage.profile.representativeName,
           companyType: mypage.profile.companyType,
           resumeTemplate: mypage.profile.resumeTemplate,
@@ -105,17 +96,37 @@ export default function MyPage() {
           foundedAt: mypage.profile.foundedAt,
           contactMethod: mypage.profile.contactMethod,
           contactUrl: mypage.profile.contactUrl,
-        };
+        },
+      });
+    }
+  };
 
-        await updateCompanyProfile({
-          data: companyProfileData,
-        });
-      }
+  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.target;
+    const file = input.files?.[0];
+
+    if (!file || isMypageMutating) return;
+
+    try {
+      const uploadedFile = await uploadFile({ file });
+
+      await updateProfileImage(uploadedFile.url);
     } catch (error) {
       console.error('Failed to upload profile image:', error);
       alert('프로필 이미지 변경에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       input.value = '';
+    }
+  };
+
+  const handleProfileImageDelete = async () => {
+    if (isMypageMutating || !mypage.profile.profileImageUrl) return;
+
+    try {
+      await updateProfileImage('');
+    } catch (error) {
+      console.error('Failed to delete profile image:', error);
+      alert('프로필 이미지 삭제에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
@@ -268,7 +279,21 @@ export default function MyPage() {
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between px-3">
           <div className="flex items-center gap-3">
-            <ProfileImage src={profileHeader.imageUrl} />
+            <div className="relative">
+              <ProfileImage src={profileHeader.imageUrl} />
+
+              {profileHeader.imageUrl && (
+                <button
+                  type="button"
+                  onClick={handleProfileImageDelete}
+                  disabled={isMypageMutating}
+                  aria-label="프로필 이미지 삭제"
+                  className="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-gray-800 text-white disabled:opacity-50"
+                >
+                  <DeleteIcon className="size-2" />
+                </button>
+              )}
+            </div>
 
             <div className="flex flex-col text-gray-700">
               <div className="flex items-center gap-2">
