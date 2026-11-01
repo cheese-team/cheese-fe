@@ -89,11 +89,7 @@ export type InfoPost = {
 
   author: UserSummary;
 
-  // TODO: content 안에 첨부된 첫 번째 이미지를 썸네일로 사용
   thumbnailUrl?: string;
-
-  // 목록 카드 미리보기용 텍스트
-  // TODO: content에서 HTML/img를 제거한 순수 텍스트
   previewText: string;
 
   // 상세 본문 HTML
