@@ -9,6 +9,8 @@ import DatePicker from '@/components/common/DatePicker/DatePicker';
 
 import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
 
+import { ApiError } from '@/api/client';
+
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useCreateJobPost } from '@/queries/community/useCreateJobPost';
 import { useUpdateJobPost } from '@/queries/community/useUpdateJobPost';
@@ -37,9 +39,19 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
   const [employmentType, setEmploymentType] = useState(initialValues?.employmentType ?? '');
   const [education, setEducation] = useState(initialValues?.education ?? '');
   const [career, setCareer] = useState(initialValues?.career ?? '');
-  const [date, setDate] = useState(
-    initialValues?.deadline ? formatDate(initialValues.deadline).replaceAll('.', '-') : '',
-  );
+  const initialDate = initialValues?.deadline
+    ? formatDate(initialValues.deadline).replaceAll('.', '-')
+    : '';
+  const [date, setDate] = useState(initialDate);
+  const today = formatDate(new Date().toISOString()).replaceAll('.', '-');
+  const isOriginalDeadline = mode === 'edit' && date === initialDate;
+  const minDate = isOriginalDeadline && date && date < today ? date : today;
+
+  const handleDateChange = (nextDate: string) => {
+    const currentToday = formatDate(new Date().toISOString()).replaceAll('.', '-');
+    if (nextDate && nextDate < currentToday) return;
+    setDate(nextDate);
+  };
 
   const { data: user } = useCurrentUser();
 
@@ -52,6 +64,12 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
     event.preventDefault();
 
     if (!user || isCreatePending || isUpdatePending) return;
+
+    const currentToday = formatDate(new Date().toISOString()).replaceAll('.', '-');
+    if (date && date < currentToday && !isOriginalDeadline) {
+      alert('지원 마감일은 오늘 이후의 날짜로 선택해주세요.');
+      return;
+    }
 
     const formData = new FormData(event.currentTarget);
 
@@ -94,11 +112,16 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
       content,
     };
 
+    const onError = (error: Error) => {
+      alert(error instanceof ApiError ? error.message : '채용공고 저장에 실패했습니다.');
+    };
+
     if (mode === 'create') {
       createJobPost(jobPostData, {
         onSuccess: (createdJobPost) => {
           router.replace(`/community/jobs/${createdJobPost.id}`);
         },
+        onError,
       });
       return;
     }
@@ -114,6 +137,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
         onSuccess: () => {
           router.replace(`/community/jobs/${jobId}`);
         },
+        onError,
       },
     );
   };
@@ -188,8 +212,10 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
 
           <FormField label="지원 마감일" labelClassName="text-[14px]">
             <DatePicker
+              label="지원 마감일"
               value={date}
-              onChange={setDate}
+              min={minDate}
+              onChange={handleDateChange}
               formatDisplayValue={(value) => value.replaceAll('-', '.')}
               buttonClassName="border-b border-gray-400 h-[30px] focus-within:border-secondary-600 focus-within:border-b-2"
             />

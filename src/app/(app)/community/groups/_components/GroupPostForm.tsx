@@ -32,9 +32,19 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
   const [field, setField] = useState(toFieldSelectValue(initialValues?.field));
   const [progressType, setProgressType] = useState(initialValues?.progressType ?? '');
 
-  const [date, setDate] = useState(
-    initialValues?.deadline ? formatDate(initialValues.deadline).replaceAll('.', '-') : '',
-  );
+  const initialDate = initialValues?.deadline
+    ? formatDate(initialValues.deadline).replaceAll('.', '-')
+    : '';
+  const [date, setDate] = useState(initialDate);
+  const today = formatDate(new Date().toISOString()).replaceAll('.', '-');
+  const isOriginalDeadline = mode === 'edit' && date === initialDate;
+  const minDate = isOriginalDeadline && date && date < today ? date : today;
+
+  const handleDateChange = (nextDate: string) => {
+    const currentToday = formatDate(new Date().toISOString()).replaceAll('.', '-');
+    if (nextDate && nextDate < currentToday) return;
+    setDate(nextDate);
+  };
 
   const { mutate: createGroupPost, isPending: isCreatePending } = useCreateGroupPost();
   const { mutate: updateGroupPost, isPending: isUpdatePending } = useUpdateGroupPost();
@@ -60,6 +70,12 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
       return;
     }
 
+    const currentToday = formatDate(new Date().toISOString()).replaceAll('.', '-');
+    if (date && date < currentToday && !isOriginalDeadline) {
+      alert('지원 마감일은 오늘 이후의 날짜로 선택해주세요.');
+      return;
+    }
+
     const formData = new FormData(event.currentTarget);
 
     const title = String(formData.get('title') ?? '');
@@ -68,7 +84,12 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
       .split(',')
       .map((skill) => skill.trim())
       .filter(Boolean);
-    const recruitCount = Number(formData.get('recruitCount') ?? 0);
+    const recruitCount = Number(formData.get('recruitCount'));
+
+    if (!Number.isInteger(recruitCount) || recruitCount < 1) {
+      alert('모집 인원은 1명 이상 입력해주세요.');
+      return;
+    }
 
     const groupPostPayload: CreateGroupPostRequest = {
       title,
@@ -179,9 +200,11 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
 
           <FormField label="지원 마감일" labelClassName="text-[14px]">
             <DatePicker
+              label="지원 마감일"
               value={date}
+              min={minDate}
               formatDisplayValue={(value) => value.replaceAll('-', '.')}
-              onChange={setDate}
+              onChange={handleDateChange}
               buttonClassName="border-b border-gray-400 h-[30px] focus-within:border-secondary-600 focus-within:border-b-2"
             />
           </FormField>
