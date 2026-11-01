@@ -17,6 +17,7 @@ import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useCreateInfoPost } from '@/queries/community/useCreateInfoPost';
 import { useUpdateInfoPost } from '@/queries/community/useUpdateInfoPost';
 import { useUploadFile } from '@/queries/files/useUploadFile';
+import { useUploadDocument } from '@/queries/files/useUploadDocument';
 
 import { INFO_SORT_OPTIONS } from '../../_constants/community';
 
@@ -26,6 +27,10 @@ import CloseIcon from '@/assets/icons/common/close.svg';
 import type { InfoPost } from '@/types/community/community';
 
 const INFO_CATEGORY_OPTIONS = INFO_SORT_OPTIONS.filter((option) => option.value !== 'all');
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
 
 type InfoPostFormProps = {
   mode: 'create' | 'edit';
@@ -39,6 +44,9 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
   const { mutateAsync: createInfoPost, isPending: isCreatePending } = useCreateInfoPost();
   const { mutateAsync: updateInfoPost, isPending: isUpdatePending } = useUpdateInfoPost();
   const { mutateAsync: uploadFile, isPending: isUploadPending } = useUploadFile();
+  const { mutateAsync: uploadDocument, isPending: isDocumentUploadPending } = useUploadDocument();
+  const isSubmitting =
+    isCreatePending || isUpdatePending || isUploadPending || isDocumentUploadPending;
 
   const [category, setCategory] = useState(initialValues?.category ?? '');
   const [isExistingFileRemoved, setIsExistingFileRemoved] = useState(false);
@@ -51,10 +59,46 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
     initialTags: initialValues?.tags ?? [],
     maxTags: 5,
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting) return;
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const isDocument = /\.(pdf|docx)$/i.test(file.name);
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+
+    if (!isDocument && !isImage) {
+      alert('JPG, PNG, GIF, WEBP, PDF, DOCX 파일만 첨부할 수 있습니다.');
+      event.target.value = '';
+      return;
+    }
+
+    if (isImage && file.size > MAX_IMAGE_SIZE) {
+      alert('이미지 파일 크기는 최대 5MB까지 가능합니다.');
+      event.target.value = '';
+      return;
+    }
+
+    if (isDocument && file.size > MAX_DOCUMENT_SIZE) {
+      alert('문서 파일 크기는 최대 10MB까지 가능합니다.');
+      event.target.value = '';
+      return;
+    }
+
+    addFiles(event);
+  };
+
+  const uploadAttachment = (file: File) =>
+    /\.(pdf|docx)$/i.test(file.name)
+      ? uploadDocument({ file, purpose: 'infoAttachment' })
+      : uploadFile({ file });
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, content: string) => {
     event.preventDefault();
 
-    if (isCreatePending || isUpdatePending || isUploadPending) return;
+    if (isSubmitting) return;
 
     const formData = new FormData(event.currentTarget);
 
@@ -68,7 +112,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
       try {
         const file = files[0];
-        const uploadedFile = file ? await uploadFile({ file }) : undefined;
+        const uploadedFile = file ? await uploadAttachment(file) : undefined;
 
         const createdInfoPost = await createInfoPost({
           category,
@@ -96,7 +140,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
     try {
       const file = files[0];
-      const uploadedFile = file ? await uploadFile({ file }) : undefined;
+      const uploadedFile = file ? await uploadAttachment(file) : undefined;
 
       await updateInfoPost({
         infoId: initialValues.id,
@@ -127,7 +171,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
       mode={mode}
       onSubmit={handleSubmit}
       initialContent={initialValues?.content ?? ''}
-      isSubmitting={isCreatePending || isUpdatePending || isUploadPending}
+      isSubmitting={isSubmitting}
     >
       <section className="flex flex-col gap-[30px]">
         <Input
@@ -165,6 +209,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                   <button
                     type="button"
                     aria-label="기존 첨부파일 삭제"
+                    disabled={isSubmitting}
                     onClick={() => setIsExistingFileRemoved(true)}
                     className="text-gray-600 hover:text-gray-800"
                   >
@@ -189,6 +234,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                     <button
                       type="button"
                       aria-label={`${file.name} 삭제`}
+                      disabled={isSubmitting}
                       onClick={() => removeFile(index)}
                       className="text-gray-600 hover:text-gray-800"
                     >
@@ -198,18 +244,19 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
                 ))}
               </div>
             )}
-            {/* TODO: 현재 파일 업로드 API는 이미지만 지원
-                      일반 파일 업로드 지원 시 정보/자료공유 첨부파일 업로드 확장 */}
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx"
+              disabled={isSubmitting}
               className="hidden"
-              onChange={addFiles}
+              onChange={handleFileChange}
             />
+
             <Button
               type="button"
               onClick={openFilePicker}
+              disabled={isSubmitting}
               width={90}
               size={46}
               variant="outlineLightGray"
@@ -218,6 +265,10 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
               <UploadIcon className="w-3" aria-hidden="true" />
               업로드
             </Button>
+            <p className="text-xs">
+              이미지 최대 5MB(jpg, png, gif, webp) / 문서 최대 10MB(pdf, docx) 파일을 첨부할 수
+              있습니다.
+            </p>
           </div>
 
           <FormField
