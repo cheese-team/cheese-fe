@@ -11,6 +11,18 @@ import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 import type { ContactSettings, ProfileDocument } from '@/types/profile';
 import type { MypageModalItem } from './types';
 import { validateCompanyName, validateNickname } from '@/lib/validation';
+import { formatDate } from '@/lib/formatDate';
+
+const maxLengthByField: Record<string, number> = {
+  nickname: 10,
+  companyName: 20,
+  interestedJob: 50,
+  skills: 200,
+  interests: 200,
+  address: 200,
+  representativeName: 50,
+  industryType: 200,
+};
 
 type MypageModalRendererProps = {
   editingItem: MypageModalItem | null;
@@ -37,6 +49,7 @@ export default function MypageModalRenderer({
     isError: isLogoutError,
     reset: resetLogout,
   } = useLogout();
+
   const {
     mutate: deleteMe,
     isPending: isDeletePending,
@@ -122,8 +135,7 @@ export default function MypageModalRenderer({
   };
 
   if (isTextModal) {
-    const maxLength =
-      editingItem.field === 'nickname' ? 10 : editingItem.field === 'companyName' ? 20 : undefined;
+    const maxLength = maxLengthByField[editingItem.field];
 
     const validate =
       editingItem.field === 'nickname'
@@ -141,6 +153,11 @@ export default function MypageModalRenderer({
         value={editingItem.value}
         inputType={editingItem.inputType}
         min={editingItem.min}
+        max={
+          editingItem.field === 'foundedAt'
+            ? formatDate(new Date().toISOString()).replaceAll('.', '-')
+            : undefined
+        }
         maxLength={maxLength}
         validate={validate}
         description={

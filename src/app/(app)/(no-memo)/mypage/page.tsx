@@ -161,11 +161,9 @@ export default function MyPage() {
         }
 
         if (field === 'employeeCount' && typeof value === 'string') {
-          if (value.trim() === '') return;
+          const employeeCount = value.trim() === '' ? 0 : Number(value);
 
-          const employeeCount = Number(value);
-
-          if (!Number.isFinite(employeeCount) || employeeCount < 0) return;
+          if (!Number.isInteger(employeeCount) || employeeCount < 0) return;
 
           nextValue = employeeCount;
         }

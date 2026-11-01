@@ -12,6 +12,7 @@ type TextEditModalProps = {
   value?: string;
   inputType?: React.HTMLInputTypeAttribute;
   min?: number;
+  max?: string | number;
   maxLength?: number;
   validate?: (value: string) => string | undefined;
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function TextEditModal({
   value,
   inputType = 'text',
   min,
+  max,
   maxLength,
   validate,
   isOpen,
@@ -67,6 +69,7 @@ export default function TextEditModal({
         <Input
           type={inputType}
           min={min}
+          max={max}
           maxLength={maxLength}
           label={inputLabel}
           value={inputValue}
