@@ -233,7 +233,10 @@ export default function MyPage() {
               <div className="flex items-center gap-2">
                 <span className="text-[20px] font-bold">{profileHeader.name}</span>
 
-                <Chip size="sm" className="bg-primary-600 shrink-0">
+                <Chip
+                  size="sm"
+                  variant={mypage.profileType === 'personal' ? 'profilePersonal' : 'profileCompany'}
+                >
                   {mypage.profileType === 'personal' ? '개인' : '기업'}
                 </Chip>
               </div>

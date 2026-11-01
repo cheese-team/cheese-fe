@@ -1,6 +1,14 @@
 import { cn } from '@/lib/cn';
 
-type ChipVariant = 'default' | 'FE' | 'BE' | 'interview' | 'document' | 'personal';
+type ChipVariant =
+  | 'default'
+  | 'FE'
+  | 'BE'
+  | 'interview'
+  | 'document'
+  | 'personal'
+  | 'profilePersonal'
+  | 'profileCompany';
 
 type ChipSize = 'sm' | 'md';
 
@@ -23,6 +31,10 @@ const variantStyles: Record<ChipVariant, string> = {
   interview: 'bg-primary-600 text-gray-950',
   document: 'bg-secondary-200 text-gray-950',
   personal: 'bg-bg-3 text-gray-950',
+
+  // 마이페이지(프로필) 영역
+  profilePersonal: 'bg-tag-yellow-100 text-gray-950',
+  profileCompany: 'bg-tag-blue-100 text-gray-950',
 };
 
 const sizeStyles: Record<ChipSize, string> = {
