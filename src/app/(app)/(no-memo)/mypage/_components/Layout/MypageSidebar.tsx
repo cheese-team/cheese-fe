@@ -5,7 +5,10 @@ import { usePathname } from 'next/navigation';
 
 import { UserIcon as MypageIcon, SettingsIcon } from '@/assets/icons/settings';
 
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { cn } from '@/lib/cn';
+
 import {
   getSidebarIconClassName,
   getSidebarItemClassName,
@@ -24,12 +27,16 @@ const ICON_MAP = {
 
 export default function MyPageSidebar() {
   const pathname = usePathname();
+  const { data: user } = useCurrentUser();
+  const menuItems = MYPAGE_MENU_ITEMS.filter(
+    (item) => item.icon !== 'applications' || user?.account.profileType === 'personal',
+  );
 
   return (
     <div className="bg-sidebar-bg h-full">
       <nav className="px-4 pt-[90px]">
         <ul className="flex flex-col gap-2">
-          {MYPAGE_MENU_ITEMS.map((item) => {
+          {menuItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <li key={item.href}>

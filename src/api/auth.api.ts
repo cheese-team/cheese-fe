@@ -1,3 +1,5 @@
+import { cache } from 'react';
+
 import { apiClient, ApiError } from './client';
 
 import type { ProfileType } from '@/types/profile';
@@ -65,6 +67,10 @@ export async function getMeFromServer(cookie: string) {
 
   return (await response.json()) as CurrentUser;
 }
+
+export const getCachedMeFromServer = cache(async (cookie: string) => {
+  return getMeFromServer(cookie);
+});
 
 export type LogoutResponse = {
   success: boolean;
