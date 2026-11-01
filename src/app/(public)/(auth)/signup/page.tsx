@@ -15,12 +15,9 @@ import { useSignup } from '@/queries/auth/useSignup';
 import { useCheckNickname } from '@/queries/auth/useCheckNickname';
 import { ApiError } from '@/api/client';
 
+import { validateCompanyName, validateNickname } from '@/lib/validation';
+import { validatePassword, validatePasswordConfirmation } from '../_lib/validation';
 import { AUTH_MESSAGE } from '../_constants/authMessage';
-import {
-  validateNickname,
-  validatePassword,
-  validatePasswordConfirmation,
-} from '../_lib/validation';
 
 import CheckIcon from '@/assets/icons/common/check.svg';
 import ChevronIcon from '@/assets/icons/common/chevron.svg';
@@ -205,8 +202,7 @@ export default function SignupPage() {
     const nextErrors: SignupErrors = {
       profileType: profileType ? undefined : '프로필 타입을 선택해 주세요',
       nickname: profileType === 'personal' ? getNicknameError() : undefined,
-      companyName:
-        profileType === 'company' && !companyName.trim() ? '회사명을 입력해 주세요' : undefined,
+      companyName: profileType === 'company' ? validateCompanyName(companyName) : undefined,
       email: verifiedEmail ? undefined : AUTH_MESSAGE.VERIFICATION.EMAIL_REQUIRED,
       password: validatePassword(password),
       passwordConfirmation: validatePasswordConfirmation(password, passwordConfirmation),
@@ -318,9 +314,10 @@ export default function SignupPage() {
                 label="닉네임"
                 name="nickname"
                 type="text"
+                maxLength={10}
                 value={nickname}
                 onChange={handleNicknameChange}
-                placeholder="닉네임 입력"
+                placeholder="닉네임 입력 (2~10자)"
                 errorMessage={signupErrors.nickname}
                 successMessage={
                   nicknameStatus === 'available' ? AUTH_MESSAGE.NICKNAME.AVAILABLE : undefined
@@ -343,12 +340,13 @@ export default function SignupPage() {
                 label="회사명"
                 name="companyName"
                 type="text"
+                maxLength={20}
                 value={companyName}
                 onChange={(event) => {
                   setCompanyName(event.target.value);
                   setSignupErrors((prev) => ({ ...prev, companyName: undefined }));
                 }}
-                placeholder="회사명 입력"
+                placeholder="회사명 입력 (2~20자)"
                 errorMessage={signupErrors.companyName}
                 className="h-10 px-2 font-medium tracking-normal"
                 showMessageSpace

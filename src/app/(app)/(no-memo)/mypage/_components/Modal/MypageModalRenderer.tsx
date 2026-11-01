@@ -10,6 +10,7 @@ import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 
 import type { ContactSettings, ProfileDocument } from '@/types/profile';
 import type { MypageModalItem } from './types';
+import { validateCompanyName, validateNickname } from '@/lib/validation';
 
 type MypageModalRendererProps = {
   editingItem: MypageModalItem | null;
@@ -121,6 +122,16 @@ export default function MypageModalRenderer({
   };
 
   if (isTextModal) {
+    const maxLength =
+      editingItem.field === 'nickname' ? 10 : editingItem.field === 'companyName' ? 20 : undefined;
+
+    const validate =
+      editingItem.field === 'nickname'
+        ? validateNickname
+        : editingItem.field === 'companyName'
+          ? validateCompanyName
+          : undefined;
+
     return (
       <TextEditModal
         key={modalKey}
@@ -130,6 +141,8 @@ export default function MypageModalRenderer({
         value={editingItem.value}
         inputType={editingItem.inputType}
         min={editingItem.min}
+        maxLength={maxLength}
+        validate={validate}
         description={
           editingItem.label === '내 스킬' || editingItem.label === '내 관심분야'
             ? 'ex) HTML, CSS3, Java ...'
