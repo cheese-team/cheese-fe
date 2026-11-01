@@ -270,15 +270,10 @@ export type DeleteGroupPostRequest = {
   groupId: string;
 };
 
-export async function deleteGroupPost({ groupId }: DeleteGroupPostRequest): Promise<GroupPost> {
-  const response = await apiClient<GroupPostResponse>(
-    `/backend-api/community/groups/${encodeURIComponent(groupId)}`,
-    {
-      method: 'DELETE',
-    },
-  );
-
-  return mapGroupPost(response);
+export async function deleteGroupPost({ groupId }: DeleteGroupPostRequest): Promise<void> {
+  await apiClient<unknown>(`/backend-api/community/groups/${encodeURIComponent(groupId)}`, {
+    method: 'DELETE',
+  });
 }
 
 type GroupPostLikeRequest = {
@@ -419,15 +414,13 @@ export type DeleteInfoPostRequest = {
   infoId: string;
 };
 
-export async function deleteInfoPost({ infoId }: DeleteInfoPostRequest) {
-  const response = await apiClient<InfoPostResponse>(
+export async function deleteInfoPost({ infoId }: DeleteInfoPostRequest): Promise<void> {
+  await apiClient<{ success: boolean }>(
     `/backend-api/community/info/${encodeURIComponent(infoId)}`,
     {
       method: 'DELETE',
     },
   );
-
-  return mapInfoPost(response);
 }
 
 type InfoPostLikeRequest = {
