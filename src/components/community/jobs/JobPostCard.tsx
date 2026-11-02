@@ -23,7 +23,7 @@ import type { JobPost } from '@/types/community/community';
 import type { ToggleJobPostLikeParams } from '@/types/community/community';
 
 type JobPostCardProps = {
-  post: JobPost;
+  post: Omit<JobPost, 'author'>;
   onDirectApply: () => void;
   onToggleLike: (variables: ToggleJobPostLikeParams) => void;
   isLikePending?: boolean;

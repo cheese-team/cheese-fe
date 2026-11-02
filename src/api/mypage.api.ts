@@ -1,7 +1,4 @@
 import { apiClient } from '@/api/client';
-import { mapGroupPost, mapInfoPost } from '@/api/community.api';
-
-import type { GroupPostResponse, InfoPostResponse } from '@/api/community.api';
 import type { GroupPost, JobPost, InfoPost } from '@/types/community/community';
 import type { ApplicationSort } from '@/app/(app)/(no-memo)/mypage/applications/_constants/applications';
 
@@ -117,21 +114,12 @@ export async function getGroupApplications(
   { cursor, limit = 20, q, sort = 'latest' }: ApplicationsParams,
   signal?: AbortSignal,
 ): Promise<GroupApplicationsResponse> {
-  const response = await apiClient<
-    Omit<GroupApplicationsResponse, 'items'> & {
-      items: GroupPostResponse[];
-    }
-  >('/backend-api/mypage/applications', {
+  return apiClient<GroupApplicationsResponse>('/backend-api/mypage/applications', {
     method: 'GET',
     cache: 'no-store',
     query: { type: 'groups', cursor, limit: String(limit), q, sort },
     signal,
   });
-
-  return {
-    ...response,
-    items: response.items.map(mapGroupPost),
-  };
 }
 
 export type BookmarkType = 'jobs' | 'groups' | 'info';
@@ -166,21 +154,12 @@ export async function getGroupBookmarks(
   { cursor, limit = 20 }: BookmarkListParams,
   signal?: AbortSignal,
 ): Promise<GroupBookmarksResponse> {
-  const response = await apiClient<
-    Omit<GroupBookmarksResponse, 'items'> & {
-      items: GroupPostResponse[];
-    }
-  >('/backend-api/mypage/bookmarks', {
+  return apiClient<GroupBookmarksResponse>('/backend-api/mypage/bookmarks', {
     method: 'GET',
     cache: 'no-store',
     query: { type: 'groups', cursor, limit: String(limit) },
     signal,
   });
-
-  return {
-    ...response,
-    items: response.items.map(mapGroupPost),
-  };
 }
 
 export type InfoBookmarksResponse = {
@@ -193,22 +172,10 @@ export async function getInfoBookmarks(
   { cursor, limit = 20 }: BookmarkListParams,
   signal?: AbortSignal,
 ): Promise<InfoBookmarksResponse> {
-  const response = await apiClient<
-    Omit<InfoBookmarksResponse, 'items'> & {
-      items: (InfoPostResponse & { likedAt?: string })[];
-    }
-  >('/backend-api/mypage/bookmarks', {
+  return apiClient<InfoBookmarksResponse>('/backend-api/mypage/bookmarks', {
     method: 'GET',
     cache: 'no-store',
     query: { type: 'info', cursor, limit: String(limit) },
     signal,
   });
-
-  return {
-    ...response,
-    items: response.items.map(({ likedAt, ...post }) => ({
-      ...mapInfoPost(post),
-      likedAt,
-    })),
-  };
 }

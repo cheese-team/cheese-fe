@@ -1,13 +1,20 @@
-import type { UserSummary } from '@/types/community/community';
+import type { CommunityAuthor, UserSummary } from '@/types/community/community';
 
-export function getMockUserSummary(id: number, type: UserSummary['profileType']) {
+export function getMockUserSummary(id: number, type: UserSummary['profileType']): CommunityAuthor {
   const user = mockUserSummaries.find((user) => user.id === id && user.profileType === type);
 
   if (!user) {
     throw new Error(`Mock user(${id}, ${type})를 찾을 수 없습니다.`);
   }
 
-  return user;
+  // Fixture UUIDs are unrelated to real user IDs; numeric keys remain mock-only.
+  return {
+    userId: `00000000-0000-4000-8000-${String(user.id).padStart(12, '0')}`,
+    profileType: user.profileType,
+    displayName: user.nickname,
+    email: user.email,
+    profileImageUrl: user.profileImageUrl || null,
+  };
 }
 
 export const mockUserSummaries: UserSummary[] = [

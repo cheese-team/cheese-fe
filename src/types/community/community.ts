@@ -6,7 +6,7 @@ export type CommunityAuthor = {
   profileImageUrl: string | null;
 };
 
-// TODO: 미확인 목록·등록·수정 API의 기존 작성자 계약. 응답 확인 후 통합합니다.
+// Legacy profile mock data only; not an API response type
 export type UserSummary = {
   id: number;
   profileType: 'personal' | 'company';
@@ -33,7 +33,7 @@ export type JobPost = {
   companyName: string;
   title: string;
 
-  author: UserSummary;
+  author: CommunityAuthor;
 
   field: Field[];
   skills: string[];
@@ -57,15 +57,14 @@ export type JobPost = {
   isApplied: boolean;
 };
 
-export type JobPostDetail = Omit<JobPost, 'author'> & { author: CommunityAuthor };
+export type JobPostDetail = JobPost;
 
 export type GroupPost = {
   id: string;
   field: Field[];
   title: string;
 
-  // TODO:목록은 CommunityAuthor, 미확인 등록·수정·마이페이지 응답은 기존 계약을 유지합니다.
-  author: CommunityAuthor | UserSummary;
+  author: CommunityAuthor;
 
   recruitCount: number;
   expectedPeriod: string;
@@ -85,14 +84,14 @@ export type GroupPost = {
   isApplied: boolean;
 };
 
-export type GroupPostDetail = Omit<GroupPost, 'author'> & { author: CommunityAuthor };
+export type GroupPostDetail = GroupPost;
 
 export type InfoPost = {
   id: string;
   category: 'question' | 'info' | 'resource';
   title: string;
 
-  author: UserSummary;
+  author: CommunityAuthor;
 
   thumbnailUrl?: string;
   previewText: string;
@@ -113,7 +112,7 @@ export type InfoPost = {
   isLiked: boolean;
 };
 
-export type InfoPostDetail = Omit<InfoPost, 'author'> & { author: CommunityAuthor };
+export type InfoPostDetail = InfoPost;
 
 export type ToggleInfoPostLikeParams = {
   infoId: string;

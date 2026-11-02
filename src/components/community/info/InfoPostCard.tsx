@@ -15,7 +15,7 @@ import type { InfoPost } from '@/types/community/community';
 import type { ToggleInfoPostLikeParams } from '@/types/community/community';
 
 type InfoPostCardProps = {
-  post: InfoPost;
+  post: Omit<InfoPost, 'author'>;
   wrapperClassName?: string;
   onToggleLike?: (variables: ToggleInfoPostLikeParams) => void;
   isLikePending?: boolean;
