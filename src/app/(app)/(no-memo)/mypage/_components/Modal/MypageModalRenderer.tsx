@@ -8,7 +8,7 @@ import ConfirmModal from './ConfirmModal';
 import { useLogout } from '@/queries/auth/useLogout';
 import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 
-import { validateCompanyName, validateNickname } from '@/lib/validation';
+import { validateCompanyName, validateEmployeeCount, validateNickname } from '@/lib/validation';
 import { formatDate } from '@/lib/formatDate';
 
 import type { ContactSettings, ProfileDocument } from '@/types/profile';
@@ -143,7 +143,9 @@ export default function MypageModalRenderer({
         ? validateNickname
         : editingItem.field === 'companyName'
           ? validateCompanyName
-          : undefined;
+          : editingItem.field === 'employeeCount'
+            ? validateEmployeeCount
+            : undefined;
 
     return (
       <TextEditModal
@@ -157,7 +159,9 @@ export default function MypageModalRenderer({
         max={
           editingItem.field === 'foundedAt'
             ? formatDate(new Date().toISOString()).replaceAll('.', '-')
-            : undefined
+            : editingItem.field === 'employeeCount'
+              ? 9999999
+              : undefined
         }
         maxLength={maxLength}
         validate={validate}

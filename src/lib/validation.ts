@@ -25,3 +25,21 @@ export function validateCompanyName(companyName: string) {
 
   return undefined;
 }
+
+export function validateEmployeeCount(value: string): string | undefined {
+  const trimmed = value.trim();
+
+  if (!trimmed) return undefined;
+
+  const count = Number(trimmed);
+
+  if (!Number.isInteger(count) || count < 0) {
+    return '사원수는 0명 이상의 정수로 입력해주세요.';
+  }
+
+  if (count > 9999999) {
+    return '사원수는 최대 9,999,999명까지 입력할 수 있습니다.';
+  }
+
+  return undefined;
+}
