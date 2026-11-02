@@ -50,7 +50,7 @@ export default function JobPostCard({
     educationLabel,
     post.location,
     employmentTypeLabel,
-  ];
+  ].filter((item): item is string => typeof item === 'string' && item.trim() !== '');
 
   return (
     <article className="flex items-center justify-between border-b border-gray-300 px-5 py-8">
