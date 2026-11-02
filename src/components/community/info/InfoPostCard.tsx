@@ -6,6 +6,8 @@ import { getOptionLabel } from '@/lib/getOptionLabel';
 
 import { INFO_SORT_OPTIONS, POST_CONTENT_CLASS } from '@/app/(app)/community/_constants/community';
 
+import { formatLikeCount } from '@/lib/formatLikeCount';
+
 import ViewIcon from '@/assets/icons/common/view.svg';
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
@@ -89,7 +91,9 @@ export default function InfoPostCard({
                 ) : (
                   <LikeOutlineIcon className="w-[14px] text-gray-500" />
                 )}
-                <span>{post.likeCount}</span>
+                <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : '')}>
+                  {formatLikeCount(post.likeCount)}
+                </span>
               </button>
 
               <div className="flex items-center gap-1">

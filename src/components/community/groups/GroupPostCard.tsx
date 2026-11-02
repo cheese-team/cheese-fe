@@ -7,6 +7,7 @@ import ProfileImage from '@/components/common/ProfileImage';
 
 import { cn } from '@/lib/cn';
 import { formatDeadline, isRecruitClosed } from '@/lib/formatDeadline';
+import { formatLikeCount } from '@/lib/formatLikeCount';
 
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
@@ -94,7 +95,9 @@ export default function GroupPostCard({
               <LikeOutlineIcon className="w-[13px] text-gray-500" />
             )}
 
-            <span>{post.likeCount}</span>
+            <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : '')}>
+              {formatLikeCount(post.likeCount)}
+            </span>
           </button>
 
           <div className="flex items-center gap-1">

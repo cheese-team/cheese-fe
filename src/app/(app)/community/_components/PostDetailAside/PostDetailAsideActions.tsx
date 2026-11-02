@@ -6,6 +6,8 @@ import { Button } from '@/components/common/Button';
 
 import ApplyModal from '../ApplyModal';
 
+import { formatLikeCount } from '@/lib/formatLikeCount';
+
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
 import ShareIcon from '@/assets/icons/common/contact.svg';
@@ -68,20 +70,20 @@ export default function PostDetailAsideActions({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-col gap-2">
       <Button
         variant="outlineGray"
         onClick={handleToggleLike}
         disabled={isLikePending}
         size={54}
-        width={46}
-        className="border-gray-400"
+        className="flex w-full items-center justify-center gap-1 border-gray-400"
       >
         {displayedIsLiked ? (
           <LikeFilledIcon className="text-error-subtle w-[14px]" />
         ) : (
           <LikeOutlineIcon className="w-[14px] text-gray-500" />
         )}
+        <span className="text-gray-500">{formatLikeCount(post.likeCount)}</span>
       </Button>
 
       {onApply && (
@@ -89,7 +91,6 @@ export default function PostDetailAsideActions({
           disabled={isClosed || isApplyPending || isApplied}
           onClick={handleApplyClick}
           size={54}
-          width={182}
           className="flex gap-3"
         >
           <ShareIcon className="h-[13px]" />

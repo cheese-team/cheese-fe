@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { formatDeadline, isRecruitClosed } from '@/lib/formatDeadline';
 import { getOptionLabel } from '@/lib/getOptionLabel';
 import { toFieldSelectValue } from '@/lib/jobField';
+import { formatLikeCount } from '@/lib/formatLikeCount';
 
 import {
   CAREER_OPTIONS,
@@ -77,7 +78,7 @@ export default function JobPostCard({
         <span className="text-[12px] leading-5">{formatDeadline(post.deadline)}</span>
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex flex-col gap-1">
         <button
           type="button"
           disabled={isLikePending}
@@ -97,7 +98,7 @@ export default function JobPostCard({
           )}
 
           <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : '')}>
-            {post.likeCount}
+            {formatLikeCount(post.likeCount)}
           </span>
         </button>
         <JobApplyAction
