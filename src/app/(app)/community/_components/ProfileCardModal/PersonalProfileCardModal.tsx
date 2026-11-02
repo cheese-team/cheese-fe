@@ -31,7 +31,6 @@ export default function PersonalProfileCardModal({
         <DocumentLinkItemList
           document={profile.coverLetter ?? { fileName: '', url: '' }}
           urlLabel={profile.coverLetter?.urlLabel || '자기소개서 URL'}
-          labelClassName="text-gray-950 no-underline"
         />
       ),
     },

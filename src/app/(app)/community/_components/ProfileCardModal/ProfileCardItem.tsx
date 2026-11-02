@@ -9,14 +9,17 @@ type ProfileCardItemProps = {
 export default function ProfileCardItem({
   label,
   value,
-  valueClassName = 'border border-gray-400 py-2 text-gray-700 h-[46px]',
+  valueClassName = 'border border-gray-400 text-gray-700',
 }: ProfileCardItemProps) {
   return (
-    <div className="flex w-full min-w-0 flex-col gap-4 self-center">
+    <div className="flex h-full w-full min-w-0 flex-col gap-4">
       <span className="h-[19px] font-medium text-gray-800">{label}</span>
+
       <div
-        title={typeof value === 'string' ? value : undefined}
-        className={cn('block w-full truncate rounded-[10px] px-5', valueClassName)}
+        className={cn(
+          'max-h-[120px] min-h-[46px] w-full min-w-0 flex-1 overflow-y-auto rounded-[10px] px-5 py-2 wrap-break-word',
+          valueClassName,
+        )}
       >
         {value}
       </div>

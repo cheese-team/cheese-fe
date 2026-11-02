@@ -109,7 +109,7 @@ export default function ProfileCardModal({
                   </Button>
                 </section>
 
-                <div className="grid grid-cols-2 gap-x-8 gap-y-5 max-xl:grid-cols-1">
+                <div className="grid grid-cols-2 items-stretch gap-x-8 gap-y-5 max-xl:grid-cols-1">
                   {profileItems.map((item) => (
                     <ProfileCardItem
                       key={item.label}
