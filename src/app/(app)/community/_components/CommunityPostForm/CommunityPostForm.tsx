@@ -17,6 +17,7 @@ type CommunityPostFormProps = {
   onSubmit: (event: React.FormEvent<HTMLFormElement>, content: string) => void;
   initialContent?: string;
   isSubmitting?: boolean;
+  noValidate?: boolean;
   children: ReactNode;
 };
 
@@ -25,6 +26,7 @@ export default function CommunityPostForm({
   onSubmit,
   initialContent = '',
   isSubmitting = false,
+  noValidate = false,
   children,
 }: CommunityPostFormProps) {
   const [content, setContent] = useState(initialContent);
@@ -79,6 +81,7 @@ export default function CommunityPostForm({
 
         <form
           id={formId}
+          noValidate={noValidate}
           onSubmit={(event) => onSubmit(event, content)}
           className="flex flex-col gap-2 px-25 py-8"
         >

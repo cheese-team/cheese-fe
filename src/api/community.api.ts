@@ -14,6 +14,7 @@ import type {
   InfoPostDetail,
   JobPost,
   JobPostDetail,
+  JobPostLink,
   UserSummary,
 } from '@/types/community/community';
 import type {
@@ -85,6 +86,7 @@ export type CreateJobPostRequest = {
   skills: string[];
   deadline: string | null;
   apply: ApplyInfo;
+  links?: JobPostLink[];
   content: string;
 };
 

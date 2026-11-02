@@ -19,9 +19,14 @@ import { useToggleJobPostLike } from '@/queries/community/useToggleJobPostLike';
 import { getOptionLabel } from '@/lib/getOptionLabel';
 import { isRecruitClosed } from '@/lib/formatDeadline';
 import { formatDate } from '@/lib/formatDate';
+import { isHttpUrl } from '../_lib/isHttpUrl';
 
 import { APPLY_LABEL } from '@/components/community/jobs/constants';
-import { EDUCATION_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from '@/constants/profileOptions';
+import {
+  CAREER_OPTIONS,
+  EDUCATION_OPTIONS,
+  EMPLOYMENT_TYPE_OPTIONS,
+} from '@/constants/profileOptions';
 
 import { POST_CONTENT_CLASS } from '../../_constants/community';
 
@@ -59,18 +64,22 @@ export default function JobDetailPage() {
     );
   }
 
-  const applyUrl = jobPost.apply.type === 'homepage' ? jobPost.apply.url : '-';
+  const applyUrl =
+    jobPost.apply.type === 'homepage'
+      ? jobPost.apply.url
+      : jobPost.links?.find((link) => link.type === 'homepage')?.url;
 
   const isClosed = isRecruitClosed(jobPost.deadline);
 
   const jobInfoItems = [
-    { label: '모집 분야', value: formatField(jobPost.field) },
-    { label: '근무 지역', value: jobPost.location },
-    { label: '사용 기술', value: jobPost.skills.join(', ') },
+    { label: '회사명', value: jobPost.companyName || '-' },
+    { label: '모집 분야', value: formatField(jobPost.field) || '-' },
+    { label: '근무 지역', value: jobPost.location || '-' },
+    { label: '사용 기술', value: jobPost.skills.join(', ') || '-' },
     {
       label: '공고 URL',
       value:
-        jobPost.apply.type === 'homepage' ? (
+        applyUrl && isHttpUrl(applyUrl) ? (
           <a
             href={applyUrl}
             target="_blank"
@@ -83,9 +92,22 @@ export default function JobDetailPage() {
           '-'
         ),
     },
-    { label: '학력', value: getOptionLabel(EDUCATION_OPTIONS, jobPost.education) },
-    { label: '고용 형태', value: getOptionLabel(EMPLOYMENT_TYPE_OPTIONS, jobPost.employmentType) },
-    { label: '지원 마감일', value: jobPost.deadline ? formatDate(jobPost.deadline) : '상시모집' },
+    {
+      label: '학력',
+      value: getOptionLabel(EDUCATION_OPTIONS, jobPost.education) || '-',
+    },
+    {
+      label: '경력',
+      value: getOptionLabel(CAREER_OPTIONS, jobPost.career) || '-',
+    },
+    {
+      label: '고용 형태',
+      value: getOptionLabel(EMPLOYMENT_TYPE_OPTIONS, jobPost.employmentType) || '-',
+    },
+    {
+      label: '지원 마감일',
+      value: jobPost.deadline ? formatDate(jobPost.deadline) : '상시모집',
+    },
     { label: '지원 방법', value: APPLY_LABEL[jobPost.apply.type] },
   ];
 

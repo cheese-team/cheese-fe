@@ -25,6 +25,8 @@ export type ApplyInfo =
       type: 'direct';
     };
 
+export type JobPostLink = ApplyInfo & { label?: string };
+
 export type JobPost = {
   id: string;
   companyName: string;
@@ -48,6 +50,7 @@ export type JobPost = {
   likeCount: number;
 
   apply: ApplyInfo;
+  links?: JobPostLink[];
 
   isLiked: boolean;
   isApplied: boolean;
