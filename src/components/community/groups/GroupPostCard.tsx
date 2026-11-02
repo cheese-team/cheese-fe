@@ -64,18 +64,24 @@ export default function GroupPostCard({
         </Link>
       </div>
 
-      <div className="text-[14px] leading-7 text-gray-700">
+      <div className="flex h-14 flex-col justify-end text-[14px] leading-7 text-gray-700">
         <div>모집인원: {post.recruitCount}명</div>
         {post.expectedPeriod?.trim() && <div>예상기간: {post.expectedPeriod}</div>}
       </div>
 
       <div className="flex items-center justify-between text-[12px] leading-[26px] text-gray-600">
-        <div className="flex items-center gap-[10.5px] pl-0.5">
-          <ProfileImage src={post.author.profileImageUrl} size={24} />
-          <div>{post.author.displayName} 님</div>
+        <div className="flex min-w-0 items-center gap-[10.5px] pl-0.5">
+          <div className="shrink-0">
+            <ProfileImage src={post.author.profileImageUrl} size={24} />
+          </div>
+
+          <div className="flex min-w-0 items-center gap-1">
+            <span className="min-w-0 truncate">{post.author.displayName}</span>
+            <span className="shrink-0">님</span>
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="ml-3 flex shrink-0 gap-2">
           <button
             type="button"
             disabled={isLikePending}
@@ -99,11 +105,6 @@ export default function GroupPostCard({
               {formatLikeCount(post.likeCount)}
             </span>
           </button>
-
-          <div className="flex items-center gap-1">
-            <CommentIcon className="w-[15px] text-gray-500" />
-            <span>{post.commentCount}</span>
-          </div>
         </div>
       </div>
     </article>
