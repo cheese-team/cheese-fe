@@ -1,5 +1,16 @@
+import { useRef } from 'react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
+
+import {
+  dropdownContentStyle,
+  dropdownOptionStyle,
+  dropdownOptionInteractiveStyle,
+} from '@/components/common/styles/dropdown';
+
+import { cn } from '@/lib/cn';
 
 import { resizeTextarea } from './utils';
 
@@ -12,16 +23,20 @@ export default function CommentItem({
   comment,
   isMine,
   isEditing,
-  isMenuOpen,
   editingValue,
   textareaRef,
-  onToggleMenu,
   onStartEdit,
   onChangeEditingValue,
   onUpdate,
   onCancelEdit,
   onDelete,
 }: CommentItemProps) {
+  const focusEditorOnCloseRef = useRef(false);
+  const optionClassName = cn(
+    dropdownOptionStyle,
+    !disabled && dropdownOptionInteractiveStyle,
+    'data-[highlighted]:bg-gray-200 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
+  );
   return (
     <li key={comment.id} className="relative flex items-start gap-3">
       <div className="p-[5px]">
@@ -77,44 +92,61 @@ export default function CommentItem({
           )}
         </div>
 
-        <button
-          type="button"
-          disabled={disabled}
-          className="mt-4 flex w-[33px] justify-center"
-          onClick={() => onToggleMenu(comment.id)}
-        >
-          <MoreIcon className="h-3" />
-        </button>
-      </div>
-
-      {/* TODO: 공통 드롭다운 교체 예정 */}
-      {isMenuOpen && (
-        <div className="bg-bg-white absolute top-2 right-8 z-10 flex w-25 flex-col gap-2 rounded-[10px] border border-gray-400 py-3 text-[12px] leading-5">
-          {isMine ? (
-            <>
-              <button
-                type="button"
-                className="mx-3 rounded-[5px] px-2 text-left hover:bg-gray-200"
-                onClick={() => onStartEdit(comment)}
-                disabled={disabled}
-              >
-                수정
-              </button>
-              <button
-                type="button"
-                className="mx-3 rounded-[5px] px-2 text-left hover:bg-gray-200"
-                onClick={() => onDelete(comment.id)}
-              >
-                삭제
-              </button>
-            </>
-          ) : (
-            <button type="button" className="mx-3 rounded-[5px] px-2 text-left hover:bg-gray-200">
-              신고
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              aria-label="댓글 더보기"
+              className="mt-4 flex w-[33px] shrink-0 justify-center self-start"
+            >
+              <MoreIcon className="h-3" aria-hidden="true" />
             </button>
-          )}
-        </div>
-      )}
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              side="left"
+              align="start"
+              alignOffset={-8}
+              className={cn(dropdownContentStyle, 'z-[60] flex w-25 flex-col gap-2')}
+              onCloseAutoFocus={(event) => {
+                if (focusEditorOnCloseRef.current) {
+                  event.preventDefault();
+                  focusEditorOnCloseRef.current = false;
+                  textareaRef.current?.focus();
+                }
+              }}
+            >
+              {isMine ? (
+                <>
+                  <DropdownMenu.Item
+                    disabled={disabled}
+                    className={optionClassName}
+                    onSelect={() => {
+                      focusEditorOnCloseRef.current = true;
+                      onStartEdit(comment);
+                    }}
+                  >
+                    수정
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    disabled={disabled}
+                    className={optionClassName}
+                    onSelect={() => onDelete(comment.id)}
+                  >
+                    삭제
+                  </DropdownMenu.Item>
+                </>
+              ) : (
+                // TODO: 신고 모달 연결
+                <DropdownMenu.Item disabled={disabled} className={optionClassName}>
+                  신고
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      </div>
     </li>
   );
 }

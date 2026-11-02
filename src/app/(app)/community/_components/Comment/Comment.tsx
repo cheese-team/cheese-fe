@@ -1,14 +1,17 @@
 'use client';
 
 import { Fragment, useEffect, useRef, useState } from 'react';
+
+import { Button } from '@/components/common/Button';
+import CommunityListState from '../CommunityListState';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
-import CommunityListState from '../CommunityListState';
-import { Button } from '@/components/common/Button';
+
 import { ApiError } from '@/api/client';
 import { useComments } from '@/queries/community/useComments';
 import { useCommentMutations } from '@/queries/community/useCommentMutations';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import type { CommunityCommentCategory, CommunityCommentResult } from '@/types/community/comment';
 
 type CommentProps = { category: CommunityCommentCategory; postId: string };
@@ -27,7 +30,6 @@ export default function Comment({ category, postId }: CommentProps) {
   const { create, update, remove } = useCommentMutations({ category, postId });
   const { data: user } = useCurrentUser();
 
-  const [openCommentId, setOpenCommentId] = useState<string | null>(null);
   const [commentValue, setCommentValue] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
@@ -88,15 +90,12 @@ export default function Comment({ category, postId }: CommentProps) {
       disabled={disabled}
       isMine={!!user && comment.author.userId === user.account.userId}
       isEditing={editingCommentId === comment.id}
-      isMenuOpen={openCommentId === comment.id}
       editingValue={editingValue}
       textareaRef={editingTextareaRef}
-      onToggleMenu={(id) => setOpenCommentId((current) => (current === id ? null : id))}
       onStartEdit={(item) => {
         if (disabled || item.author.userId !== user?.account.userId) return;
         setEditingCommentId(item.id);
         setEditingValue(item.content);
-        setOpenCommentId(null);
       }}
       onChangeEditingValue={setEditingValue}
       onUpdate={(commentId) => {
@@ -120,9 +119,6 @@ export default function Comment({ category, postId }: CommentProps) {
       onDelete={(commentId) => {
         if (disabled || comment.author.userId !== user?.account.userId) return;
         remove.mutate(commentId, {
-          onSuccess: () => {
-            setOpenCommentId(null);
-          },
           onError,
         });
       }}
