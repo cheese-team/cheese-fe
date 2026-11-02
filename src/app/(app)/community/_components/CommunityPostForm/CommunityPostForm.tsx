@@ -46,7 +46,6 @@ export default function CommunityPostForm({
   const formId = 'community-post-form';
 
   const handleBackClick = () => {
-    // TODO: 공통 ConfirmModal 적용
     const isConfirmed = window.confirm('작성 중인 내용이 사라집니다. 이동하시겠습니까?');
 
     if (!isConfirmed) return;
