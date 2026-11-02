@@ -157,6 +157,7 @@ export function applyJobPost({ jobId }: JobPostApplyRequest) {
       Group
    ================================ */
 
+// 등록·수정 및 마이페이지 응답은 아직 확인되지 않아 기존 계약을 유지합니다.
 export type GroupPostResponse = Omit<GroupPost, 'author'> & {
   author: Omit<UserSummary, 'profileType'> & { type: UserSummary['profileType'] };
 };
@@ -164,7 +165,7 @@ export type GroupPostResponse = Omit<GroupPost, 'author'> & {
 export type GroupPostsResponse = {
   nextCursor: string | null;
   hasMore: boolean;
-  items: GroupPost[];
+  items: (Omit<GroupPost, 'author'> & { author: CommunityAuthor })[];
 };
 
 export function mapGroupPost({ author, ...post }: GroupPostResponse): GroupPost {
@@ -179,16 +180,12 @@ export async function getGroupPosts({
   limit = 20,
   signal,
 }: GroupPostsListParams & { signal?: AbortSignal } = {}): Promise<GroupPostsResponse> {
-  const response = await apiClient<
-    Omit<GroupPostsResponse, 'items'> & { items: GroupPostResponse[] }
-  >('/backend-api/community/groups', {
+  return apiClient<GroupPostsResponse>('/backend-api/community/groups', {
     method: 'GET',
     cache: 'no-store',
     query: { sort, keyword, cursor, limit: limit.toString() },
     signal,
   });
-
-  return { ...response, items: response.items.map(mapGroupPost) };
 }
 
 type GetGroupPostParams = {

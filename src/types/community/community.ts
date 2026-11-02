@@ -3,9 +3,10 @@ export type CommunityAuthor = {
   profileType: 'personal' | 'company';
   displayName: string;
   email: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
 };
 
+// TODO: 미확인 목록·등록·수정 API의 기존 작성자 계약. 응답 확인 후 통합합니다.
 export type UserSummary = {
   id: number;
   profileType: 'personal' | 'company';
@@ -63,7 +64,8 @@ export type GroupPost = {
   field: Field[];
   title: string;
 
-  author: UserSummary;
+  // TODO:목록은 CommunityAuthor, 미확인 등록·수정·마이페이지 응답은 기존 계약을 유지합니다.
+  author: CommunityAuthor | UserSummary;
 
   recruitCount: number;
   expectedPeriod: string;

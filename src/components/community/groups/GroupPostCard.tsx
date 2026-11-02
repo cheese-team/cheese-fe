@@ -65,13 +65,15 @@ export default function GroupPostCard({
 
       <div className="text-[14px] leading-7 text-gray-700">
         <div>모집인원: {post.recruitCount}명</div>
-        <div>예상기간: {post.expectedPeriod}</div>
+        {post.expectedPeriod?.trim() && <div>예상기간: {post.expectedPeriod}</div>}
       </div>
 
       <div className="flex items-center justify-between text-[12px] leading-[26px] text-gray-600">
         <div className="flex items-center gap-[10.5px] pl-0.5">
           <ProfileImage src={post.author.profileImageUrl} size={24} />
-          <div>{post.author.nickname} 님</div>
+          <div>
+            {'displayName' in post.author ? post.author.displayName : post.author.nickname} 님
+          </div>
         </div>
 
         <div className="flex gap-2">

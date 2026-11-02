@@ -57,7 +57,9 @@ export default function GroupBookmarkList({ sort, keyword }: GroupBookmarkListPr
 
       return (
         post.title.toLowerCase().includes(normalizedKeyword) ||
-        post.author.nickname.toLowerCase().includes(normalizedKeyword) ||
+        ('displayName' in post.author ? post.author.displayName : post.author.nickname)
+          .toLowerCase()
+          .includes(normalizedKeyword) ||
         post.field.some((field) => field.toLowerCase().includes(normalizedKeyword)) ||
         post.skills.some((skill) => skill.toLowerCase().includes(normalizedKeyword))
       );
