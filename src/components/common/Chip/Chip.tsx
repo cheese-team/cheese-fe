@@ -33,8 +33,8 @@ const variantStyles: Record<ChipVariant, string> = {
   personal: 'bg-bg-3 text-gray-950',
 
   // 마이페이지(프로필) 영역
-  profilePersonal: 'bg-tag-yellow-100 text-gray-950',
-  profileCompany: 'bg-tag-blue-100 text-gray-950',
+  profilePersonal: 'bg-tag-blue-100 text-gray-950',
+  profileCompany: 'bg-tag-purple-100 text-gray-950',
 };
 
 const sizeStyles: Record<ChipSize, string> = {
