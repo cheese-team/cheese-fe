@@ -25,12 +25,15 @@ import UploadIcon from '@/assets/icons/common/upload.svg';
 import CloseIcon from '@/assets/icons/common/close.svg';
 
 import type { InfoPost } from '@/types/community/community';
+import type { CreateInfoPostRequest } from '@/api/community.api';
 
 const INFO_CATEGORY_OPTIONS = INFO_SORT_OPTIONS.filter((option) => option.value !== 'all');
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
+
+type FormErrors = Partial<Record<'title' | 'category', string>>;
 
 type InfoPostFormProps = {
   mode: 'create' | 'edit';
@@ -40,6 +43,11 @@ type InfoPostFormProps = {
 export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps) {
   const router = useRouter();
 
+  const [errors, setErrors] = useState<FormErrors>({});
+  const clearError = (name: keyof FormErrors) => {
+    setErrors((previous) => ({ ...previous, [name]: undefined }));
+  };
+
   const { data: user } = useCurrentUser();
   const { mutateAsync: createInfoPost, isPending: isCreatePending } = useCreateInfoPost();
   const { mutateAsync: updateInfoPost, isPending: isUpdatePending } = useUpdateInfoPost();
@@ -48,17 +56,22 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
   const isSubmitting =
     isCreatePending || isUpdatePending || isUploadPending || isDocumentUploadPending;
 
-  const [category, setCategory] = useState(initialValues?.category ?? '');
+  const [category, setCategory] = useState<CreateInfoPostRequest['category'] | ''>(
+    initialValues?.category ?? '',
+  );
+
   const [isExistingFileRemoved, setIsExistingFileRemoved] = useState(false);
 
   const { files, fileInputRef, openFilePicker, addFiles, removeFile, openFile } = useFileUpload({
     multiple: false,
   });
 
-  const { tagInput, tags, setTagInput, removeTag, handleTagKeyDown } = useTagInput({
-    initialTags: initialValues?.tags ?? [],
-    maxTags: 5,
-  });
+  const { tagInput, tags, tagError, handleTagInputChange, removeTag, handleTagKeyDown } =
+    useTagInput({
+      initialTags: initialValues?.tags ?? [],
+      maxTags: 5,
+      maxLength: 20,
+    });
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
@@ -102,14 +115,27 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
     const formData = new FormData(event.currentTarget);
 
-    const title = String(formData.get('title') ?? '');
+    const title = String(formData.get('title') ?? '').trim();
+
+    const nextErrors: FormErrors = {};
+
+    if (!title) {
+      nextErrors.title = '제목을 입력해주세요.';
+    } else if (title.length > 100) {
+      nextErrors.title = '제목은 최대 100자까지 입력할 수 있습니다.';
+    }
+
+    if (category === '') {
+      nextErrors.category = '분류를 선택해주세요.';
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) return;
 
     if (mode === 'create') {
-      if (category !== 'question' && category !== 'info' && category !== 'resource') {
-        alert('분류를 선택해주세요.');
-        return;
-      }
-
       try {
         const file = files[0];
         const uploadedFile = file ? await uploadAttachment(file) : undefined;
@@ -132,11 +158,6 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
     }
 
     if (!user || !initialValues) return;
-
-    if (category !== 'question' && category !== 'info' && category !== 'resource') {
-      alert('분류를 선택해주세요.');
-      return;
-    }
 
     try {
       const file = files[0];
@@ -172,12 +193,16 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
       onSubmit={handleSubmit}
       initialContent={initialValues?.content ?? ''}
       isSubmitting={isSubmitting}
+      noValidate
     >
       <section className="flex flex-col gap-[30px]">
         <Input
           required
           label="제목"
           name="title"
+          maxLength={100}
+          errorMessage={errors.title}
+          onChange={() => clearError('title')}
           placeholder="제목"
           defaultValue={initialValues?.title ?? ''}
           className="h-16 border-0 text-[24px] tracking-normal"
@@ -185,8 +210,28 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
         />
 
         <div className="flex flex-col gap-y-6">
-          <FormField label="분류" labelClassName="text-[14px]" className="w-full max-w-[300px]">
-            <Select value={category} options={INFO_CATEGORY_OPTIONS} onChange={setCategory} />
+          <FormField
+            label="분류"
+            labelClassName="text-[14px]"
+            className="w-full max-w-[300px]"
+            required
+          >
+            <Select
+              value={category}
+              options={INFO_CATEGORY_OPTIONS}
+              onChange={(value) => {
+                if (value === 'question' || value === 'info' || value === 'resource') {
+                  setCategory(value);
+                  clearError('category');
+                }
+              }}
+            />
+
+            {errors.category && (
+              <p role="alert" className="text-text-error text-xs font-medium tracking-[-0.04em]">
+                {errors.category}
+              </p>
+            )}
           </FormField>
 
           <div className="flex flex-col gap-2">
@@ -281,7 +326,8 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
               name="tags"
               placeholder="# 최대 5개의 태그를 설정할 수 있습니다"
               value={tagInput}
-              onChange={(event) => setTagInput(event.target.value)}
+              errorMessage={tagError || undefined}
+              onChange={(event) => handleTagInputChange(event.target.value)}
               onKeyDown={handleTagKeyDown}
               className="h-[30px]"
               inputClassName="font-medium"
