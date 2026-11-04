@@ -1,12 +1,10 @@
-import { DocumentLinkItem, DocumentLinkItemList } from '@/components/common/DocumentLink';
-import FileIcon from '@/assets/icons/common/file.svg';
-import LinkIcon from '@/assets/icons/common/link.svg';
-
 import type { Ref } from 'react';
 
+import { DocumentLinkItemList } from '@/components/common/DocumentLink';
 import ProfileCardModal from './ProfileCardModal';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
+import { getProfileWebHref } from '@/lib/getProfileWebHref';
 
 import { CONTACT_METHOD_OPTIONS } from '@/constants/profileOptions';
 
@@ -51,14 +49,19 @@ export default function CompanyProfileCardModal({
     },
   ];
 
+  const contactHref =
+    profile.contactMethod === 'kakaoOpenChat' || profile.contactMethod === 'googleForm'
+      ? getProfileWebHref(profile.contactUrl)
+      : null;
+
   const handleContactClick = () => {
     if (profile.contactMethod === 'email' && profile.email) {
       window.location.href = `mailto:${profile.email}`;
       return;
     }
 
-    if (profile.contactMethod && profile.contactMethod !== 'email' && profile.contactUrl) {
-      window.open(profile.contactUrl, '_blank', 'noopener,noreferrer');
+    if (contactHref) {
+      window.open(contactHref, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -74,10 +77,7 @@ export default function CompanyProfileCardModal({
       gradientClassName="from-[#DBC0E4] via-[#DDD6D7] to-[#DFECCB]"
       profileItems={profileItems}
       onContact={handleContactClick}
-      contactDisabled={
-        !profile.contactMethod ||
-        !(profile.contactMethod === 'email' ? profile.email : profile.contactUrl)
-      }
+      contactDisabled={profile.contactMethod === 'email' ? !profile.email?.trim() : !contactHref}
     />
   );
 }
