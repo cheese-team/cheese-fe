@@ -28,6 +28,26 @@ type SelectEditModalProps = {
   onSave: (value: SelectEditValue) => void;
 };
 
+const validateContactUrl = (value: string): string | undefined => {
+  const trimmedUrl = value.trim();
+
+  if (!trimmedUrl) {
+    return 'URL을 입력해 주세요.';
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return 'http 또는 https URL을 입력해 주세요.';
+    }
+  } catch {
+    return '올바른 URL 형식으로 입력해 주세요.';
+  }
+
+  return undefined;
+};
+
 export default function SelectEditModal({
   title,
   inputLabel,
@@ -44,18 +64,25 @@ export default function SelectEditModal({
   const formId = useId();
 
   const [selectedValue, setSelectedValue] = useState(value);
+
   const [url, setUrl] = useState(contactUrl ?? '');
   const [email, setEmail] = useState(contactEmail ?? '');
+
   const [verifiedEmail, setVerifiedEmail] = useState<string>();
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+
   const [emailError, setEmailError] = useState<string>();
+  const [urlError, setUrlError] = useState<string>();
+
   const isDisabled = disabled;
 
   const isEmailSelected = hasContactInput && selectedValue === '이메일';
   const hasUrlInput =
     hasContactInput && (selectedValue === '오픈 카카오톡' || selectedValue === '구글 폼');
   const needsEmailVerification =
-    isEmailSelected && email.trim() !== contactEmail && email.trim() !== verifiedEmail;
+    isEmailSelected &&
+    email.trim() !== (contactEmail ?? '').trim() &&
+    email.trim() !== verifiedEmail;
 
   // TODO: contact-change 인증 시 본인의 로그인 이메일로 변경하면
   // 인증번호 발송 단계에서 400 오류 발생
@@ -82,6 +109,14 @@ export default function SelectEditModal({
       )?.value;
 
       if (!contactMethod) return;
+
+      if (contactMethod !== 'email') {
+        const validationError = validateContactUrl(url);
+
+        setUrlError(validationError);
+
+        if (validationError) return;
+      }
 
       onSave({
         contactMethod,
@@ -142,6 +177,7 @@ export default function SelectEditModal({
               onChange={(e) => {
                 setSelectedValue(e.target.value);
                 setUrl(e.target.value === value ? (contactUrl ?? '') : '');
+                setUrlError(undefined);
               }}
               className="flex-1 appearance-none outline-none"
             >
@@ -186,7 +222,11 @@ export default function SelectEditModal({
               className="h-10 px-2"
               value={url}
               disabled={isDisabled}
-              onChange={(e) => setUrl(e.target.value)}
+              errorMessage={urlError}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setUrlError(undefined);
+              }}
             />
           )}
         </form>
