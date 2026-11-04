@@ -24,9 +24,10 @@ export function syncPostViewCount(
       if (queryClient.getQueryCache().get(query.queryHash) !== query) return;
 
       const current = query.state.data as PostListData | undefined;
+
       if (
         !current?.pages.some((page) =>
-          page.items.some((item) => item.id === detail.id && item.viewCount !== detail.viewCount),
+          page.items.some((item) => item.id === detail.id && item.viewCount < detail.viewCount),
         )
       ) {
         return;
@@ -38,10 +39,13 @@ export function syncPostViewCount(
           ...current,
           pages: current.pages.map((page) => {
             if (!page.items.some((item) => item.id === detail.id)) return page;
+
             return {
               ...page,
               items: page.items.map((item) =>
-                item.id === detail.id ? { ...item, viewCount: detail.viewCount } : item,
+                item.id === detail.id && item.viewCount < detail.viewCount
+                  ? { ...item, viewCount: detail.viewCount }
+                  : item,
               ),
             };
           }),
@@ -51,22 +55,28 @@ export function syncPostViewCount(
     };
 
     const pendingRequest = query.promise;
+
     update(post);
 
     if (query.state.fetchStatus !== 'idle' && pendingRequest) {
       const detailHash = hashKey(detailKey);
+
       let responses = pendingViewCounts.get(pendingRequest);
+
       if (!responses) {
         responses = new Map();
         pendingViewCounts.set(pendingRequest, responses);
       }
+
       responses.set(detailHash, { id: post.id, viewCount: post.viewCount });
 
       void pendingRequest.then(
         () => {
           if (signal.aborted) return;
+
           // queryFn can finish before its response is committed to the detail cache.
           const latest = responses.get(detailHash);
+
           if (latest) update(latest);
         },
         () => {},
