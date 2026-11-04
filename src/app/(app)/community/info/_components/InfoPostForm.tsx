@@ -80,7 +80,9 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
     if (!file) return;
 
     const isDocument = /\.(pdf|docx)$/i.test(file.name);
-    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isImage = file.type
+      ? ALLOWED_IMAGE_TYPES.includes(file.type)
+      : /\.(jpe?g|png|gif|webp)$/i.test(file.name);
 
     if (!isDocument && !isImage) {
       alert('JPG, PNG, GIF, WEBP, PDF, DOCX 파일만 첨부할 수 있습니다.');
