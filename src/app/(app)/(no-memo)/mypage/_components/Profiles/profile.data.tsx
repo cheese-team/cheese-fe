@@ -3,7 +3,6 @@ import type { HTMLInputTypeAttribute, ReactNode } from 'react';
 import {
   CompanyIcon,
   DocumentsIcon,
-  EmailIcon,
   IndustryIcon,
   LocationIcon,
   LogoutIcon,
@@ -237,29 +236,23 @@ export function getCompanyProfileItems(profile: CompanyProfile): SettingItemData
 }
 
 export function getAccountItems(profile: AccountSettings): SettingItemData[] {
+  const contactMethodLabel = getOptionLabel(CONTACT_METHOD_OPTIONS, profile.contactMethod);
+  const contactValue =
+    profile.contactMethod === 'email' ? profile.contactEmail : profile.contactUrl;
+
   return [
-    // TODO: 이메일을 연락용으로 사용할지 여부 확인 후 수정 플로우 반영
     {
       section: 'accountSettings',
       field: 'contactMethod',
       label: '선호하는 연락방식',
-      value: getOptionLabel(CONTACT_METHOD_OPTIONS, profile.contactMethod),
+      value: contactValue ? `${contactMethodLabel} (${contactValue})` : contactMethodLabel,
+      editValue: contactMethodLabel,
       contactUrl: profile.contactUrl,
       icon: <ContactIcon className="h-6" />,
       buttonIcon: <EditIcon className="h-[14px]" />,
       buttonText: '변경',
       options: CONTACT_METHOD_OPTIONS.map((option) => option.label),
       modalType: 'select',
-    },
-    {
-      section: 'accountSettings',
-      field: 'email',
-      label: '이메일',
-      value: profile.contactEmail,
-      icon: <EmailIcon className="h-6" />,
-      buttonIcon: <EditIcon className="h-[14px]" />,
-      buttonText: '변경',
-      modalType: 'text',
     },
     {
       section: 'accountAction',

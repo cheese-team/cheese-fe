@@ -18,6 +18,10 @@ import { useInfoPost } from '@/queries/community/useInfoPost';
 import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
 import CommunityListState from '../../_components/CommunityListState';
 
+import { shareUrl } from '@/lib/shareUrl';
+
+import ShareIcon from '@/assets/icons/common/share.svg';
+
 export default function InfoDetailPage() {
   const { infoId } = useParams<{ infoId: string }>();
   const { data: infoPost, error, isPending, refetch } = useInfoPost(infoId);
@@ -72,12 +76,12 @@ export default function InfoDetailPage() {
       <PostDetailAside
         profile={<PostDetailAsideProfile author={infoPost.author} />}
         actions={
-          <div className="flex w-full gap-2 px-3 py-5">
+          <div className="flex w-full gap-2 px-3 py-10 pt-2">
             <Button
               variant="outlineGray"
               size={54}
               width={90}
-              className="gap-2 border-gray-400"
+              className="shrink-0 gap-2 border-gray-400"
               aria-label="좋아요"
               aria-pressed={infoPost.isLiked}
               disabled={isLikePending}
@@ -93,11 +97,26 @@ export default function InfoDetailPage() {
               )}
               <span>{infoPost.likeCount}</span>
             </Button>
+
+            <Button
+              variant="outlineGray"
+              size={54}
+              className="border-secondary-600 text-secondary-600 min-w-0 flex-1 gap-3 font-medium"
+              onClick={() => {
+                void shareUrl({
+                  title: infoPost.title,
+                  url: window.location.href,
+                });
+              }}
+            >
+              <ShareIcon className="w-4" />
+              공유하기
+            </Button>
           </div>
         }
       >
         {infoPost.attachmentUrl && (
-          <div className="flex w-full flex-col gap-1 border-t border-gray-300 px-3 py-10 text-[14px] leading-6 text-gray-600">
+          <div className="flex w-full flex-col gap-1 border-t border-gray-300 px-3 pt-10 text-[14px] leading-6 text-gray-600">
             <div className="font-medium">첨부파일</div>
             <div className="flex items-start gap-1">
               <div className="flex h-6 w-6 shrink-0 items-center justify-center">

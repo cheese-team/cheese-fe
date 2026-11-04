@@ -16,8 +16,6 @@ export default function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // 기본 캐시 정책 (초기 설정)
-            // TODO: 실제 API 특성에 맞게 staleTime, retry 등을 조정할 예정
             staleTime: 1000 * 60,
             gcTime: 1000 * 60 * 10,
             retry: 1,

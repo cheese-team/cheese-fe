@@ -5,6 +5,7 @@ import { DocumentLinkItemList } from '@/components/common/DocumentLink';
 import ProfileCardModal from './ProfileCardModal';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
+import { getProfileWebHref } from '@/lib/getProfileWebHref';
 
 import { CONTACT_METHOD_OPTIONS } from '@/constants/profileOptions';
 
@@ -31,7 +32,6 @@ export default function PersonalProfileCardModal({
         <DocumentLinkItemList
           document={profile.coverLetter ?? { fileName: '', url: '' }}
           urlLabel={profile.coverLetter?.urlLabel || '자기소개서 URL'}
-          labelClassName="text-gray-950 no-underline"
         />
       ),
     },
@@ -56,14 +56,19 @@ export default function PersonalProfileCardModal({
     },
   ];
 
+  const contactHref =
+    profile.contactMethod === 'kakaoOpenChat' || profile.contactMethod === 'googleForm'
+      ? getProfileWebHref(profile.contactUrl)
+      : null;
+
   const handleContactClick = () => {
     if (profile.contactMethod === 'email' && profile.email) {
       window.location.href = `mailto:${profile.email}`;
       return;
     }
 
-    if (profile.contactMethod && profile.contactMethod !== 'email' && profile.contactUrl) {
-      window.open(profile.contactUrl, '_blank', 'noopener,noreferrer');
+    if (contactHref) {
+      window.open(contactHref, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -79,10 +84,7 @@ export default function PersonalProfileCardModal({
       gradientClassName="from-[#B5D2F0] via-[#ECE8E9] to-[#FDF7E1]"
       profileItems={profileItems}
       onContact={handleContactClick}
-      contactDisabled={
-        !profile.contactMethod ||
-        !(profile.contactMethod === 'email' ? profile.email : profile.contactUrl)
-      }
+      contactDisabled={profile.contactMethod === 'email' ? !profile.email?.trim() : !contactHref}
     />
   );
 }

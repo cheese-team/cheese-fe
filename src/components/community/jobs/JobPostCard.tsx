@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { formatDeadline, isRecruitClosed } from '@/lib/formatDeadline';
 import { getOptionLabel } from '@/lib/getOptionLabel';
 import { toFieldSelectValue } from '@/lib/jobField';
+import { formatLikeCount } from '@/lib/formatLikeCount';
 
 import {
   CAREER_OPTIONS,
@@ -23,7 +24,7 @@ import type { JobPost } from '@/types/community/community';
 import type { ToggleJobPostLikeParams } from '@/types/community/community';
 
 type JobPostCardProps = {
-  post: JobPost;
+  post: Omit<JobPost, 'author'>;
   onDirectApply: () => void;
   onToggleLike: (variables: ToggleJobPostLikeParams) => void;
   isLikePending?: boolean;
@@ -50,7 +51,7 @@ export default function JobPostCard({
     educationLabel,
     post.location,
     employmentTypeLabel,
-  ];
+  ].filter((item): item is string => typeof item === 'string' && item.trim() !== '');
 
   return (
     <article className="flex items-center justify-between border-b border-gray-300 px-5 py-8">
@@ -77,7 +78,7 @@ export default function JobPostCard({
         <span className="text-[12px] leading-5">{formatDeadline(post.deadline)}</span>
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex flex-col gap-1">
         <button
           type="button"
           disabled={isLikePending}
@@ -97,7 +98,7 @@ export default function JobPostCard({
           )}
 
           <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : '')}>
-            {post.likeCount}
+            {formatLikeCount(post.likeCount)}
           </span>
         </button>
         <JobApplyAction

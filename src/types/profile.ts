@@ -9,7 +9,6 @@ export type ProfileDocument = {
   urlLabel?: string;
 };
 
-// TODO: GET profile의 상세 필드와 필수 여부는 기존 타입을 임시 유지하며, 응답 스펙 확인 필요.
 export type PersonalProfile = {
   nickname: string;
   email: string;
@@ -25,7 +24,6 @@ export type PersonalProfile = {
   contactUrl?: string;
 };
 
-// TODO: GET profile의 상세 필드와 필수 여부는 기존 타입을 임시 유지하며, 응답 스펙 확인 필요.
 export type CompanyProfile = {
   companyName: string;
   email: string;
@@ -50,7 +48,9 @@ export type AccountSettings = {
   address: string;
 };
 
-export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUrl'>;
+export type ContactSettings = Pick<AccountSettings, 'contactMethod' | 'contactUrl'> & {
+  contactEmail?: string;
+};
 
 export type Mypage = {
   loginEmail: string;

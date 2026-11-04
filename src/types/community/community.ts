@@ -3,9 +3,10 @@ export type CommunityAuthor = {
   profileType: 'personal' | 'company';
   displayName: string;
   email: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
 };
 
+// Legacy profile mock data only; not an API response type
 export type UserSummary = {
   id: number;
   profileType: 'personal' | 'company';
@@ -25,12 +26,14 @@ export type ApplyInfo =
       type: 'direct';
     };
 
+export type JobPostLink = ApplyInfo & { label?: string };
+
 export type JobPost = {
   id: string;
   companyName: string;
   title: string;
 
-  author: UserSummary;
+  author: CommunityAuthor;
 
   field: Field[];
   skills: string[];
@@ -48,19 +51,20 @@ export type JobPost = {
   likeCount: number;
 
   apply: ApplyInfo;
+  links?: JobPostLink[];
 
   isLiked: boolean;
   isApplied: boolean;
 };
 
-export type JobPostDetail = Omit<JobPost, 'author'> & { author: CommunityAuthor };
+export type JobPostDetail = JobPost;
 
 export type GroupPost = {
   id: string;
   field: Field[];
   title: string;
 
-  author: UserSummary;
+  author: CommunityAuthor;
 
   recruitCount: number;
   expectedPeriod: string;
@@ -80,20 +84,16 @@ export type GroupPost = {
   isApplied: boolean;
 };
 
-export type GroupPostDetail = Omit<GroupPost, 'author'> & { author: CommunityAuthor };
+export type GroupPostDetail = GroupPost;
 
 export type InfoPost = {
   id: string;
   category: 'question' | 'info' | 'resource';
   title: string;
 
-  author: UserSummary;
+  author: CommunityAuthor;
 
-  // TODO: content 안에 첨부된 첫 번째 이미지를 썸네일로 사용
   thumbnailUrl?: string;
-
-  // 목록 카드 미리보기용 텍스트
-  // TODO: content에서 HTML/img를 제거한 순수 텍스트
   previewText: string;
 
   // 상세 본문 HTML
@@ -112,7 +112,7 @@ export type InfoPost = {
   isLiked: boolean;
 };
 
-export type InfoPostDetail = Omit<InfoPost, 'author'> & { author: CommunityAuthor };
+export type InfoPostDetail = InfoPost;
 
 export type ToggleInfoPostLikeParams = {
   infoId: string;

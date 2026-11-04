@@ -12,6 +12,9 @@ type TextEditModalProps = {
   value?: string;
   inputType?: React.HTMLInputTypeAttribute;
   min?: number;
+  max?: string | number;
+  maxLength?: number;
+  validate?: (value: string) => string | undefined;
   isOpen: boolean;
   disabled: boolean;
   onClose: () => void;
@@ -25,12 +28,16 @@ export default function TextEditModal({
   value,
   inputType = 'text',
   min,
+  max,
+  maxLength,
+  validate,
   isOpen,
   disabled,
   onClose,
   onSave,
 }: TextEditModalProps) {
   const [inputValue, setInputValue] = useState(value ?? '');
+  const [error, setError] = useState<string>();
 
   const formId = useId();
 
@@ -39,7 +46,15 @@ export default function TextEditModal({
 
     if (disabled) return;
 
-    onSave(inputValue);
+    const validationError = validate?.(inputValue);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError(undefined);
+    onSave(validate ? inputValue.trim() : inputValue);
   };
 
   return (
@@ -50,16 +65,22 @@ export default function TextEditModal({
       submitFormId={formId}
       disabled={disabled}
     >
-      <form id={formId} onSubmit={handleSubmit}>
+      <form id={formId} onSubmit={handleSubmit} noValidate={!!validate}>
         <Input
           type={inputType}
           min={min}
+          max={max}
+          maxLength={maxLength}
           label={inputLabel}
           value={inputValue}
           placeholder={`${inputLabel} 입력`}
           className="h-10 px-2"
           disabled={disabled}
-          onChange={(e) => setInputValue(e.target.value)}
+          errorMessage={error}
+          onChange={(e) => {
+            setInputValue(e.target.value);
+            setError(undefined);
+          }}
         />
 
         {description && <p className="mt-3 text-[12px]">{description}</p>}

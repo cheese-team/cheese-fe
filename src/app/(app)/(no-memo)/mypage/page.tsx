@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
 import { Chip } from '@/components/common/Chip';
@@ -11,16 +12,20 @@ import MypageModalRenderer from './_components/Modal/MypageModalRenderer';
 import { useMypageModal } from './_components/Modal/useMypageModal';
 
 import { useMypage } from '@/queries/mypage/useMypage';
+import { mypageQueryKeys } from '@/queries/mypage/mypageQueryKeys';
 import { useUpdatePersonalProfile } from '@/queries/mypage/useUpdatePersonalProfile';
 import { useUpdateCompanyProfile } from '@/queries/mypage/useUpdateCompanyProfile';
 import { useUpdateAccountSettings } from '@/queries/mypage/useUpdateAccountSettings';
+import { useUpdateContactEmail } from '@/queries/mypage/useUpdateContactEmail';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 
-import type { ContactSettings, ProfileDocument } from '@/types/profile';
+import DeleteIcon from '@/assets/icons/common/close.svg';
+
+import type { ContactSettings, Mypage, ProfileDocument } from '@/types/profile';
 import type { MypageItemField, MypageItemSection } from './_components/Modal/types';
 
-// TODO: 연락용 이메일 변경 플로우 연동 (contact-change 이메일 인증 후 요청)
 export default function MyPage() {
+  const queryClient = useQueryClient();
   const { data: mypage, isPending: isMypagePending, isError: isMypageError } = useMypage();
 
   const { mutateAsync: updatePersonalProfile, isPending: isPersonalProfilePending } =
@@ -29,6 +34,8 @@ export default function MyPage() {
     useUpdateCompanyProfile();
   const { mutateAsync: updateAccountSettings, isPending: isAccountSettingsPending } =
     useUpdateAccountSettings();
+  const { mutateAsync: updateContactEmail, isPending: isContactEmailPending } =
+    useUpdateContactEmail();
   const { mutateAsync: uploadFile, isPending: isUploadFilePending } = useUploadFile();
 
   const { editingItem, openModal, closeModal } = useMypageModal();
@@ -58,23 +65,15 @@ export default function MyPage() {
     isPersonalProfilePending ||
     isCompanyProfilePending ||
     isAccountSettingsPending ||
+    isContactEmailPending ||
     isUploadFilePending;
 
-  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const input = event.target;
-    const file = event.target.files?.[0];
-
-    if (!file || isMypageMutating) return;
-
-    try {
-      const uploadedFile = await uploadFile({
-        file,
-      });
-
-      if (mypage.profileType === 'personal') {
-        const personalProfileData = {
+  const updateProfileImage = async (profileImageUrl: string) => {
+    if (mypage.profileType === 'personal') {
+      await updatePersonalProfile({
+        data: {
           nickname: mypage.profile.nickname,
-          profileImageUrl: uploadedFile.url,
+          profileImageUrl,
           interestedJob: mypage.profile.interestedJob,
           coverLetter: mypage.profile.coverLetter,
           additionalDocument: mypage.profile.additionalDocument,
@@ -82,15 +81,13 @@ export default function MyPage() {
           interests: mypage.profile.interests,
           contactMethod: mypage.profile.contactMethod,
           contactUrl: mypage.profile.contactUrl,
-        };
-
-        await updatePersonalProfile({
-          data: personalProfileData,
-        });
-      } else {
-        const companyProfileData = {
+        },
+      });
+    } else {
+      await updateCompanyProfile({
+        data: {
           companyName: mypage.profile.companyName,
-          profileImageUrl: uploadedFile.url,
+          profileImageUrl,
           representativeName: mypage.profile.representativeName,
           companyType: mypage.profile.companyType,
           resumeTemplate: mypage.profile.resumeTemplate,
@@ -99,17 +96,37 @@ export default function MyPage() {
           foundedAt: mypage.profile.foundedAt,
           contactMethod: mypage.profile.contactMethod,
           contactUrl: mypage.profile.contactUrl,
-        };
+        },
+      });
+    }
+  };
 
-        await updateCompanyProfile({
-          data: companyProfileData,
-        });
-      }
+  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.target;
+    const file = input.files?.[0];
+
+    if (!file || isMypageMutating) return;
+
+    try {
+      const uploadedFile = await uploadFile({ file });
+
+      await updateProfileImage(uploadedFile.url);
     } catch (error) {
       console.error('Failed to upload profile image:', error);
       alert('프로필 이미지 변경에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       input.value = '';
+    }
+  };
+
+  const handleProfileImageDelete = async () => {
+    if (isMypageMutating || !mypage.profile.profileImageUrl) return;
+
+    try {
+      await updateProfileImage('');
+    } catch (error) {
+      console.error('Failed to delete profile image:', error);
+      alert('프로필 이미지 삭제에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
@@ -161,11 +178,9 @@ export default function MyPage() {
         }
 
         if (field === 'employeeCount' && typeof value === 'string') {
-          if (value.trim() === '') return;
+          const employeeCount = value.trim() === '' ? 0 : Number(value);
 
-          const employeeCount = Number(value);
-
-          if (!Number.isFinite(employeeCount) || employeeCount < 0) return;
+          if (!Number.isInteger(employeeCount) || employeeCount < 0) return;
 
           nextValue = employeeCount;
         }
@@ -191,28 +206,65 @@ export default function MyPage() {
       }
 
       if (section === 'accountSettings') {
+        const currentSettings =
+          queryClient.getQueryData<Mypage>(mypageQueryKeys.user())?.accountSettings ??
+          mypage.accountSettings;
+        const contactSettings =
+          field === 'contactMethod' && typeof value === 'object' && 'contactMethod' in value
+            ? value
+            : undefined;
+        const nextEmail =
+          contactSettings?.contactMethod === 'email'
+            ? contactSettings.contactEmail?.trim()
+            : undefined;
+        const hasEmailChanged =
+          nextEmail !== undefined && nextEmail !== currentSettings.contactEmail.trim();
         const accountSettingsData = {
-          contactMethod: mypage.accountSettings.contactMethod,
-          contactUrl: mypage.accountSettings.contactUrl,
-          passwordUpdatedAt: mypage.accountSettings.passwordUpdatedAt,
-          address: mypage.accountSettings.address,
+          contactMethod: currentSettings.contactMethod,
+          contactUrl: currentSettings.contactUrl,
+          passwordUpdatedAt: currentSettings.passwordUpdatedAt,
+          address: currentSettings.address,
         };
 
-        const nextAccountSettingsData =
-          field === 'contactMethod' && typeof value === 'object' && 'contactMethod' in value
-            ? {
-                ...accountSettingsData,
-                contactMethod: value.contactMethod,
-                contactUrl: value.contactUrl,
-              }
-            : {
-                ...accountSettingsData,
-                [field]: value,
-              };
+        const nextAccountSettingsData = contactSettings
+          ? {
+              ...accountSettingsData,
+              contactMethod: contactSettings.contactMethod,
+              contactUrl: contactSettings.contactUrl,
+            }
+          : {
+              ...accountSettingsData,
+              [field]: value,
+            };
 
-        await updateAccountSettings({
-          data: nextAccountSettingsData,
-        });
+        const hasSettingsChanged =
+          nextAccountSettingsData.contactMethod !== currentSettings.contactMethod ||
+          (nextAccountSettingsData.contactUrl ?? '').trim() !==
+            (currentSettings.contactUrl ?? '').trim() ||
+          nextAccountSettingsData.address !== currentSettings.address ||
+          nextAccountSettingsData.passwordUpdatedAt !== currentSettings.passwordUpdatedAt;
+
+        if (hasEmailChanged && nextEmail !== undefined) {
+          try {
+            await updateContactEmail({ contactEmail: nextEmail });
+          } catch {
+            alert('연락용 이메일 변경에 실패했습니다. 다시 시도해 주세요.');
+            return;
+          }
+        }
+
+        if (hasSettingsChanged) {
+          try {
+            await updateAccountSettings({ data: nextAccountSettingsData });
+          } catch {
+            alert(
+              hasEmailChanged
+                ? '연락용 이메일은 변경되었지만 계정 설정 저장에 실패했습니다. 다시 저장해 주세요.'
+                : '계정 설정 변경에 실패했습니다. 다시 시도해 주세요.',
+            );
+            return;
+          }
+        }
 
         closeModal();
       }
@@ -227,16 +279,34 @@ export default function MyPage() {
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between px-3">
           <div className="flex items-center gap-3">
-            <ProfileImage src={profileHeader.imageUrl} />
+            <div className="relative">
+              <ProfileImage src={profileHeader.imageUrl} />
+
+              {profileHeader.imageUrl && (
+                <button
+                  type="button"
+                  onClick={handleProfileImageDelete}
+                  disabled={isMypageMutating}
+                  aria-label="프로필 이미지 삭제"
+                  className="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full bg-gray-800 text-white disabled:opacity-50"
+                >
+                  <DeleteIcon className="size-2" />
+                </button>
+              )}
+            </div>
 
             <div className="flex flex-col text-gray-700">
               <div className="flex items-center gap-2">
-                <span className="text-[20px] font-bold">{profileHeader.name}</span>
+                <span className="text-[20px] leading-[30px] font-bold">{profileHeader.name}</span>
 
-                <Chip size="sm" className="bg-primary-600 shrink-0">
+                <Chip
+                  size="sm"
+                  variant={mypage.profileType === 'personal' ? 'profilePersonal' : 'profileCompany'}
+                >
                   {mypage.profileType === 'personal' ? '개인' : '기업'}
                 </Chip>
               </div>
+              <span className="text-[14px]">{mypage.loginEmail}</span>
               <span className="text-[14px]">{profileHeader.subText}</span>
             </div>
           </div>
@@ -268,7 +338,11 @@ export default function MyPage() {
           <AccountSettings profile={mypage.accountSettings} onOpenModal={openModal} />
 
           <MypageModalRenderer
-            editingItem={editingItem}
+            editingItem={
+              editingItem?.section === 'accountSettings' && editingItem.field === 'contactMethod'
+                ? { ...editingItem, contactEmail: mypage.accountSettings.contactEmail }
+                : editingItem
+            }
             onClose={closeModal}
             onSave={handleSaveMypageItem}
             isPending={isMypageMutating}

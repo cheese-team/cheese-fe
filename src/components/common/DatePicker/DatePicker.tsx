@@ -1,11 +1,13 @@
 'use client';
 
-import { useRef } from 'react';
+import { useId, useRef } from 'react';
 
 import { cn } from '@/lib/cn';
 
 type DatePickerProps = {
   value: string;
+  label?: string;
+  min?: string;
   onChange: (value: string) => void;
   formatDisplayValue?: (value: string) => string;
   placeholder?: string;
@@ -15,6 +17,8 @@ type DatePickerProps = {
 
 export default function DatePicker({
   value,
+  label = '날짜',
+  min,
   placeholder = '날짜 선택',
   formatDisplayValue,
   onChange,
@@ -22,16 +26,22 @@ export default function DatePicker({
   buttonClassName,
 }: DatePickerProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputId = useId();
 
   const openPicker = () => {
-    if (!inputRef.current) return;
+    const input = inputRef.current;
 
-    if ('showPicker' in HTMLInputElement.prototype) {
-      (inputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
-      return;
+    if (!input) return;
+
+    try {
+      if (typeof input.showPicker === 'function') {
+        input.showPicker();
+      } else {
+        input.click();
+      }
+    } catch {
+      input.focus();
     }
-
-    inputRef.current.click();
   };
 
   const displayValue = value && formatDisplayValue ? formatDisplayValue(value) : value;
@@ -40,6 +50,8 @@ export default function DatePicker({
     <div className={cn('relative', className)}>
       <button
         type="button"
+        aria-label={`${label} 선택${displayValue ? `: ${displayValue}` : ''}`}
+        aria-controls={inputId}
         onClick={openPicker}
         className={cn('flex w-full items-center text-left', buttonClassName)}
       >
@@ -50,7 +62,10 @@ export default function DatePicker({
 
       <input
         ref={inputRef}
+        id={inputId}
+        aria-label={label}
         type="date"
+        min={min}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="pointer-events-none absolute inset-0 h-full w-full opacity-0"

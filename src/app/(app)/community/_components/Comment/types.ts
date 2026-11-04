@@ -13,10 +13,8 @@ export type CommentItemProps = {
   comment: CommunityCommentResult;
   isMine: boolean;
   isEditing: boolean;
-  isMenuOpen: boolean;
   editingValue: string;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  onToggleMenu: (commentId: string) => void;
   onStartEdit: (comment: CommunityCommentResult) => void;
   onChangeEditingValue: (value: string) => void;
   onUpdate: (commentId: string) => void;

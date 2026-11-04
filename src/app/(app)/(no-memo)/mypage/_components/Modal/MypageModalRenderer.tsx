@@ -8,8 +8,22 @@ import ConfirmModal from './ConfirmModal';
 import { useLogout } from '@/queries/auth/useLogout';
 import { useDeleteMe } from '@/queries/auth/useDeleteMe';
 
+import { validateCompanyName, validateEmployeeCount, validateNickname } from '@/lib/validation';
+import { formatDate } from '@/lib/formatDate';
+
 import type { ContactSettings, ProfileDocument } from '@/types/profile';
 import type { MypageModalItem } from './types';
+
+const maxLengthByField: Record<string, number> = {
+  nickname: 10,
+  companyName: 20,
+  interestedJob: 50,
+  skills: 200,
+  interests: 200,
+  address: 200,
+  representativeName: 50,
+  industryType: 200,
+};
 
 type MypageModalRendererProps = {
   editingItem: MypageModalItem | null;
@@ -36,6 +50,7 @@ export default function MypageModalRenderer({
     isError: isLogoutError,
     reset: resetLogout,
   } = useLogout();
+
   const {
     mutate: deleteMe,
     isPending: isDeletePending,
@@ -52,7 +67,7 @@ export default function MypageModalRenderer({
   const isSelectModal = editingItem?.modalType === 'select';
   const isConfirmModal = editingItem?.modalType === 'confirm';
 
-  const hasOpenKakaoInput =
+  const hasContactInput =
     editingItem.section === 'accountSettings' && editingItem.field === 'contactMethod';
   const isLogout = isConfirmModal && editingItem.field === 'logout';
   const isDeleteAccount = isConfirmModal && editingItem.field === 'deleteAccount';
@@ -121,6 +136,17 @@ export default function MypageModalRenderer({
   };
 
   if (isTextModal) {
+    const maxLength = maxLengthByField[editingItem.field];
+
+    const validate =
+      editingItem.field === 'nickname'
+        ? validateNickname
+        : editingItem.field === 'companyName'
+          ? validateCompanyName
+          : editingItem.field === 'employeeCount'
+            ? validateEmployeeCount
+            : undefined;
+
     return (
       <TextEditModal
         key={modalKey}
@@ -130,6 +156,15 @@ export default function MypageModalRenderer({
         value={editingItem.value}
         inputType={editingItem.inputType}
         min={editingItem.min}
+        max={
+          editingItem.field === 'foundedAt'
+            ? formatDate(new Date().toISOString()).replaceAll('.', '-')
+            : editingItem.field === 'employeeCount'
+              ? 9999999
+              : undefined
+        }
+        maxLength={maxLength}
+        validate={validate}
         description={
           editingItem.label === '내 스킬' || editingItem.label === '내 관심분야'
             ? 'ex) HTML, CSS3, Java ...'
@@ -152,6 +187,7 @@ export default function MypageModalRenderer({
         title={`${editingItem.label} 추가`}
         inputLabel={editingItem.label}
         document={editingItem.document}
+        purpose={editingItem.field === 'coverLetter' ? 'coverLetter' : 'additionalDocument'}
         disabled={isPending}
         onClose={handleEditModalClose}
         onSave={(document) => {
@@ -170,8 +206,9 @@ export default function MypageModalRenderer({
         inputLabel={editingItem.label}
         value={editingItem.value}
         contactUrl={editingItem.contactUrl}
+        contactEmail={editingItem.contactEmail}
         options={editingItem.options ?? []}
-        hasOpenKakaoInput={hasOpenKakaoInput}
+        hasContactInput={hasContactInput}
         disabled={isPending}
         onClose={handleEditModalClose}
         onSave={(value) => {

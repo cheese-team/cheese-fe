@@ -17,6 +17,7 @@ type CommunityPostFormProps = {
   onSubmit: (event: React.FormEvent<HTMLFormElement>, content: string) => void;
   initialContent?: string;
   isSubmitting?: boolean;
+  noValidate?: boolean;
   children: ReactNode;
 };
 
@@ -25,6 +26,7 @@ export default function CommunityPostForm({
   onSubmit,
   initialContent = '',
   isSubmitting = false,
+  noValidate = false,
   children,
 }: CommunityPostFormProps) {
   const [content, setContent] = useState(initialContent);
@@ -44,7 +46,6 @@ export default function CommunityPostForm({
   const formId = 'community-post-form';
 
   const handleBackClick = () => {
-    // TODO: 공통 ConfirmModal 적용
     const isConfirmed = window.confirm('작성 중인 내용이 사라집니다. 이동하시겠습니까?');
 
     if (!isConfirmed) return;
@@ -79,6 +80,7 @@ export default function CommunityPostForm({
 
         <form
           id={formId}
+          noValidate={noValidate}
           onSubmit={(event) => onSubmit(event, content)}
           className="flex flex-col gap-2 px-25 py-8"
         >

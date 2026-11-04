@@ -5,7 +5,7 @@ import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query
 
 import AppSidebar from '@/components/layout/sidebar/AppSidebar';
 
-import { getMeFromServer } from '@/api/auth.api';
+import { getCachedMeFromServer } from '@/api/auth.api';
 import { ApiError } from '@/api/client';
 import { authQueryKeys } from '@/queries/auth/authQueryKeys';
 
@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   let user;
 
   try {
-    user = await getMeFromServer(cookie);
+    user = await getCachedMeFromServer(cookie);
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       redirect('/login');

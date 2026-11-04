@@ -2,6 +2,8 @@ import { apiClient } from '@/api/client';
 
 export type FilePurpose = 'image' | 'coverLetter' | 'additionalDocument' | 'infoAttachment';
 
+export type DocumentPurpose = Exclude<FilePurpose, 'image'>;
+
 export type UploadedFile = {
   id: string;
   url: string;
@@ -15,6 +17,11 @@ type UploadFileParams = {
   file: File;
 };
 
+type UploadDocumentParams = {
+  file: File;
+  purpose: DocumentPurpose;
+};
+
 export function uploadFile({ file }: UploadFileParams) {
   const formData = new FormData();
   formData.append('file', file);
@@ -25,4 +32,13 @@ export function uploadFile({ file }: UploadFileParams) {
   });
 }
 
-// TODO: 문서 업로드 API 연동 (coverLetter, additionalDocument, infoAttachment)
+export function uploadDocument({ file, purpose }: UploadDocumentParams) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('purpose', purpose);
+
+  return apiClient<UploadedFile>('/backend-api/files/documents', {
+    method: 'POST',
+    body: formData,
+  });
+}

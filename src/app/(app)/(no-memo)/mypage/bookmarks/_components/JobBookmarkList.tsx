@@ -57,10 +57,6 @@ export default function JobBookmarkList({ sort, keyword }: JobBookmarkListProps)
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError, keyword, sort]);
 
-  // TODO:
-  // 관심글 조회 API에 검색(q), 정렬(sort) 파라미터가 없어
-  // 현재 로드된 데이터에 대해서만 클라이언트에서 검색/정렬하고 있음
-  // API 지원 시 전체 관심글 기준 서버 검색/정렬로 전환 필요
   const filteredJobPosts = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
@@ -72,7 +68,7 @@ export default function JobBookmarkList({ sort, keyword }: JobBookmarkListProps)
       return (
         post.title.toLowerCase().includes(normalizedKeyword) ||
         post.companyName.toLowerCase().includes(normalizedKeyword) ||
-        post.author.nickname.toLowerCase().includes(normalizedKeyword)
+        post.author.displayName.toLowerCase().includes(normalizedKeyword)
       );
     });
 

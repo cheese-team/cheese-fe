@@ -1,4 +1,4 @@
-import type { PublicUserProfile } from '@/types/publicProfile';
+import type { PublicProfileBase, PublicUserProfile } from '@/types/publicProfile';
 
 export function getProfileWebHref(value?: string | null): string | null {
   if (!value?.trim()) return null;
@@ -10,16 +10,19 @@ export function getProfileWebHref(value?: string | null): string | null {
   }
 }
 
-export function getPublicProfileContactHref(profile: PublicUserProfile): string | null {
+export function getPublicProfileContactHref(profile: PublicProfileBase): string | null {
   if (profile.contactMethod === 'email') {
     const email = profile.email?.trim();
+
     return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
       ? `mailto:${encodeURIComponent(email)}`
       : null;
   }
+
   if (profile.contactMethod === 'kakaoOpenChat' || profile.contactMethod === 'googleForm') {
     return getProfileWebHref(profile.contactUrl);
   }
+
   return null;
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
+import PasswordInput from '../../_components/PasswordInput';
 
 import { useResetPassword } from '@/queries/auth/useResetPassword';
 
@@ -68,10 +68,9 @@ export default function NewPasswordStep({ email, onComplete }: NewPasswordStepPr
       <h2 className="text-[20px] font-bold">비밀번호 변경</h2>
 
       <div className="flex flex-col gap-5">
-        <Input
+        <PasswordInput
           label="새로운 비밀번호"
           name="newPassword"
-          type="password"
           value={newPassword}
           onChange={(event) => {
             setNewPassword(event.target.value);
@@ -83,10 +82,9 @@ export default function NewPasswordStep({ email, onComplete }: NewPasswordStepPr
           errorMessage={passwordError}
           className="h-10 px-2 font-medium tracking-normal"
         />
-        <Input
+        <PasswordInput
           label="새로운 비밀번호 확인"
           name="newPasswordConfirm"
-          type="password"
           value={newPasswordConfirmation}
           onChange={(event) => {
             setNewPasswordConfirmation(event.target.value);

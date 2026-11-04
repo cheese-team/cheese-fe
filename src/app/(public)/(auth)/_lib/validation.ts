@@ -1,20 +1,6 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
-export function validateNickname(nickname: string) {
-  const trimmedNickname = nickname.trim();
-
-  if (!trimmedNickname) {
-    return '닉네임을 입력해 주세요';
-  }
-
-  if (trimmedNickname.length < 2 || trimmedNickname.length > 10) {
-    return '닉네임은 2~10자로 입력해 주세요';
-  }
-
-  return undefined;
-}
-
 export function validateEmail(email: string) {
   const trimmedEmail = email.trim();
 

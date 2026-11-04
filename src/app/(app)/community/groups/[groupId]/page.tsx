@@ -62,14 +62,14 @@ export default function GroupDetailPage() {
   const isClosed = isRecruitClosed(groupPost.deadline);
 
   const groupInfoItems = [
-    { label: '모집 분야', value: formatField(groupPost.field) },
+    { label: '모집분야', value: formatField(groupPost.field) || '-' },
     {
       label: '진행방식',
-      value: getOptionLabel(WORK_METHOD_OPTIONS, groupPost.progressType),
+      value: getOptionLabel(WORK_METHOD_OPTIONS, groupPost.progressType) || '-',
     },
-    { label: '사용기술', value: groupPost.skills.join(', ') },
-    { label: '예상기간', value: groupPost.expectedPeriod },
-    { label: '모집인원', value: `${groupPost.recruitCount}명` },
+    { label: '필요스킬', value: groupPost.skills.join(', ') || '-' },
+    { label: '예상 기간', value: groupPost.expectedPeriod?.trim() || '-' },
+    { label: '모집 인원', value: `${groupPost.recruitCount}명` },
     {
       label: '지원 마감일',
       value: groupPost.deadline ? formatDate(groupPost.deadline) : '상시모집',

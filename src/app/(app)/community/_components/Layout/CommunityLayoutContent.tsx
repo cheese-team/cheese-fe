@@ -38,7 +38,6 @@ export default function CommunityLayoutContent({ children }: { children: React.R
   const handleChangeTab = (value: (typeof COMMUNITY_CATEGORY_TABS)[number]['value']) => {
     const nextPath = isCreatePage ? `${value}/create` : `${value}`;
 
-    // TODO: 공통 ConfirmModal 적용
     if (isCreatePage) {
       const isConfirmed = window.confirm('작성 중인 내용이 사라집니다. 이동하시겠습니까?');
 

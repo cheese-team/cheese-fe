@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Input, InputActionButton } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -21,6 +21,8 @@ export type EmailVerifyBaseProps = {
   onNext: (email: string) => void;
   emailDisabled?: boolean;
   purpose: EmailVerificationPurpose;
+  emailLabel?: string;
+  sendOnOpen?: boolean;
 };
 
 export type EmailVerifyStatus =
@@ -42,10 +44,14 @@ export default function EmailVerifyForm({
   onNext,
   emailDisabled,
   purpose,
+  emailLabel = '아이디(이메일)',
+  sendOnOpen = false,
 }: EmailVerifyFormProps) {
+  const sendInFlight = useRef(false);
+  const initialSendStarted = useRef(false);
   const [email, setEmail] = useState(initialEmail);
   const [sentEmail, setSentEmail] = useState(initialEmail);
-  const [status, setStatus] = useState<EmailVerifyStatus>(initialStatus);
+  const [status, setStatus] = useState<EmailVerifyStatus>(sendOnOpen ? 'SENDING' : initialStatus);
   const [emailError, setEmailError] = useState<string>();
 
   const [verificationCode, setVerificationCode] = useState('');
@@ -68,16 +74,22 @@ export default function EmailVerifyForm({
 
   const formattedRemainingTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
+    if (sendInFlight.current || isVerifying || isVerified) return;
     const normalizedEmail = email.trim();
     const validationError = validateEmail(normalizedEmail);
 
     if (validationError) {
       setEmailError(validationError);
+      setStatus('IDLE');
       return;
     }
 
+    sendInFlight.current = true;
     setEmailError(undefined);
+    setVerificationError(undefined);
+    setVerificationCode('');
+    setRemainingSeconds(0);
     setStatus('SENDING');
 
     try {
@@ -101,8 +113,16 @@ export default function EmailVerifyForm({
     } catch (error) {
       setStatus('SEND_ERROR');
       setEmailError(getSendEmailErrorMessage(error, purpose));
+    } finally {
+      sendInFlight.current = false;
     }
-  };
+  }, [email, isVerifying, isVerified, purpose, sendEmailCode]);
+
+  useEffect(() => {
+    if (!sendOnOpen || initialSendStarted.current) return;
+    initialSendStarted.current = true;
+    void handleSend();
+  }, [sendOnOpen, handleSend]);
 
   useEffect(() => {
     if (!hasSentEmail || isVerified) return;
@@ -125,7 +145,7 @@ export default function EmailVerifyForm({
   const isExpired = hasSentEmail && remainingSeconds === 0;
 
   const handleVerify = async () => {
-    if (!isSentEmail || isExpired) return;
+    if (sendInFlight.current || status !== 'SENT' || !isSentEmail || isExpired) return;
 
     const code = verificationCode.trim();
 
@@ -171,10 +191,10 @@ export default function EmailVerifyForm({
     <div>
       {title && <h2 className="pb-10 text-[20px] font-bold tracking-normal">{title}</h2>}
 
-      <form className="flex flex-col gap-5">
+      <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
         <Input
           autoFocus
-          label="아이디(이메일)"
+          label={emailLabel}
           name="email"
           type="email"
           value={email}
@@ -182,7 +202,9 @@ export default function EmailVerifyForm({
             setEmail(event.target.value);
             setEmailError(undefined);
           }}
-          placeholder="아이디 (이메일) 입력"
+          placeholder={
+            emailLabel === '아이디(이메일)' ? '아이디 (이메일) 입력' : `${emailLabel} 입력`
+          }
           disabled={isEmailLocked}
           errorMessage={emailError}
           successMessage={hasSentEmail && isSentEmail ? AUTH_MESSAGE.EMAIL.SEND_SUCCESS : undefined}
@@ -191,7 +213,7 @@ export default function EmailVerifyForm({
               onClick={handleSend}
               disabled={isSending || isVerifying || isVerified}
             >
-              {hasSentEmail && isSentEmail ? '재발송' : '메일발송'}
+              {isSending ? '발송 중' : hasSentEmail && isSentEmail ? '재발송' : '메일발송'}
             </InputActionButton>
           }
           className="h-10 px-2 font-medium tracking-normal"

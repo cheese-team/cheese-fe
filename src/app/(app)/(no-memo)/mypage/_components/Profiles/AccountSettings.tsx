@@ -25,6 +25,7 @@ export default function AccountSettings({ profile, onOpenModal }: AccountSetting
           <div key={item.label} className="border-b border-gray-300 p-3 last:border-b-0">
             <SettingItem
               {...item}
+              truncateValue={item.field === 'contactMethod'}
               buttonClassName={item.danger ? '!text-error-subtle' : ''}
               onClick={() => {
                 if (item.field === 'updatePassword') {
@@ -38,8 +39,9 @@ export default function AccountSettings({ profile, onOpenModal }: AccountSetting
                   section: item.section,
                   field: item.field,
                   label: item.label,
-                  value: item.value,
+                  value: item.editValue ?? item.value,
                   contactUrl: profile.contactUrl,
+                  contactEmail: profile.contactEmail,
                   buttonText: item.buttonText,
                   options: item.options,
                   modalType: item.modalType,

@@ -7,16 +7,16 @@ import ProfileImage from '@/components/common/ProfileImage';
 
 import PublicProfileCardModal from '../ProfileCardModal/PublicProfileCardModal';
 
-import type { CommunityAuthor, UserSummary } from '@/types/community/community';
+import type { CommunityAuthor } from '@/types/community/community';
 
 type PostDetailAsideProfileProps = {
-  author: UserSummary | CommunityAuthor;
+  author: CommunityAuthor;
 };
 
 export default function PostDetailAsideProfile({ author }: PostDetailAsideProfileProps) {
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
 
-  const userId = 'userId' in author ? author.userId : undefined;
+  const userId = author.userId;
 
   const handleProfileButtonClick = () => {
     setIsProfileCardOpen(true);
@@ -28,9 +28,7 @@ export default function PostDetailAsideProfile({ author }: PostDetailAsideProfil
         <ProfileImage size={100} src={author.profileImageUrl} />
 
         <div className="flex flex-col gap-1 text-center leading-[30px]">
-          <span className="text-[20px] font-bold break-words">
-            {'displayName' in author ? author.displayName : author.nickname}
-          </span>
+          <span className="text-[20px] font-bold break-words">{author.displayName}</span>
           <span className="break-all">{author.email}</span>
         </div>
       </div>
