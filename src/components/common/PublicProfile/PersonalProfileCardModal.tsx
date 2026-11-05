@@ -18,6 +18,7 @@ type PersonalProfileCardModalProps = {
   profile: PublicPersonalProfile;
 };
 
+/** 공통 카드에 개인 회원의 관심 직무, 자기소개서와 이력서 등 공개 항목을 표시한다. */
 export default function PersonalProfileCardModal({
   isOpen,
   onClose,
@@ -58,6 +59,7 @@ export default function PersonalProfileCardModal({
 
   const contactHref = getPublicProfileContactHref(profile);
 
+  /** 이메일은 메일 앱에 전달하고, 오픈채팅과 구글 폼은 새 탭에서 연다. */
   const handleContactClick = () => {
     if (!contactHref) return;
 

@@ -2,6 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 
+/**
+ * 로딩 화면이 프로필 카드로 바뀌어도 Tab 탐색을 모달 안에 유지한다.
+ * 닫은 뒤 포커스가 본문으로 빠졌을 때만 모달을 열었던 요소로 돌려보낸다.
+ */
 export function usePublicProfileDialogFocus(isOpen: boolean, trigger?: HTMLElement) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);

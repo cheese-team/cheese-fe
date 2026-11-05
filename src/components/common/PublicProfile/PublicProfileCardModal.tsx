@@ -19,6 +19,7 @@ type PublicProfileCardModalProps = {
   trigger?: HTMLElement;
 };
 
+/** 모달이 열려 있는 동안에만 지정한 사용자의 프로필을 조회한다. */
 export default function PublicProfileCardModal({
   userId,
   isOpen,
@@ -32,6 +33,7 @@ export default function PublicProfileCardModal({
   );
 }
 
+/** 조회 결과에 맞는 개인·기업 카드를 표시하며, 캐시된 null은 재조회가 끝난 뒤 판단한다. */
 function PublicProfileCardContent({
   userId,
   onClose,

@@ -17,6 +17,7 @@ type CompanyProfileCardModalProps = {
   profile: PublicCompanyProfile;
 };
 
+/** 공통 카드에 기업 정보와 지원자가 열어볼 수 있는 이력서 양식을 표시한다. */
 export default function CompanyProfileCardModal({
   isOpen,
   onClose,
@@ -51,6 +52,7 @@ export default function CompanyProfileCardModal({
 
   const contactHref = getPublicProfileContactHref(profile);
 
+  /** 이메일은 메일 앱에 전달하고, 오픈채팅과 구글 폼은 새 탭에서 연다. */
   const handleContactClick = () => {
     if (!contactHref) return;
 

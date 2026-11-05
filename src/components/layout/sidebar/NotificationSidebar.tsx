@@ -57,6 +57,7 @@ function NotificationFeedback({
   );
 }
 
+/** 로그인 계정의 알림을 읽음 상태별로 표시하고 선택된 발신자와 포커스를 돌려줄 버튼을 관리한다. */
 function NotificationList({ userId }: { userId: string }) {
   const notifications = useNotifications();
   const actions = useNotificationActions(userId);
