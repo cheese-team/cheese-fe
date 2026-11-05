@@ -16,28 +16,34 @@ type PublicProfileCardModalProps = {
   userId: string | undefined;
   isOpen: boolean;
   onClose: () => void;
+  trigger?: HTMLElement;
 };
 
 export default function PublicProfileCardModal({
   userId,
   isOpen,
   onClose,
+  trigger,
 }: PublicProfileCardModalProps) {
   if (!isOpen) return null;
 
-  return <PublicProfileCardContent key={userId} userId={userId} onClose={onClose} />;
+  return (
+    <PublicProfileCardContent key={userId} userId={userId} onClose={onClose} trigger={trigger} />
+  );
 }
 
 function PublicProfileCardContent({
   userId,
   onClose,
+  trigger,
 }: {
   userId: string | undefined;
   onClose: () => void;
+  trigger?: HTMLElement;
 }) {
   const router = useRouter();
 
-  const dialogRef = usePublicProfileDialogFocus(true);
+  const dialogRef = usePublicProfileDialogFocus(true, trigger);
   const alertedErrorRef = useRef<Error | null>(null);
 
   const {

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/common/Button';
 import ProfileImage from '@/components/common/ProfileImage';
 
-import PublicProfileCardModal from '../ProfileCardModal/PublicProfileCardModal';
+import { PublicProfileCardModal } from '@/components/common/PublicProfile';
 
 import type { CommunityAuthor } from '@/types/community/community';
 

@@ -5,11 +5,8 @@ import { getPublicUserProfile } from '../src/api/profile.api.ts';
 import { ApiError } from '../src/api/client.ts';
 import { authQueryKeys } from '../src/queries/auth/authQueryKeys.ts';
 import { publicProfileOptions } from '../src/queries/profile/publicProfileQueryOptions.ts';
-import {
-  getProfileWebHref,
-  getPublicProfileContactHref,
-  getPublicProfileFields,
-} from '../src/components/common/PublicProfile/publicProfileModel.ts';
+import { getProfileWebHref } from '../src/lib/getProfileWebHref.ts';
+import { getPublicProfileContactHref } from '../src/components/common/PublicProfile/publicProfileModel.ts';
 
 const personal = {
   profileType: 'personal',
@@ -46,18 +43,6 @@ for (const profile of [personal, company]) {
   });
 }
 
-test('선택 상세 항목이 없는 개인/기업 프로필을 가짜 값으로 보완하지 않는다', () => {
-  for (const profile of [personal, company])
-    assert.ok(getPublicProfileFields(profile).every((field) => field.value === undefined));
-  const fields = getPublicProfileFields({
-    ...company,
-    employeeCount: 0,
-    industryType: ['IT', '교육'],
-  });
-  assert.equal(fields.find((field) => field.label === '사원 수').value, '0명');
-  assert.equal(fields.find((field) => field.label === '산업 구분').value, 'IT, 교육');
-});
-
 test('연락처와 문서의 정상 웹 링크만 사용하며 비어 있으면 링크를 만들지 않는다', () => {
   for (const url of [
     '',
@@ -71,6 +56,12 @@ test('연락처와 문서의 정상 웹 링크만 사용하며 비어 있으면 
   assert.equal(getProfileWebHref('https://example.com/document'), 'https://example.com/document');
   assert.equal(getPublicProfileContactHref(personal), 'mailto:user%40example.com');
   assert.equal(getPublicProfileContactHref({ ...personal, email: '' }), null);
+  assert.equal(getPublicProfileContactHref({}), null);
+  assert.equal(getPublicProfileContactHref({ contactMethod: 'email', email: 'invalid' }), null);
+  assert.equal(
+    getPublicProfileContactHref({ contactMethod: 'email', email: ' user+test@example.com ' }),
+    'mailto:user%2Btest%40example.com',
+  );
   assert.equal(
     getPublicProfileContactHref({
       ...personal,

@@ -1,16 +1,9 @@
-import type { PublicProfileBase, PublicUserProfile } from '@/types/publicProfile';
+import { getProfileWebHref } from '@/lib/getProfileWebHref';
+import type { PublicProfileBase } from '@/types/publicProfile';
 
-export function getProfileWebHref(value?: string | null): string | null {
-  if (!value?.trim()) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
-  } catch {
-    return null;
-  }
-}
+type ContactProfile = Partial<Pick<PublicProfileBase, 'email' | 'contactMethod' | 'contactUrl'>>;
 
-export function getPublicProfileContactHref(profile: PublicProfileBase): string | null {
+export function getPublicProfileContactHref(profile: ContactProfile): string | null {
   if (profile.contactMethod === 'email') {
     const email = profile.email?.trim();
 
@@ -24,26 +17,4 @@ export function getPublicProfileContactHref(profile: PublicProfileBase): string 
   }
 
   return null;
-}
-
-export function getPublicProfileFields(profile: PublicUserProfile) {
-  return profile.profileType === 'personal'
-    ? [
-        { label: '관심 직무', value: profile.interestedJob },
-        { label: '내 스킬', value: profile.skills?.join(', ') },
-        { label: '관심 분야', value: profile.interests?.join(', ') },
-      ]
-    : [
-        { label: '기업 구분', value: profile.companyType },
-        { label: '대표자명', value: profile.representativeName },
-        { label: '산업 구분', value: profile.industryType?.join(', ') },
-        {
-          label: '사원 수',
-          value:
-            typeof profile.employeeCount === 'number'
-              ? `${profile.employeeCount.toLocaleString('ko-KR')}명`
-              : undefined,
-        },
-        { label: '설립일', value: profile.foundedAt },
-      ];
 }
