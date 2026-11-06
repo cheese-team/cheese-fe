@@ -13,7 +13,6 @@ import EmailVerifyModal from '../_components/EmailVerifyModal';
 
 import { useSignup } from '@/queries/auth/useSignup';
 import { useCheckNickname } from '@/queries/auth/useCheckNickname';
-import { ApiError } from '@/api/client';
 
 import { validateCompanyName, validateNickname } from '@/lib/validation';
 import { validatePassword, validatePasswordConfirmation } from '../_lib/validation';
@@ -34,6 +33,7 @@ type SignupErrors = {
   email?: string;
   password?: string;
   passwordConfirmation?: string;
+  submit?: string;
 };
 
 export default function SignupPage() {
@@ -245,20 +245,10 @@ export default function SignupPage() {
     try {
       await signup(signupData);
       setIsDoneOpen(true);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 400) {
-        setSignupErrors((prev) => ({
-          ...prev,
-          email: AUTH_MESSAGE.EMAIL.ALREADY_REGISTERED,
-        }));
-
-        emailRef.current?.focus();
-        return;
-      }
-
+    } catch {
       setSignupErrors((prev) => ({
         ...prev,
-        email: AUTH_MESSAGE.SIGNUP.FAILED,
+        submit: AUTH_MESSAGE.SIGNUP.FAILED,
       }));
     }
   };
@@ -424,14 +414,22 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <Button
-            variant="light"
-            type="submit"
-            disabled={!termsAgreed || isSignupPending}
-            className="text-[16px]"
-          >
-            회원가입
-          </Button>
+          <div className="flex flex-col gap-5">
+            <Button
+              variant="light"
+              type="submit"
+              disabled={!termsAgreed || isSignupPending}
+              className="text-[16px]"
+            >
+              회원가입
+            </Button>
+
+            {signupErrors.submit && (
+              <p role="alert" className="text-text-error text-center text-xs">
+                {signupErrors.submit}
+              </p>
+            )}
+          </div>
         </form>
 
         <EmailVerifyModal
