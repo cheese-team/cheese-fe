@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -10,6 +10,8 @@ import { Input } from '@/components/common/Input';
 import PasswordInput from '../../_components/PasswordInput';
 
 import { useLogin } from '@/queries/auth/useLogin';
+
+import { startOAuthLogin } from '../_lib/oauth';
 
 import { AUTH_MESSAGE } from '../_constants/authMessage';
 
@@ -21,6 +23,19 @@ export default function LoginPage() {
   const { mutateAsync: login, isPending } = useLogin();
 
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const oauthError = searchParams.get('oauthError');
+  const provider = searchParams.get('provider');
+
+  useEffect(() => {
+    if (oauthError !== 'USE_EMAIL_LOGIN' || provider !== 'email') return;
+
+    window.history.replaceState(null, '', '/login');
+
+    alert('이미 이메일로 가입된 계정입니다.\n기존 이메일과 비밀번호로 로그인해 주세요.');
+  }, [oauthError, provider]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -90,10 +105,19 @@ export default function LoginPage() {
         </div>
 
         <div className="flex justify-center gap-[45px]">
-          <Button variant="circle" aria-label="구글 로그인">
+          <Button
+            variant="circle"
+            aria-label="구글 로그인"
+            onClick={() => startOAuthLogin('google')}
+          >
             <Image src="/brands/google.svg" width={19} height={20} alt="" />
           </Button>
-          <Button variant="circle" className="bg-primary-700" aria-label="카카오 로그인">
+          <Button
+            variant="circle"
+            className="bg-primary-700"
+            aria-label="카카오 로그인"
+            onClick={() => startOAuthLogin('kakao')}
+          >
             <Image src="/brands/kakao.svg" width={22} height={20} alt="" />
           </Button>
         </div>
