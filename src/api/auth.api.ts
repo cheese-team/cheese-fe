@@ -174,3 +174,46 @@ export function deleteMe() {
     method: 'DELETE',
   });
 }
+
+/* ================================
+     Social Login / Signup
+   ================================ */
+
+export type OAuthProvider = 'google' | 'kakao';
+
+export type OAuthSignupSession = {
+  provider: OAuthProvider;
+  email: string | null;
+  emailRequired: boolean;
+};
+
+export type OAuthSignupRequest = {
+  profileType: ProfileType;
+  nickname?: string;
+  companyName?: string;
+  termsAgreed: boolean;
+  email?: string;
+};
+
+export type OAuthSignupResponse = {
+  id: string;
+  nickname: string | null;
+  email: string;
+  profileType: ProfileType;
+  companyName: string | null;
+};
+
+/** OAuth 회원가입 세션 조회 */
+export async function getOAuthSignupSession(): Promise<OAuthSignupSession> {
+  return apiClient<OAuthSignupSession>('/backend-api/auth/oauth/signup', {
+    method: 'GET',
+  });
+}
+
+/** OAuth 회원가입 완료 */
+export async function signupWithOAuth(data: OAuthSignupRequest): Promise<OAuthSignupResponse> {
+  return apiClient<OAuthSignupResponse>('/backend-api/auth/oauth/signup', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
