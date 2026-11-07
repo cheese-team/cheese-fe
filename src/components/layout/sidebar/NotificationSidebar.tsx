@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { ApiError } from '@/api/client';
-import { PublicProfileModal } from '@/components/common/PublicProfile/PublicProfileModal';
+import { PublicProfileCardModal } from '@/components/common/PublicProfile';
 import DoubleArrowIcon from '@/assets/icons/problem/double-arrow.svg';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import type { NotificationAction } from '@/queries/notification/notificationMutationOptions';
@@ -57,6 +57,7 @@ function NotificationFeedback({
   );
 }
 
+/** 로그인 계정의 알림을 읽음 상태별로 표시하고 선택된 발신자와 포커스를 돌려줄 버튼을 관리한다. */
 function NotificationList({ userId }: { userId: string }) {
   const notifications = useNotifications();
   const actions = useNotificationActions(userId);
@@ -242,9 +243,9 @@ function NotificationList({ userId }: { userId: string }) {
         </button>
       ) : null}
       {selectedProfile ? (
-        <PublicProfileModal
+        <PublicProfileCardModal
           key={selectedProfile.userId}
-          viewerId={userId}
+          isOpen
           userId={selectedProfile.userId}
           trigger={selectedProfile.trigger}
           onClose={() => setSelectedProfile(null)}

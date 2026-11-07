@@ -16,28 +16,36 @@ type PublicProfileCardModalProps = {
   userId: string | undefined;
   isOpen: boolean;
   onClose: () => void;
+  trigger?: HTMLElement;
 };
 
+/** 모달이 열려 있는 동안에만 지정한 사용자의 프로필을 조회한다. */
 export default function PublicProfileCardModal({
   userId,
   isOpen,
   onClose,
+  trigger,
 }: PublicProfileCardModalProps) {
   if (!isOpen) return null;
 
-  return <PublicProfileCardContent key={userId} userId={userId} onClose={onClose} />;
+  return (
+    <PublicProfileCardContent key={userId} userId={userId} onClose={onClose} trigger={trigger} />
+  );
 }
 
+/** 조회 결과에 맞는 개인·기업 카드를 표시하며, 캐시된 null은 재조회가 끝난 뒤 판단한다. */
 function PublicProfileCardContent({
   userId,
   onClose,
+  trigger,
 }: {
   userId: string | undefined;
   onClose: () => void;
+  trigger?: HTMLElement;
 }) {
   const router = useRouter();
 
-  const dialogRef = usePublicProfileDialogFocus(true);
+  const dialogRef = usePublicProfileDialogFocus(true, trigger);
   const alertedErrorRef = useRef<Error | null>(null);
 
   const {

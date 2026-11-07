@@ -4,7 +4,7 @@ import { DocumentLinkItemList } from '@/components/common/DocumentLink';
 import ProfileCardModal from './ProfileCardModal';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
-import { getProfileWebHref } from '@/lib/getProfileWebHref';
+import { getPublicProfileContactHref } from './publicProfileModel';
 
 import { CONTACT_METHOD_OPTIONS } from '@/constants/profileOptions';
 
@@ -17,6 +17,7 @@ type CompanyProfileCardModalProps = {
   profile: PublicCompanyProfile;
 };
 
+/** 공통 카드에 기업 정보와 지원자가 열어볼 수 있는 이력서 양식을 표시한다. */
 export default function CompanyProfileCardModal({
   isOpen,
   onClose,
@@ -49,20 +50,18 @@ export default function CompanyProfileCardModal({
     },
   ];
 
-  const contactHref =
-    profile.contactMethod === 'kakaoOpenChat' || profile.contactMethod === 'googleForm'
-      ? getProfileWebHref(profile.contactUrl)
-      : null;
+  const contactHref = getPublicProfileContactHref(profile);
 
+  /** 이메일은 메일 앱에 전달하고, 오픈채팅과 구글 폼은 새 탭에서 연다. */
   const handleContactClick = () => {
-    if (profile.contactMethod === 'email' && profile.email) {
-      window.location.href = `mailto:${profile.email}`;
+    if (!contactHref) return;
+
+    if (profile.contactMethod === 'email') {
+      window.location.href = contactHref;
       return;
     }
 
-    if (contactHref) {
-      window.open(contactHref, '_blank', 'noopener,noreferrer');
-    }
+    window.open(contactHref, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -77,7 +76,7 @@ export default function CompanyProfileCardModal({
       gradientClassName="from-[#DBC0E4] via-[#DDD6D7] to-[#DFECCB]"
       profileItems={profileItems}
       onContact={handleContactClick}
-      contactDisabled={profile.contactMethod === 'email' ? !profile.email?.trim() : !contactHref}
+      contactDisabled={!contactHref}
     />
   );
 }

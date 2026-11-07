@@ -2,15 +2,27 @@
 
 import { useEffect, useRef } from 'react';
 
-export function usePublicProfileDialogFocus(isOpen: boolean) {
+/**
+ * 로딩 화면이 프로필 카드로 바뀌어도 Tab 탐색을 모달 안에 유지한다.
+ * 닫은 뒤 포커스가 본문으로 빠졌을 때만 모달을 열었던 요소로 돌려보낸다.
+ */
+export function usePublicProfileDialogFocus(isOpen: boolean, trigger?: HTMLElement) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    previousFocusRef.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const activeElement = document.activeElement;
+
+    if (trigger) {
+      previousFocusRef.current = trigger;
+    } else if (
+      activeElement instanceof HTMLElement &&
+      !dialogRef.current?.contains(activeElement)
+    ) {
+      previousFocusRef.current = activeElement;
+    }
 
     const focusDialog = () => {
       const dialog = dialogRef.current;
@@ -75,11 +87,12 @@ export function usePublicProfileDialogFocus(isOpen: boolean) {
 
       const previousFocus = previousFocusRef.current;
 
-      if (previousFocus?.isConnected) {
-        previousFocus.focus();
-      }
+      requestAnimationFrame(() => {
+        if (previousFocus?.isConnected && document.activeElement === document.body)
+          previousFocus.focus({ preventScroll: true });
+      });
     };
-  }, [isOpen]);
+  }, [isOpen, trigger]);
 
   return dialogRef;
 }
