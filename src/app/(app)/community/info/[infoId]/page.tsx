@@ -6,17 +6,16 @@ import { PostDetailAside, PostDetailAsideProfile } from '../../_components/PostD
 import Comment from '../../_components/Comment';
 import { InfoDetailHeader } from '../_components';
 
-import { POST_CONTENT_CLASS } from '../../_constants/community';
-
 import DownloadIcon from '@/assets/icons/common/download.svg';
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
 import { Button } from '@/components/common/Button';
+import CommunityListState from '../../_components/CommunityListState';
+import PostContent from '../../_components/PostDetail/PostContent';
 
 import { ApiError } from '@/api/client';
 import { useInfoPost } from '@/queries/community/useInfoPost';
 import { useToggleInfoPostLike } from '@/queries/community/useToggleInfoPostLike';
-import CommunityListState from '../../_components/CommunityListState';
 
 import { shareUrl } from '@/lib/shareUrl';
 
@@ -53,10 +52,7 @@ export default function InfoDetailPage() {
         <InfoDetailHeader infoPost={infoPost} />
 
         <article className="flex flex-col gap-6">
-          <div
-            className={POST_CONTENT_CLASS}
-            dangerouslySetInnerHTML={{ __html: infoPost.content }}
-          />
+          <PostContent content={infoPost.content} />
 
           {infoPost.tags.length > 0 && (
             <ul
