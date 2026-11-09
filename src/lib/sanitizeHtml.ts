@@ -40,9 +40,76 @@ const ALLOWED_COLORS = new Set([
 
 const ALLOWED_ALIGNMENTS = new Set(['left', 'center', 'right', 'justify']);
 
-/**
- * 커뮤니티 TipTap HTML에 적용할 추가 정제 규칙입니다.
- */
+function parseColorComponent(value: string, maximum: number): number | null {
+  if (!/^[+-]?(?:\d*\.)?\d+(?:e[+-]?\d+)?%?$/.test(value)) return null;
+
+  const limit = value.endsWith('%') ? 100 : maximum;
+  const number = Number(value.replace(/%$/, ''));
+
+  return Number.isFinite(number) && number >= 0 && number <= limit ? number / limit : null;
+}
+
+// DOM의 CSS 직렬화에 의존하지 않아 서버와 브라우저에서 동일한 RGB 값으로 비교합니다.
+function normalizeColor(value: string): string | null {
+  if (/[^\t\n\f\r\x20-\x7e]/.test(value)) return null;
+  value = value.trim();
+
+  const hexMatch = /^#([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/.exec(value);
+
+  if (hexMatch) {
+    const hex =
+      hexMatch[1].length <= 4
+        ? [...hexMatch[1]].map((digit) => digit.repeat(2)).join('')
+        : hexMatch[1];
+
+    if (hex.length === 8 && hex.slice(6) !== 'ff') return null;
+
+    return `rgb(${[0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16)).join(', ')})`;
+  }
+
+  const match = /^(rgba?|color)\(([^()]*)\)$/.exec(value);
+  if (!match) return null;
+
+  const isSrgb = match[1] === 'color';
+  let components = match[2].trim();
+
+  if (isSrgb) {
+    if (!/^srgb\s+/.test(components)) return null;
+    components = components.replace(/^srgb\s+/, '');
+  }
+
+  let channels: string[];
+  let alpha: string | undefined;
+
+  if (components.includes(',')) {
+    if (isSrgb || components.includes('/')) return null;
+    const parts = components.split(',').map((part) => part.trim());
+    if (parts.length !== 3 && parts.length !== 4) return null;
+    channels = parts.slice(0, 3);
+    alpha = parts[3];
+
+    // 쉼표 구분 RGB 문법에서는 숫자와 백분율을 혼합할 수 없습니다.
+    if (channels.some((channel) => channel.endsWith('%') !== channels[0].endsWith('%'))) {
+      return null;
+    }
+  } else {
+    const parts = components.split('/');
+    if (parts.length > 2) return null;
+    channels = parts[0].trim().split(/\s+/);
+    alpha = parts[1]?.trim();
+  }
+
+  if (channels.length !== 3 || (alpha !== undefined && parseColorComponent(alpha, 1) !== 1)) {
+    return null;
+  }
+
+  const rgb = channels.map((channel) => parseColorComponent(channel, isSrgb ? 1 : 255));
+  if (!rgb.every((channel) => channel !== null)) return null;
+
+  // sRGB 소수 표기의 직렬화 오차를 8비트 RGB로 정규화합니다.
+  return `rgb(${rgb.map((channel) => Math.round(channel * 255)).join(', ')})`;
+}
+
 const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
   const tagName = node.nodeName.toLowerCase();
 
@@ -64,10 +131,11 @@ const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
   const style = data.attrValue.trim().toLowerCase();
 
   if (tagName === 'span') {
-    const match = /^color:\s*(rgb\(\d+,\s*\d+,\s*\d+\))\s*;?$/.exec(style);
+    const match = /^color:([^;]+);?$/.exec(style);
+    const color = match ? normalizeColor(match[1]) : null;
 
-    if (match && ALLOWED_COLORS.has(match[1])) {
-      data.attrValue = `color: ${match[1]};`;
+    if (color && ALLOWED_COLORS.has(color)) {
+      data.attrValue = `color: ${color};`;
       return;
     }
   }
@@ -116,8 +184,7 @@ export function sanitizeHtml(html: string): string {
       ALLOWED_ATTR,
     });
   } finally {
-    // 동기 정제 후 이 호출의 훅만 제거해 Fast Refresh 시 이전 규칙이 남지 않도록 합니다.
-    // 기본 import의 메서드는 콜백을 지정할 수 있습니다. 서버 named export는 이를 전달하지 않습니다.
+    // Fast Refresh 시 훅이 누적되지 않도록 현재 등록한 콜백만 제거합니다.
     DOMPurify.removeHook('uponSanitizeAttribute', sanitizeAttribute);
     DOMPurify.removeHook('afterSanitizeAttributes', secureLink);
   }
