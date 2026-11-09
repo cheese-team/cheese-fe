@@ -131,8 +131,11 @@ const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
   const style = data.attrValue.trim().toLowerCase();
 
   if (tagName === 'span') {
-    const match = /^color:([^;]+);?$/.exec(style);
-    const color = match ? normalizeColor(match[1]) : null;
+    const match = /^color:\s*([^;]+);?$/.exec(style);
+
+    const colorValue = match?.[1].replace(/\s*!important\s*$/, '').trim();
+
+    const color = colorValue ? normalizeColor(colorValue) : null;
 
     if (color && ALLOWED_COLORS.has(color)) {
       data.attrValue = `color: ${color};`;
