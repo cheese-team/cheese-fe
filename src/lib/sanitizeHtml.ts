@@ -143,7 +143,7 @@ const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
       if (colorDeclaration) {
         const colorValue = colorDeclaration
           .slice(colorDeclaration.indexOf(':') + 1)
-          .replace(/\s*!important\s*$/, '')
+          .replace(/!important\s*$/, '')
           .trim();
 
         const color = normalizeColor(colorValue);
