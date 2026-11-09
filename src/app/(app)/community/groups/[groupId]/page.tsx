@@ -9,19 +9,19 @@ import {
   PostDetailAsideProfile,
 } from '../../_components/PostDetailAside';
 import { GroupDetailHeader } from '../_components';
+import CommunityListState from '../../_components/CommunityListState';
+import PostContent from '../../_components/PostDetail/PostContent';
 
 import { ApiError } from '@/api/client';
 import { useGroupPost } from '@/queries/community/useGroupPost';
 import { useApplyGroupPost } from '@/queries/community/useApplyGroupPost';
 import { useToggleGroupPostLike } from '@/queries/community/useToggleGroupPostLike';
-import CommunityListState from '../../_components/CommunityListState';
 
 import { getOptionLabel } from '@/lib/getOptionLabel';
 import { isRecruitClosed } from '@/lib/formatDeadline';
 import { formatDate } from '@/lib/formatDate';
 
 import { WORK_METHOD_OPTIONS } from '@/constants/profileOptions';
-import { POST_CONTENT_CLASS } from '../../_constants/community';
 
 import type { Field } from '@/types/community/community';
 
@@ -83,10 +83,7 @@ export default function GroupDetailPage() {
         <GroupDetailHeader groupPost={groupPost} />
 
         <article className="flex flex-col gap-5">
-          <div
-            className={POST_CONTENT_CLASS}
-            dangerouslySetInnerHTML={{ __html: groupPost.content }}
-          />
+          <PostContent content={groupPost.content} />
         </article>
       </section>
 

@@ -10,6 +10,7 @@ import {
 } from '../../_components/PostDetailAside';
 import { JobDetailHeader } from '../_components';
 import CommunityListState from '../../_components/CommunityListState';
+import PostContent from '../../_components/PostDetail/PostContent';
 
 import { ApiError } from '@/api/client';
 import { useJobPost } from '@/queries/community/useJobPost';
@@ -27,8 +28,6 @@ import {
   EDUCATION_OPTIONS,
   EMPLOYMENT_TYPE_OPTIONS,
 } from '@/constants/profileOptions';
-
-import { POST_CONTENT_CLASS } from '../../_constants/community';
 
 import type { Field } from '@/types/community/community';
 
@@ -117,10 +116,7 @@ export default function JobDetailPage() {
         <JobDetailHeader jobId={jobId} jobPost={jobPost} />
 
         <article className="flex flex-col gap-5">
-          <div
-            className={POST_CONTENT_CLASS}
-            dangerouslySetInnerHTML={{ __html: jobPost.content }}
-          />
+          <PostContent content={jobPost.content} />
         </article>
       </section>
 
