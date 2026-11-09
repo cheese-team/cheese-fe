@@ -131,15 +131,28 @@ const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
   const style = data.attrValue.trim().toLowerCase();
 
   if (tagName === 'span') {
-    const match = /^color:\s*([^;]+);?$/.exec(style);
+    const declarations = style.split(';').map((declaration) => declaration.trim());
 
-    const colorValue = match?.[1].replace(/\s*!important\s*$/, '').trim();
+    const hasInvalidDeclaration = declarations.some(
+      (declaration) => declaration && !declaration.includes(':'),
+    );
 
-    const color = colorValue ? normalizeColor(colorValue) : null;
+    if (!hasInvalidDeclaration) {
+      const colorDeclaration = declarations.find((declaration) => /^color\s*:/.test(declaration));
 
-    if (color && ALLOWED_COLORS.has(color)) {
-      data.attrValue = `color: ${color};`;
-      return;
+      if (colorDeclaration) {
+        const colorValue = colorDeclaration
+          .slice(colorDeclaration.indexOf(':') + 1)
+          .replace(/\s*!important\s*$/, '')
+          .trim();
+
+        const color = normalizeColor(colorValue);
+
+        if (color && ALLOWED_COLORS.has(color)) {
+          data.attrValue = `color: ${color};`;
+          return;
+        }
+      }
     }
   }
 
