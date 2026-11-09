@@ -156,9 +156,15 @@ const secureLink: ElementHook = (node) => {
   if (node.nodeType !== 1 || node.nodeName.toLowerCase() !== 'a') return;
 
   const link = node as Element;
+  const target = link.getAttribute('target');
 
-  if (link.getAttribute('target') !== '_blank') return;
-  if (!link.hasAttribute('href')) return;
+  // 허용되지 않은 target은 제거합니다.
+  if (target && target !== '_blank' && target !== '_self') {
+    link.removeAttribute('target');
+    return;
+  }
+
+  if (target !== '_blank' || !link.hasAttribute('href')) return;
 
   const rel = new Set((link.getAttribute('rel') ?? '').split(/\s+/).filter(Boolean));
 
