@@ -1,4 +1,5 @@
 import DOMPurify from 'isomorphic-dompurify';
+import type { ElementHook, UponSanitizeAttributeHook } from 'isomorphic-dompurify';
 
 const ALLOWED_TAGS = [
   'p',
@@ -41,9 +42,8 @@ const ALLOWED_ALIGNMENTS = new Set(['left', 'center', 'right', 'justify']);
 
 /**
  * 커뮤니티 TipTap HTML에 적용할 추가 정제 규칙입니다.
- * addHook으로 등록한 규칙은 동일한 DOMPurify 인스턴스의 다른 sanitize 호출에도 적용됩니다.
  */
-DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
+const sanitizeAttribute: UponSanitizeAttributeHook = (node, data) => {
   const tagName = node.nodeName.toLowerCase();
 
   if (tagName === 'img' && data.attrName === 'src') {
@@ -82,9 +82,9 @@ DOMPurify.addHook('uponSanitizeAttribute', (node, data) => {
   }
 
   data.keepAttr = false;
-});
+};
 
-DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+const secureLink: ElementHook = (node) => {
   if (node.nodeType !== 1 || node.nodeName.toLowerCase() !== 'a') return;
 
   const link = node as Element;
@@ -98,7 +98,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   rel.add('noreferrer');
 
   link.setAttribute('rel', [...rel].join(' '));
-});
+};
 
 /**
  * 커뮤니티 TipTap 에디터에서 생성한 HTML을 정제합니다.
@@ -107,8 +107,18 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
  * 에디터 기능 변경 시 허용 규칙도 함께 검토해야 합니다.
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-  });
+  DOMPurify.addHook('uponSanitizeAttribute', sanitizeAttribute);
+  DOMPurify.addHook('afterSanitizeAttributes', secureLink);
+
+  try {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS,
+      ALLOWED_ATTR,
+    });
+  } finally {
+    // 동기 정제 후 이 호출의 훅만 제거해 Fast Refresh 시 이전 규칙이 남지 않도록 합니다.
+    // 기본 import의 메서드는 콜백을 지정할 수 있습니다. 서버 named export는 이를 전달하지 않습니다.
+    DOMPurify.removeHook('uponSanitizeAttribute', sanitizeAttribute);
+    DOMPurify.removeHook('afterSanitizeAttributes', secureLink);
+  }
 }
