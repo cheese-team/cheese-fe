@@ -15,7 +15,7 @@ import { NotificationContact } from './NotificationContact';
 type NotificationActionsProps = {
   isRead: boolean;
   mutationsDisabled: boolean;
-  contactDisabled: boolean;
+  isActionPending: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
   viewerId: string;
@@ -29,7 +29,7 @@ const actionClassName =
 export function NotificationActions({
   isRead,
   mutationsDisabled,
-  contactDisabled,
+  isActionPending,
   onRead,
   onDelete,
   viewerId,
@@ -57,13 +57,17 @@ export function NotificationActions({
     const trigger = openPanel === 'delete' ? deleteButton.current : contactButton.current;
     setOpenPanel(null);
     requestAnimationFrame(() => {
-      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+      const target = trigger?.disabled ? menuRef.current : trigger;
+      if (target?.isConnected) target.focus({ preventScroll: true });
     });
   };
 
   return (
     <div
       ref={menuRef}
+      role="group"
+      aria-label="알림 작업"
+      tabIndex={-1}
       className={cn('absolute top-[12px] right-0', openPanel ? 'z-30' : 'z-20')}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && openPanel) {
@@ -115,7 +119,7 @@ export function NotificationActions({
           ref={contactButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'contact' ? null : 'contact'))}
-          disabled={contactDisabled || !senderId}
+          disabled={isActionPending || !senderId}
           aria-label="연락 방법 보기"
           title={senderId ? '상대가 지정한 연락 방법' : '발신자가 없는 알림입니다'}
           aria-expanded={openPanel === 'contact'}
@@ -162,7 +166,7 @@ export function NotificationActions({
           <button
             ref={cancelButton}
             type="button"
-            disabled={mutationsDisabled}
+            disabled={isActionPending}
             onClick={closePanel}
             className={cn(
               dropdownOptionStyle,

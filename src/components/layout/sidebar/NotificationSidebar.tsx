@@ -203,7 +203,7 @@ function NotificationList({ userId }: { userId: string }) {
                 item={item}
                 expanded={expandedId === item.id}
                 mutationsDisabled={mutationsDisabled}
-                contactDisabled={actions.isPending}
+                isActionPending={actions.isPending}
                 onRead={() => void runAction({ type: 'read', notificationId: item.id })}
                 onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
                 viewerId={userId}
