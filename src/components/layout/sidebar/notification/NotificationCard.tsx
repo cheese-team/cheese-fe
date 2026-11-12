@@ -13,7 +13,8 @@ export function NotificationCard({
   item,
   expanded,
   onToggleExpand,
-  actionsDisabled,
+  mutationsDisabled,
+  contactDisabled,
   onRead,
   onDelete,
   viewerId,
@@ -22,7 +23,8 @@ export function NotificationCard({
   item: NotificationItem;
   expanded: boolean;
   onToggleExpand: () => void;
-  actionsDisabled: boolean;
+  mutationsDisabled: boolean;
+  contactDisabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
   viewerId: string;
@@ -94,7 +96,8 @@ export function NotificationCard({
 
       <NotificationActions
         isRead={item.isRead}
-        disabled={actionsDisabled}
+        mutationsDisabled={mutationsDisabled}
+        contactDisabled={contactDisabled}
         onRead={onRead}
         onDelete={onDelete}
         viewerId={viewerId}

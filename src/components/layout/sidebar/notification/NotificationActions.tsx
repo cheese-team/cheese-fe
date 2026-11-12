@@ -14,7 +14,8 @@ import { NotificationContact } from './NotificationContact';
 
 type NotificationActionsProps = {
   isRead: boolean;
-  disabled: boolean;
+  mutationsDisabled: boolean;
+  contactDisabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
   viewerId: string;
@@ -27,7 +28,8 @@ const actionClassName =
 /** 읽음 처리와 삭제 확인을 제공하고, 연락 버튼을 열면 발신자의 선호 연락처를 표시한다. */
 export function NotificationActions({
   isRead,
-  disabled,
+  mutationsDisabled,
+  contactDisabled,
   onRead,
   onDelete,
   viewerId,
@@ -87,7 +89,7 @@ export function NotificationActions({
         <button
           type="button"
           onClick={onRead}
-          disabled={disabled || isRead}
+          disabled={mutationsDisabled || isRead}
           aria-label="알림 읽음 처리"
           title={isRead ? '이미 읽은 알림' : '읽음 처리'}
           className={actionClassName}
@@ -99,7 +101,7 @@ export function NotificationActions({
           ref={deleteButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'delete' ? null : 'delete'))}
-          disabled={disabled}
+          disabled={mutationsDisabled}
           aria-label="알림 삭제"
           title="삭제"
           aria-expanded={openPanel === 'delete'}
@@ -113,7 +115,7 @@ export function NotificationActions({
           ref={contactButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'contact' ? null : 'contact'))}
-          disabled={disabled || !senderId}
+          disabled={contactDisabled || !senderId}
           aria-label="연락 방법 보기"
           title={senderId ? '상대가 지정한 연락 방법' : '발신자가 없는 알림입니다'}
           aria-expanded={openPanel === 'contact'}
@@ -138,7 +140,7 @@ export function NotificationActions({
 
           <button
             type="button"
-            disabled={disabled}
+            disabled={mutationsDisabled}
             onClick={async () => {
               if (await onDelete()) {
                 setOpenPanel(null);
@@ -160,7 +162,7 @@ export function NotificationActions({
           <button
             ref={cancelButton}
             type="button"
-            disabled={disabled}
+            disabled={mutationsDisabled}
             onClick={closePanel}
             className={cn(
               dropdownOptionStyle,

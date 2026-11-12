@@ -119,7 +119,7 @@ function NotificationList({ userId }: { userId: string }) {
   }
 
   const isEmpty = unread.length + read.length === 0;
-  const actionsDisabled = actions.isPending || notifications.isFetching;
+  const mutationsDisabled = actions.isPending || notifications.isFetching;
   const actionLabel = actions.action?.type === 'delete' ? '알림 삭제' : '읽음 처리';
 
   return (
@@ -135,7 +135,7 @@ function NotificationList({ userId }: { userId: string }) {
           <button
             type="button"
             onClick={() => void runAction({ type: 'readAll' })}
-            disabled={actionsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
+            disabled={mutationsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
             title="불러오지 않은 알림까지 모두 읽음 처리"
             className={retryButtonClassName}
           >
@@ -202,7 +202,8 @@ function NotificationList({ userId }: { userId: string }) {
                 key={item.id}
                 item={item}
                 expanded={expandedId === item.id}
-                actionsDisabled={actionsDisabled}
+                mutationsDisabled={mutationsDisabled}
+                contactDisabled={actions.isPending}
                 onRead={() => void runAction({ type: 'read', notificationId: item.id })}
                 onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
                 viewerId={userId}
