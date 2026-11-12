@@ -9,6 +9,7 @@ import { CONTACT_METHOD_OPTIONS } from '@/constants/profileOptions';
 import { ApiError } from '@/api/client';
 import { publicProfileOptions } from '@/queries/profile/publicProfileQueryOptions';
 
+/** 발신자의 공개 프로필에서 선택한 연락 방법과 실제로 열 수 있는 주소를 함께 표시한다. */
 export function NotificationContact({
   viewerId,
   senderId,
@@ -56,9 +57,12 @@ export function NotificationContact({
     );
   }
 
-  const href = getPublicProfileContactHref(profile.data);
+  const senderProfile = profile.data;
+  if (!senderProfile) return <p role="status">공개 프로필이 없습니다.</p>;
+
+  const href = getPublicProfileContactHref(senderProfile);
   const label = CONTACT_METHOD_OPTIONS.find(
-    (option) => option.value === profile.data.contactMethod,
+    (option) => option.value === senderProfile.contactMethod,
   )?.label;
   if (!href || !label) return <p role="status">등록된 연락 방법이 없습니다.</p>;
 
@@ -67,12 +71,12 @@ export function NotificationContact({
       <p className="font-medium text-gray-950">{label}</p>
       <a
         href={href}
-        target={profile.data.contactMethod === 'email' ? undefined : '_blank'}
+        target={senderProfile.contactMethod === 'email' ? undefined : '_blank'}
         rel="noopener noreferrer"
         aria-label={`연락하기: ${label}`}
         className="focus-visible:outline-secondary-600 break-all text-gray-700 underline focus-visible:outline-2"
       >
-        {profile.data.contactMethod === 'email' ? profile.data.email : profile.data.contactUrl}
+        {senderProfile.contactMethod === 'email' ? senderProfile.email : senderProfile.contactUrl}
       </a>
     </div>
   );

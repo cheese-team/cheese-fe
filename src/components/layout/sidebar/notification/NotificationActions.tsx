@@ -4,33 +4,34 @@ import { useEffect, useId, useRef, useState } from 'react';
 
 import DeleteIcon from '@/assets/icons/sidebar/delete.svg';
 import MessageIcon from '@/assets/icons/sidebar/message.svg';
-// import SendIcon from '@/assets/icons/sidebar/send.svg';
+import SendIcon from '@/assets/icons/sidebar/send.svg';
 import {
   dropdownOptionStyle,
   dropdownOptionInteractiveStyle,
 } from '@/components/common/styles/dropdown';
 import { cn } from '@/lib/cn';
-// import { NotificationContact } from './NotificationContact';
+import { NotificationContact } from './NotificationContact';
 
 type NotificationActionsProps = {
   isRead: boolean;
   disabled: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
-  // viewerId: string;
-  // senderId: string;
+  viewerId: string;
+  senderId?: string;
 };
 
 const actionClassName =
   'flex h-[24px] w-[24px] items-center justify-center rounded-[4px] text-gray-500 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-not-allowed disabled:text-gray-300';
 
+/** 읽음 처리와 삭제 확인을 제공하고, 연락 버튼을 열면 발신자의 선호 연락처를 표시한다. */
 export function NotificationActions({
   isRead,
   disabled,
   onRead,
   onDelete,
-  // viewerId,
-  // senderId,
+  viewerId,
+  senderId,
 }: NotificationActionsProps) {
   const [openPanel, setOpenPanel] = useState<'delete' | 'contact' | null>(null);
   const panelId = useId();
@@ -108,8 +109,7 @@ export function NotificationActions({
           <DeleteIcon aria-hidden="true" className="block shrink-0" />
         </button>
 
-        {/* TODO: 알림 API에서 sender.userId(UUID)를 제공하면 연락 방법 조회 버튼 복구 */}
-        {/* <button
+        <button
           ref={contactButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'contact' ? null : 'contact'))}
@@ -121,7 +121,7 @@ export function NotificationActions({
           className={actionClassName}
         >
           <SendIcon aria-hidden="true" className="block shrink-0" />
-        </button> */}
+        </button>
       </div>
 
       {openPanel === 'delete' ? (
@@ -173,8 +173,7 @@ export function NotificationActions({
         </div>
       ) : null}
 
-      {/* TODO: sender.userId(UUID) 적용 후 연락 방법 조회 패널 복구 */}
-      {/* {openPanel === 'contact' && senderId ? (
+      {openPanel === 'contact' && senderId ? (
         <div
           id={panelId}
           role="region"
@@ -187,7 +186,7 @@ export function NotificationActions({
             onRetryStart={() => contactButton.current?.focus({ preventScroll: true })}
           />
         </div>
-      ) : null} */}
+      ) : null}
     </div>
   );
 }

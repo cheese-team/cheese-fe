@@ -16,7 +16,7 @@ export function NotificationCard({
   actionsDisabled,
   onRead,
   onDelete,
-  // viewerId,
+  viewerId,
   onOpenProfile,
 }: {
   item: NotificationItem;
@@ -97,9 +97,8 @@ export function NotificationCard({
         disabled={actionsDisabled}
         onRead={onRead}
         onDelete={onDelete}
-        // TODO: sender.userId(UUID) 적용 후 복구
-        // viewerId={viewerId}
-        // senderId={senderId}
+        viewerId={viewerId}
+        senderId={senderId}
       />
     </article>
   );
