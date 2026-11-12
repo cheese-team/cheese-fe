@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { NotificationActions } from './NotificationActions';
 import type { NotificationItem } from './notificationModel';
 
+/** 발신자의 사용자 ID가 있는 알림에서는 아바타로 공개 프로필을 열 수 있다. */
 export function NotificationCard({
   item,
   expanded,
@@ -16,7 +17,7 @@ export function NotificationCard({
   onRead,
   onDelete,
   // viewerId,
-  // onOpenProfile,
+  onOpenProfile,
 }: {
   item: NotificationItem;
   expanded: boolean;
@@ -29,26 +30,24 @@ export function NotificationCard({
 }) {
   const messageId = useId();
 
-  // TODO: 알림 API의 sender.userId(UUID) 적용 후 참조 변경
-  // const senderId = item.sender?.id == null ? '' : String(item.sender.id).trim();
+  const senderId = item.sender?.userId?.trim();
+  const avatar = <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />;
 
   return (
     <article className="group relative box-border w-full min-w-0 border-b border-gray-300 py-[12px]">
       <div className="absolute top-[12px] left-0">
-        {/* TODO: 알림 API에서 sender.userId(UUID)를 제공하면 프로필 조회 기능 복구 */}
-        <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
-        {/* {senderId ? (
+        {senderId ? (
           <button
             type="button"
             aria-label={`${item.senderName} 프로필 보기`}
             onClick={(event) => onOpenProfile(senderId, event.currentTarget)}
             className="focus-visible:outline-secondary-600 rounded-full focus-visible:outline-2"
           >
-            <ProfileImage src={item.sender?.profileImageUrl} alt="" size={25} />
+            {avatar}
           </button>
         ) : (
-          <ProfileImage alt="" size={25} />
-        )} */}
+          avatar
+        )}
       </div>
 
       <button
