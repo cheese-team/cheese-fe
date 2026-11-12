@@ -19,7 +19,7 @@ type NotificationSidebarProps = {
 };
 
 const retryButtonClassName =
-  'rounded-[5px] border border-gray-300 px-[12px] py-[6px] text-[12px] text-gray-700 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-wait disabled:opacity-50';
+  'rounded-[5px] border border-gray-300 px-[12px] py-[6px] text-[12px] text-gray-700 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-default disabled:opacity-50';
 
 function NotificationFeedback({
   message,

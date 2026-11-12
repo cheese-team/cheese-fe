@@ -152,7 +152,7 @@ export function NotificationActions({
             className={cn(
               dropdownOptionStyle,
               dropdownOptionInteractiveStyle,
-              'shrink-0 text-gray-950 disabled:cursor-wait disabled:opacity-50',
+              'shrink-0 text-gray-950 disabled:cursor-default disabled:opacity-50',
             )}
           >
             네
@@ -165,7 +165,7 @@ export function NotificationActions({
             className={cn(
               dropdownOptionStyle,
               dropdownOptionInteractiveStyle,
-              'shrink-0 text-gray-950 disabled:cursor-wait disabled:opacity-50',
+              'shrink-0 text-gray-950 disabled:cursor-default disabled:opacity-50',
             )}
           >
             아니오
