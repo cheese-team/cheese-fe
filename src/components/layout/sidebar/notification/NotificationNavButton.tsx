@@ -14,6 +14,10 @@ type NotificationNavButtonProps = {
 
 export function NotificationNavButton({ isOpen, onToggle }: NotificationNavButtonProps) {
   const unreadCount = useNotificationUnreadCount();
+  const shouldRefetchOnOpen =
+    unreadCount.isEnabled &&
+    unreadCount.fetchStatus === 'idle' &&
+    (unreadCount.isStale || unreadCount.isError);
   // 실패·인증 만료 때 남은 캐시를 최신 숫자나 0개로 표시하지 않는다.
   const count = unreadCount.isSuccess ? unreadCount.data.count : undefined;
   const hasCount = typeof count === 'number' && Number.isInteger(count) && count >= 0;
@@ -35,8 +39,7 @@ export function NotificationNavButton({ isOpen, onToggle }: NotificationNavButto
       title={label}
       onClick={() => {
         onToggle();
-        // 사용자가 알림함을 열면 오류 후에도 직접 다시 확인할 수 있다.
-        if (!isOpen && !unreadCount.isFetching) void unreadCount.refetch({ cancelRefetch: false });
+        if (!isOpen && shouldRefetchOnOpen) void unreadCount.refetch({ cancelRefetch: false });
       }}
       className={cn('h-[38px] gap-2 p-1', getSidebarItemClassName(isOpen))}
     >

@@ -19,7 +19,7 @@ type NotificationSidebarProps = {
 };
 
 const retryButtonClassName =
-  'rounded-[5px] border border-gray-300 px-[12px] py-[6px] text-[12px] text-gray-700 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-wait disabled:opacity-50';
+  'rounded-[5px] border border-gray-300 px-[12px] py-[6px] text-[12px] text-gray-700 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-default disabled:opacity-50';
 
 function NotificationFeedback({
   message,
@@ -119,7 +119,7 @@ function NotificationList({ userId }: { userId: string }) {
   }
 
   const isEmpty = unread.length + read.length === 0;
-  const actionsDisabled = actions.isPending || notifications.isFetching;
+  const mutationsDisabled = actions.isPending || notifications.isFetching;
   const actionLabel = actions.action?.type === 'delete' ? '알림 삭제' : '읽음 처리';
 
   return (
@@ -135,7 +135,7 @@ function NotificationList({ userId }: { userId: string }) {
           <button
             type="button"
             onClick={() => void runAction({ type: 'readAll' })}
-            disabled={actionsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
+            disabled={mutationsDisabled || (unread.length === 0 && !notifications.hasNextPage)}
             title="불러오지 않은 알림까지 모두 읽음 처리"
             className={retryButtonClassName}
           >
@@ -202,7 +202,8 @@ function NotificationList({ userId }: { userId: string }) {
                 key={item.id}
                 item={item}
                 expanded={expandedId === item.id}
-                actionsDisabled={actionsDisabled}
+                mutationsDisabled={mutationsDisabled}
+                isActionPending={actions.isPending}
                 onRead={() => void runAction({ type: 'read', notificationId: item.id })}
                 onDelete={() => runAction({ type: 'delete', notificationId: item.id })}
                 viewerId={userId}

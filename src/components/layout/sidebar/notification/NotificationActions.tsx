@@ -4,33 +4,36 @@ import { useEffect, useId, useRef, useState } from 'react';
 
 import DeleteIcon from '@/assets/icons/sidebar/delete.svg';
 import MessageIcon from '@/assets/icons/sidebar/message.svg';
-// import SendIcon from '@/assets/icons/sidebar/send.svg';
+import SendIcon from '@/assets/icons/sidebar/send.svg';
 import {
   dropdownOptionStyle,
   dropdownOptionInteractiveStyle,
 } from '@/components/common/styles/dropdown';
 import { cn } from '@/lib/cn';
-// import { NotificationContact } from './NotificationContact';
+import { NotificationContact } from './NotificationContact';
 
 type NotificationActionsProps = {
   isRead: boolean;
-  disabled: boolean;
+  mutationsDisabled: boolean;
+  isActionPending: boolean;
   onRead: () => void;
   onDelete: () => Promise<boolean>;
-  // viewerId: string;
-  // senderId: string;
+  viewerId: string;
+  senderId?: string;
 };
 
 const actionClassName =
   'flex h-[24px] w-[24px] items-center justify-center rounded-[4px] text-gray-500 hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-secondary-600 disabled:cursor-not-allowed disabled:text-gray-300';
 
+/** 읽음 처리와 삭제 확인을 제공하고, 연락 버튼을 열면 발신자의 선호 연락처를 표시한다. */
 export function NotificationActions({
   isRead,
-  disabled,
+  mutationsDisabled,
+  isActionPending,
   onRead,
   onDelete,
-  // viewerId,
-  // senderId,
+  viewerId,
+  senderId,
 }: NotificationActionsProps) {
   const [openPanel, setOpenPanel] = useState<'delete' | 'contact' | null>(null);
   const panelId = useId();
@@ -54,13 +57,17 @@ export function NotificationActions({
     const trigger = openPanel === 'delete' ? deleteButton.current : contactButton.current;
     setOpenPanel(null);
     requestAnimationFrame(() => {
-      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+      const target = trigger?.disabled ? menuRef.current : trigger;
+      if (target?.isConnected) target.focus({ preventScroll: true });
     });
   };
 
   return (
     <div
       ref={menuRef}
+      role="group"
+      aria-label="알림 작업"
+      tabIndex={-1}
       className={cn('absolute top-[12px] right-0', openPanel ? 'z-30' : 'z-20')}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && openPanel) {
@@ -86,7 +93,7 @@ export function NotificationActions({
         <button
           type="button"
           onClick={onRead}
-          disabled={disabled || isRead}
+          disabled={mutationsDisabled || isRead}
           aria-label="알림 읽음 처리"
           title={isRead ? '이미 읽은 알림' : '읽음 처리'}
           className={actionClassName}
@@ -98,7 +105,7 @@ export function NotificationActions({
           ref={deleteButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'delete' ? null : 'delete'))}
-          disabled={disabled}
+          disabled={mutationsDisabled}
           aria-label="알림 삭제"
           title="삭제"
           aria-expanded={openPanel === 'delete'}
@@ -108,12 +115,11 @@ export function NotificationActions({
           <DeleteIcon aria-hidden="true" className="block shrink-0" />
         </button>
 
-        {/* TODO: 알림 API에서 sender.userId(UUID)를 제공하면 연락 방법 조회 버튼 복구 */}
-        {/* <button
+        <button
           ref={contactButton}
           type="button"
           onClick={() => setOpenPanel((panel) => (panel === 'contact' ? null : 'contact'))}
-          disabled={disabled || !senderId}
+          disabled={isActionPending || !senderId}
           aria-label="연락 방법 보기"
           title={senderId ? '상대가 지정한 연락 방법' : '발신자가 없는 알림입니다'}
           aria-expanded={openPanel === 'contact'}
@@ -121,7 +127,7 @@ export function NotificationActions({
           className={actionClassName}
         >
           <SendIcon aria-hidden="true" className="block shrink-0" />
-        </button> */}
+        </button>
       </div>
 
       {openPanel === 'delete' ? (
@@ -138,7 +144,7 @@ export function NotificationActions({
 
           <button
             type="button"
-            disabled={disabled}
+            disabled={mutationsDisabled}
             onClick={async () => {
               if (await onDelete()) {
                 setOpenPanel(null);
@@ -152,7 +158,7 @@ export function NotificationActions({
             className={cn(
               dropdownOptionStyle,
               dropdownOptionInteractiveStyle,
-              'shrink-0 text-gray-950 disabled:cursor-wait disabled:opacity-50',
+              'shrink-0 text-gray-950 disabled:cursor-default disabled:opacity-50',
             )}
           >
             네
@@ -160,12 +166,12 @@ export function NotificationActions({
           <button
             ref={cancelButton}
             type="button"
-            disabled={disabled}
+            disabled={isActionPending}
             onClick={closePanel}
             className={cn(
               dropdownOptionStyle,
               dropdownOptionInteractiveStyle,
-              'shrink-0 text-gray-950 disabled:cursor-wait disabled:opacity-50',
+              'shrink-0 text-gray-950 disabled:cursor-default disabled:opacity-50',
             )}
           >
             아니오
@@ -173,8 +179,7 @@ export function NotificationActions({
         </div>
       ) : null}
 
-      {/* TODO: sender.userId(UUID) 적용 후 연락 방법 조회 패널 복구 */}
-      {/* {openPanel === 'contact' && senderId ? (
+      {openPanel === 'contact' && senderId ? (
         <div
           id={panelId}
           role="region"
@@ -187,7 +192,7 @@ export function NotificationActions({
             onRetryStart={() => contactButton.current?.focus({ preventScroll: true })}
           />
         </div>
-      ) : null} */}
+      ) : null}
     </div>
   );
 }

@@ -30,6 +30,7 @@ function notificationRefreshOptions(
   queryClient: QueryClient,
   userId: string | undefined,
   enabled: boolean,
+  refetchOnMount: true | 'always',
 ) {
   const canRefresh = ({ state }: RefreshQuery) =>
     enabled &&
@@ -51,7 +52,7 @@ function notificationRefreshOptions(
         : false,
     refetchOnWindowFocus: refetchOnReturn,
     refetchOnReconnect: refetchOnReturn,
-    refetchOnMount: refetchOnReturn,
+    refetchOnMount: (query: RefreshQuery) => canRefresh(query) && refetchOnMount,
   };
 }
 
@@ -96,7 +97,8 @@ export function notificationListOptions(
   }: NotificationListQueryParams & NotificationUserParams,
 ) {
   return infiniteQueryOptions({
-    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh),
+    // 알림함 재진입 시 캐시가 만료되거나 무효화된 목록만 다시 조회한다.
+    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh, true),
     queryKey: notificationQueryKeys.list(userId ?? '', limit),
     queryFn: ({ pageParam, signal }) =>
       fetchForNotificationUser(queryClient, userId, () =>
@@ -127,7 +129,7 @@ export function notificationUnreadCountOptions(
   { userId, enabled = true, autoRefresh = true }: NotificationQueryParams & NotificationUserParams,
 ) {
   return queryOptions({
-    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh),
+    ...notificationRefreshOptions(queryClient, userId, enabled && autoRefresh, 'always'),
     queryKey: notificationQueryKeys.unreadCount(userId ?? ''),
     queryFn: ({ signal }) =>
       fetchForNotificationUser(queryClient, userId, () => getNotificationUnreadCount({ signal })),
