@@ -4,12 +4,14 @@ import ProfileImage from '@/components/common/ProfileImage';
 
 import { useCalendarStore } from '@/app/(app)/calendar/_store/CalendarStoreProvider';
 
+import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+
 import { getBusiestWeekdayLabel, getThisWeekRemainingEvents } from '../_lib/events';
 
-import { getMockPersonalProfile } from '@/mocks/profile/userProfiles';
-
 export default function DashboardGreetingSection() {
-  const profile = getMockPersonalProfile(1);
+  const { data: user } = useCurrentUser();
+  const profile = user?.profile;
+
   const { events } = useCalendarStore();
 
   const remainingThisWeek = getThisWeekRemainingEvents(events).length;
@@ -17,11 +19,11 @@ export default function DashboardGreetingSection() {
 
   return (
     <section className="flex items-center justify-center gap-5 py-5">
-      <ProfileImage src={profile.profileImageUrl} size={40} />
+      <ProfileImage src={profile?.profileImageUrl} size={40} />
 
       <div className="flex min-w-0 flex-col gap-1 text-left">
         <h1 className="text-[24px] leading-[30px] font-medium">
-          반갑습니다 {profile.nickname}님, 이번주 남은 일정이{' '}
+          반갑습니다{profile?.displayName ? ` ${profile.displayName}님` : ''}, 이번주 남은 일정이{' '}
           <span className="text-secondary-800 text-[28px] font-bold">{remainingThisWeek}</span>개
           있어요
         </h1>
