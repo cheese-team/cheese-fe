@@ -25,7 +25,7 @@ export default function DashboardCommunitySection() {
 
   return (
     <section>
-      <DashboardSectionHeader icon={<CommunityIcon />} title="커뮤니티" className="mb-4" />
+      <DashboardSectionHeader icon={<CommunityIcon />} title="커뮤니티" href="/community" />
 
       {isError && (
         <div
