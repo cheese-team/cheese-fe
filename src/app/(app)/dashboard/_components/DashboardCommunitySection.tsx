@@ -1,83 +1,82 @@
+'use client';
+
 import Link from 'next/link';
 
-import { CommunityIcon } from '@/assets/icons/sidebar';
-
+import { Button } from '@/components/common/Button';
 import DashboardPostList from './DashboardPostList';
 import DashboardSectionHeader from './DashboardSectionHeader';
 
-import { groupPosts, infoPosts, jobPosts } from '@/mocks/posts';
+import { ApiError } from '@/api/client';
+import { useDashboardPopularPosts } from '@/queries/community/useDashboardPopularPosts';
 
-type PopularPostItem = {
-  id: string;
-  category: string;
-  title: string;
-  likeCount: number;
-  viewCount: number;
-  href: string;
-};
+import { cn } from '@/lib/cn';
 
-function toPopularPosts(): { daily: PopularPostItem[]; weekly: PopularPostItem[] } {
-  const items: PopularPostItem[] = [
-    ...jobPosts.map((post) => ({
-      id: `job-${post.id}`,
-      category: '채용공고',
-      title: post.title,
-      likeCount: post.likeCount,
-      viewCount: post.viewCount,
-      href: `/community/jobs/${post.id}`,
-    })),
-    ...groupPosts.map((post) => ({
-      id: `group-${post.id}`,
-      category: '그룹모집',
-      title: post.title,
-      likeCount: post.likeCount,
-      viewCount: post.viewCount,
-      href: `/community/groups/${post.id}`,
-    })),
-    ...infoPosts.map((post) => ({
-      id: `info-${post.id}`,
-      category:
-        post.category === 'question' ? 'Q&A' : post.category === 'resource' ? '자료공유' : '정보',
-      title: post.title,
-      likeCount: post.likeCount,
-      viewCount: post.viewCount,
-      href: `/community/info/${post.id}`,
-    })),
-  ];
-
-  const byLike = [...items].sort((a, b) => b.likeCount - a.likeCount);
-  const byView = [...items].sort((a, b) => b.viewCount - a.viewCount);
-
-  return {
-    daily: byLike.slice(0, 4),
-    weekly: byView.slice(0, 4),
-  };
-}
+import { CommunityIcon } from '@/assets/icons/sidebar';
 
 export default function DashboardCommunitySection() {
-  const popularPosts = toPopularPosts();
+  const {
+    data: popularPosts,
+    error,
+    isPending,
+    isError,
+    isFetching,
+    refetch,
+  } = useDashboardPopularPosts();
 
   return (
     <section>
       <DashboardSectionHeader icon={<CommunityIcon />} title="커뮤니티" className="mb-4" />
 
-      {popularPosts.daily.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4">
-          <DashboardPostList
-            title="일간 인기 게시글"
-            href="/community/jobs"
-            posts={popularPosts.daily}
-          />
-          <DashboardPostList
-            title="주간 인기 게시글"
-            href="/community/jobs"
-            posts={popularPosts.weekly}
-          />
+      {isError && (
+        <div
+          role="alert"
+          className={cn(
+            'flex flex-col items-center justify-center gap-3 rounded-[10px] bg-white',
+            popularPosts ? 'mb-4 py-3' : 'min-h-[188px] border border-gray-300 p-8',
+          )}
+        >
+          <p className="flex flex-col text-center text-[15px] font-medium text-gray-800">
+            <span>
+              {popularPosts
+                ? '게시글을 새로고침하지 못했습니다.'
+                : error instanceof ApiError
+                  ? error.message
+                  : '커뮤니티 게시글을 불러오지 못했습니다.'}
+            </span>
+
+            {popularPosts && <span>이전에 불러온 결과를 표시합니다.</span>}
+          </p>
+
+          <Button
+            type="button"
+            width={120}
+            size={30}
+            disabled={isFetching}
+            onClick={() => {
+              void refetch();
+            }}
+          >
+            다시 시도
+          </Button>
         </div>
-      ) : (
-        <div className="flex min-h-[160px] flex-col items-center justify-center rounded-[10px] border border-gray-300 bg-white p-8 text-center">
+      )}
+
+      {isPending ? (
+        <div
+          role="status"
+          className="flex min-h-[188px] items-center justify-center rounded-[10px] border border-gray-300 bg-white p-8 text-[15px] font-medium text-gray-600"
+        >
+          커뮤니티 게시글을 불러오는 중입니다.
+        </div>
+      ) : popularPosts && popularPosts.recent.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4">
+          <DashboardPostList title="최근 게시글" posts={popularPosts.recent} />
+          <DashboardPostList title="주간 인기 게시글" posts={popularPosts.weekly} />
+        </div>
+      ) : popularPosts ? (
+        <div className="flex min-h-[188px] flex-col items-center justify-center rounded-[10px] border border-gray-300 bg-white p-8 text-center">
           <p className="text-text-muted text-[15px] leading-[22px] font-medium">
-            인기 게시글이 없습니다.
+            등록된 게시글이 없습니다.
           </p>
 
           <Link
@@ -87,7 +86,7 @@ export default function DashboardCommunitySection() {
             커뮤니티 둘러보기
           </Link>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }
