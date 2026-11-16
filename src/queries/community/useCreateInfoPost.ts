@@ -10,9 +10,14 @@ export function useCreateInfoPost() {
   return useMutation({
     mutationFn: (request: CreateInfoPostRequest) => createInfoPost(request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.infoLists(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.infoLists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

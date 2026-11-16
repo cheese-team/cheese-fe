@@ -69,7 +69,14 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
     onSuccess: async () => {
       updateCommentCount(1);
-      await queryClient.invalidateQueries({ queryKey, exact: true });
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey, exact: true }),
+        category === 'info' &&
+          queryClient.invalidateQueries({
+            queryKey: communityQueryKeys.dashboardPopularPosts(),
+          }),
+      ]);
     },
   });
 
@@ -159,6 +166,12 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
           })),
         };
       });
+
+      if (category === 'info') {
+        void queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        });
+      }
     },
   });
 

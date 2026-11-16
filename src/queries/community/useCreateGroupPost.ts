@@ -10,9 +10,14 @@ export function useCreateGroupPost() {
   return useMutation({
     mutationFn: (request: CreateGroupPostRequest) => createGroupPost(request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.groupLists(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.groupLists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

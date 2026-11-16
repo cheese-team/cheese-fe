@@ -82,11 +82,15 @@ export function useToggleInfoPostLike() {
           };
         },
       );
-      if (response.isLiked) {
-        await queryClient.invalidateQueries({
-          queryKey: mypageQueryKeys.bookmarks('info'),
-        });
-      }
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+        response.isLiked &&
+          queryClient.invalidateQueries({
+            queryKey: mypageQueryKeys.bookmarks('info'),
+          }),
+      ]);
     },
   });
 }

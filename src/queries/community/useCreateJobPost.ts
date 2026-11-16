@@ -10,9 +10,14 @@ export function useCreateJobPost() {
   return useMutation({
     mutationFn: (request: CreateJobPostRequest) => createJobPost(request),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.jobLists(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.jobLists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

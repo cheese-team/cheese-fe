@@ -86,9 +86,14 @@ export function useToggleGroupPostLike() {
         },
       );
 
-      await queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.groupApplications(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: mypageQueryKeys.groupApplications(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

@@ -33,11 +33,7 @@ export function useToggleJobPostLike() {
       ]);
     },
 
-    onSuccess: (response, variables) => {
-      void queryClient.invalidateQueries({
-        queryKey: mypageQueryKeys.jobApplications(),
-      });
-
+    onSuccess: async (response, variables) => {
       const updateLike = <T extends JobPost | JobPostDetail>(post: T): T => ({
         ...post,
         isLiked: response.isLiked,
@@ -85,6 +81,15 @@ export function useToggleJobPostLike() {
           };
         },
       );
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: mypageQueryKeys.jobApplications(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }
