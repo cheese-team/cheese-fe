@@ -16,9 +16,14 @@ export function useDeleteJobPost() {
         exact: true,
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.jobLists(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.jobLists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

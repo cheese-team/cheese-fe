@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
@@ -9,6 +8,7 @@ import { Button } from '@/components/common/Button';
 
 import { CommunityPostForm } from '../../_components/CommunityPostForm';
 import { FormField } from '../../_components/CommunityPostForm';
+import { useCommunityPostNavigation } from '../../_components/Layout/CommunityPostNavigationProvider';
 
 import useFileUpload from '@/hooks/useFileUpload';
 import useTagInput from '@/hooks/useTagInput';
@@ -19,7 +19,7 @@ import { useUpdateInfoPost } from '@/queries/community/useUpdateInfoPost';
 import { useUploadFile } from '@/queries/files/useUploadFile';
 import { useUploadDocument } from '@/queries/files/useUploadDocument';
 
-import { INFO_SORT_OPTIONS } from '../../_constants/community';
+import { INFO_POST_LIMITS, INFO_SORT_OPTIONS } from '../../_constants/community';
 
 import UploadIcon from '@/assets/icons/common/upload.svg';
 import CloseIcon from '@/assets/icons/common/close.svg';
@@ -41,7 +41,7 @@ type InfoPostFormProps = {
 };
 
 export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps) {
-  const router = useRouter();
+  const { replaceAfterSave } = useCommunityPostNavigation();
 
   const [errors, setErrors] = useState<FormErrors>({});
   const clearError = (name: keyof FormErrors) => {
@@ -69,8 +69,8 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
   const { tagInput, tags, tagError, handleTagInputChange, removeTag, handleTagKeyDown } =
     useTagInput({
       initialTags: initialValues?.tags ?? [],
-      maxTags: 5,
-      maxLength: 20,
+      maxTags: INFO_POST_LIMITS.maxTags,
+      maxLength: INFO_POST_LIMITS.tagMaxLength,
     });
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,8 +123,8 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
 
     if (!title) {
       nextErrors.title = '제목을 입력해주세요.';
-    } else if (title.length > 100) {
-      nextErrors.title = '제목은 최대 100자까지 입력할 수 있습니다.';
+    } else if (title.length > INFO_POST_LIMITS.title) {
+      nextErrors.title = `제목은 최대 ${INFO_POST_LIMITS.title}자까지 입력할 수 있습니다.`;
     }
 
     if (category === '') {
@@ -150,7 +150,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
           ...(uploadedFile ? { attachmentFileId: uploadedFile.id } : {}),
         });
 
-        router.replace(`/community/info/${createdInfoPost.id}`);
+        replaceAfterSave(`/community/info/${createdInfoPost.id}`);
       } catch (error) {
         alert(
           error instanceof ApiError ? error.message : '정보/자료공유 게시글 등록에 실패했습니다.',
@@ -181,7 +181,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
         },
       });
 
-      router.replace(`/community/info/${initialValues.id}`);
+      replaceAfterSave(`/community/info/${initialValues.id}`);
     } catch (error) {
       alert(
         error instanceof ApiError ? error.message : '정보/자료공유 게시글 수정에 실패했습니다.',
@@ -202,7 +202,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
           required
           label="제목"
           name="title"
-          maxLength={100}
+          maxLength={INFO_POST_LIMITS.title}
           errorMessage={errors.title}
           onChange={() => clearError('title')}
           placeholder="제목"
@@ -326,7 +326,7 @@ export default function InfoPostForm({ mode, initialValues }: InfoPostFormProps)
             <Input
               label="태그 등록"
               name="tags"
-              placeholder="# 최대 5개의 태그를 설정할 수 있습니다"
+              placeholder={`# 최대 ${INFO_POST_LIMITS.maxTags}개의 태그를 설정할 수 있습니다`}
               value={tagInput}
               errorMessage={tagError || undefined}
               onChange={(event) => handleTagInputChange(event.target.value)}

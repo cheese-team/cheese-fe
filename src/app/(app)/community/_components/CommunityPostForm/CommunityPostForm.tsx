@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 import { BackButton } from '@/components/common/BackButton';
 import { Button } from '@/components/common/Button';
 
 import CommunityPostEditor from '../CommunityPostEditor';
+import { useCommunityPostNavigation } from '../Layout/CommunityPostNavigationProvider';
 
 import { COMMUNITY_CATEGORY_TABS } from '../../_constants/community';
 
@@ -31,7 +32,7 @@ export default function CommunityPostForm({
 }: CommunityPostFormProps) {
   const [content, setContent] = useState(initialContent);
 
-  const router = useRouter();
+  const { navigate } = useCommunityPostNavigation();
   const pathname = usePathname();
 
   const currentCategory = COMMUNITY_CATEGORY_TABS.find((tab) => pathname.startsWith(tab.value));
@@ -46,13 +47,9 @@ export default function CommunityPostForm({
   const formId = 'community-post-form';
 
   const handleBackClick = () => {
-    const isConfirmed = window.confirm('작성 중인 내용이 사라집니다. 이동하시겠습니까?');
-
-    if (!isConfirmed) return;
-
     const backHref = mode === 'edit' ? detailPageHref : listPageHref;
 
-    router.push(backHref);
+    navigate(backHref);
   };
 
   return (

@@ -3,10 +3,9 @@
 import { useId, useState } from 'react';
 
 import { Input, InputActionButton } from '@/components/common/Input';
+import { Select } from '@/components/common/Select';
 import EmailVerifyForm from '@/app/(public)/_components/EmailVerifyForm';
 import MypageModalLayout from './MypageModalLayout';
-
-import ChevronIcon from '@/assets/icons/common/chevron.svg';
 
 import { validateEmail } from '@/app/(public)/(auth)/_lib/validation';
 
@@ -168,28 +167,18 @@ export default function SelectEditModal({
             {inputLabel}
           </label>
 
-          {/* TODO: custom option으로 교체 (공통 컴포넌트) */}
-          <div className="flex h-10 w-full items-center gap-2 border-b border-gray-400 px-2">
-            <select
-              id={`${formId}-select`}
-              value={selectedValue}
-              disabled={isDisabled}
-              onChange={(e) => {
-                setSelectedValue(e.target.value);
-                setUrl(e.target.value === value ? (contactUrl ?? '') : '');
-                setUrlError(undefined);
-              }}
-              className="flex-1 appearance-none outline-none"
-            >
-              {options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-
-            <ChevronIcon className="pointer-events-none h-[10px] rotate-90 text-gray-500" />
-          </div>
+          <Select
+            id={`${formId}-select`}
+            value={selectedValue ?? ''}
+            options={options.map((option) => ({ label: option, value: option }))}
+            disabled={isDisabled}
+            onChange={(nextValue) => {
+              setSelectedValue(nextValue);
+              setUrl(nextValue === value ? (contactUrl ?? '') : '');
+              setUrlError(undefined);
+            }}
+            triggerClassName="h-10 gap-2 px-2 font-normal data-[state=open]:rounded-none data-[state=open]:border-0 data-[state=open]:border-b-2 data-[state=open]:pl-2"
+          />
           {isEmailSelected && (
             <Input
               type="email"

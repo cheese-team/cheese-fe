@@ -1,12 +1,22 @@
 import EmailVerifyForm from '../../_components/EmailVerifyForm';
 
+import type { ApiError } from '@/api/client';
+
 type VerifyStepProps = {
   initialEmail?: string;
+  initialRemainingSeconds: number;
   onNext: (email: string) => void;
+  onSocialPasswordResetUnsupported: (error: ApiError) => void;
   emailDisabled?: boolean;
 };
 
-export default function VerifyStep({ initialEmail, onNext, emailDisabled }: VerifyStepProps) {
+export default function VerifyStep({
+  initialEmail,
+  initialRemainingSeconds,
+  onNext,
+  onSocialPasswordResetUnsupported,
+  emailDisabled,
+}: VerifyStepProps) {
   return (
     <EmailVerifyForm
       title="비밀번호 재설정"
@@ -18,8 +28,10 @@ export default function VerifyStep({ initialEmail, onNext, emailDisabled }: Veri
         </>
       }
       initialEmail={initialEmail}
-      sendOnOpen
+      initialStatus="SENT"
+      initialRemainingSeconds={initialRemainingSeconds}
       onNext={onNext}
+      onSocialPasswordResetUnsupported={onSocialPasswordResetUnsupported}
       emailDisabled={emailDisabled}
       purpose="password-reset"
     />

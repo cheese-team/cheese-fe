@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
@@ -9,6 +8,7 @@ import DatePicker from '@/components/common/DatePicker/DatePicker';
 
 import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
 import CommunityListState from '../../_components/CommunityListState';
+import { useCommunityPostNavigation } from '../../_components/Layout/CommunityPostNavigationProvider';
 
 import { ApiError } from '@/api/client';
 
@@ -26,17 +26,10 @@ import {
   EMPLOYMENT_TYPE_OPTIONS,
   FIELD_OPTIONS,
 } from '@/constants/profileOptions';
+import { JOB_POST_LIMITS } from '../../_constants/community';
 
 import type { JobPost } from '@/types/community/community';
 import type { CreateJobPostRequest } from '@/api/community.api';
-
-const MAX_LENGTH = {
-  title: 100,
-  companyName: 20,
-  location: 100,
-  skills: 200,
-  url: 2048,
-} as const;
 
 type JobPostFormProps = {
   mode: 'create' | 'edit';
@@ -49,7 +42,7 @@ type FormErrors = Partial<
 >;
 
 export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormProps) {
-  const router = useRouter();
+  const { replaceAfterSave } = useCommunityPostNavigation();
   const [errors, setErrors] = useState<FormErrors>({});
   const clearError = (name: keyof FormErrors) => {
     setErrors((previous) => ({ ...previous, [name]: undefined }));
@@ -118,27 +111,27 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
 
     if (!title) {
       nextErrors.title = '제목을 입력해주세요.';
-    } else if (title.length > MAX_LENGTH.title) {
-      nextErrors.title = `제목은 최대 ${MAX_LENGTH.title}자까지 입력할 수 있습니다.`;
+    } else if (title.length > JOB_POST_LIMITS.title) {
+      nextErrors.title = `제목은 최대 ${JOB_POST_LIMITS.title}자까지 입력할 수 있습니다.`;
     }
     if (selectedFields.length === 0) nextErrors.field = '모집분야를 선택해주세요.';
 
     if (!companyName) {
       nextErrors.companyName = '회사명을 입력해주세요.';
-    } else if (companyName.length > MAX_LENGTH.companyName) {
-      nextErrors.companyName = `회사명은 최대 ${MAX_LENGTH.companyName}자까지 입력할 수 있습니다.`;
+    } else if (companyName.length > JOB_POST_LIMITS.companyName) {
+      nextErrors.companyName = `회사명은 최대 ${JOB_POST_LIMITS.companyName}자까지 입력할 수 있습니다.`;
     }
 
-    if (location.length > MAX_LENGTH.location) {
-      nextErrors.location = `근무 지역은 최대 ${MAX_LENGTH.location}자까지 입력할 수 있습니다.`;
+    if (location.length > JOB_POST_LIMITS.location) {
+      nextErrors.location = `근무 지역은 최대 ${JOB_POST_LIMITS.location}자까지 입력할 수 있습니다.`;
     }
 
-    if (skillsInput.length > MAX_LENGTH.skills) {
-      nextErrors.skills = `필요스킬은 최대 ${MAX_LENGTH.skills}자까지 입력할 수 있습니다.`;
+    if (skillsInput.length > JOB_POST_LIMITS.skills) {
+      nextErrors.skills = `필요스킬은 최대 ${JOB_POST_LIMITS.skills}자까지 입력할 수 있습니다.`;
     }
 
-    if (applyUrl.length > MAX_LENGTH.url) {
-      nextErrors.url = `공고 URL은 최대 ${MAX_LENGTH.url}자까지 입력할 수 있습니다.`;
+    if (applyUrl.length > JOB_POST_LIMITS.url) {
+      nextErrors.url = `공고 URL은 최대 ${JOB_POST_LIMITS.url}자까지 입력할 수 있습니다.`;
     } else if (!isCompanyProfile && !applyUrl) {
       nextErrors.url = '공고 URL을 입력해주세요.';
     } else if (applyUrl && !isHttpUrl(applyUrl)) {
@@ -181,7 +174,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
     if (mode === 'create') {
       createJobPost(jobPostData, {
         onSuccess: (createdJobPost) => {
-          router.replace(`/community/jobs/${createdJobPost.id}`);
+          replaceAfterSave(`/community/jobs/${createdJobPost.id}`);
         },
         onError,
       });
@@ -197,7 +190,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
       },
       {
         onSuccess: () => {
-          router.replace(`/community/jobs/${jobId}`);
+          replaceAfterSave(`/community/jobs/${jobId}`);
         },
         onError,
       },
@@ -242,7 +235,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
           <Input
             label="제목"
             name="title"
-            maxLength={MAX_LENGTH.title}
+            maxLength={JOB_POST_LIMITS.title}
             errorMessage={errors.title}
             onChange={() => clearError('title')}
             required
@@ -258,7 +251,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
             <Input
               label="회사명"
               name="companyName"
-              maxLength={MAX_LENGTH.companyName}
+              maxLength={JOB_POST_LIMITS.companyName}
               errorMessage={errors.companyName}
               onChange={() => clearError('companyName')}
               required
@@ -303,7 +296,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
             <Input
               label="근무 지역"
               name="location"
-              maxLength={MAX_LENGTH.location}
+              maxLength={JOB_POST_LIMITS.location}
               errorMessage={errors.location}
               onChange={() => clearError('location')}
               placeholder="근무 지역 입력"
@@ -325,7 +318,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
             <Input
               label="필요스킬"
               name="skills"
-              maxLength={MAX_LENGTH.skills}
+              maxLength={JOB_POST_LIMITS.skills}
               errorMessage={errors.skills}
               onChange={() => clearError('skills')}
               placeholder="예) React, TypeScript"
@@ -360,7 +353,7 @@ export default function JobPostForm({ mode, jobId, initialValues }: JobPostFormP
             <Input
               label="공고 URL"
               name="url"
-              maxLength={MAX_LENGTH.url}
+              maxLength={JOB_POST_LIMITS.url}
               type="url"
               required={!isCompanyProfile}
               errorMessage={errors.url}

@@ -75,7 +75,7 @@ export default function ProblemResultTable({ problemSetId, rows }: ProblemResult
                 className="absolute top-0 right-[40px] gap-[12px] !text-[16px]"
               >
                 <Link href={reviewHref}>
-                  <ProblemActionIcon className="h-[16px] w-[16px] shrink-0" />
+                  <ProblemActionIcon className="h-[16px] w-[16px]" />
                   <span>복습하기</span>
                 </Link>
               </Button>

@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import DatePicker from '@/components/common/DatePicker/DatePicker';
 
 import { CommunityPostForm, FormField } from '../../_components/CommunityPostForm';
+import { useCommunityPostNavigation } from '../../_components/Layout/CommunityPostNavigationProvider';
 
 import { ApiError } from '@/api/client';
 import { useCreateGroupPost } from '@/queries/community/useCreateGroupPost';
@@ -17,15 +17,10 @@ import { formatDate } from '@/lib/formatDate';
 import { toFieldArray, toFieldSelectValue, type FieldSelectValue } from '@/lib/jobField';
 
 import { FIELD_OPTIONS, WORK_METHOD_OPTIONS } from '@/constants/profileOptions';
+import { GROUP_POST_LIMITS } from '../../_constants/community';
 
 import type { GroupPost } from '@/types/community/community';
 import type { CreateGroupPostRequest } from '@/api/community.api';
-
-const MAX_LENGTH = {
-  title: 100,
-  expectedPeriod: 100,
-  skills: 200,
-} as const;
 
 type FormErrors = Partial<
   Record<
@@ -41,7 +36,7 @@ type GroupPostFormProps = {
 };
 
 export default function GroupPostForm({ mode, groupId, initialValues }: GroupPostFormProps) {
-  const router = useRouter();
+  const { replaceAfterSave } = useCommunityPostNavigation();
 
   const [errors, setErrors] = useState<FormErrors>({});
   const clearError = (name: keyof FormErrors) => {
@@ -97,20 +92,20 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
 
     if (!title) {
       nextErrors.title = '제목을 입력해주세요.';
-    } else if (title.length > MAX_LENGTH.title) {
-      nextErrors.title = `제목은 최대 ${MAX_LENGTH.title}자까지 입력할 수 있습니다.`;
+    } else if (title.length > GROUP_POST_LIMITS.title) {
+      nextErrors.title = `제목은 최대 ${GROUP_POST_LIMITS.title}자까지 입력할 수 있습니다.`;
     }
 
     if (selectedFields.length === 0) {
       nextErrors.field = '모집분야를 선택해주세요.';
     }
 
-    if (expectedPeriod.length > MAX_LENGTH.expectedPeriod) {
-      nextErrors.expectedPeriod = `예상 기간은 최대 ${MAX_LENGTH.expectedPeriod}자까지 입력할 수 있습니다.`;
+    if (expectedPeriod.length > GROUP_POST_LIMITS.expectedPeriod) {
+      nextErrors.expectedPeriod = `예상 기간은 최대 ${GROUP_POST_LIMITS.expectedPeriod}자까지 입력할 수 있습니다.`;
     }
 
-    if (skillsInput.length > MAX_LENGTH.skills) {
-      nextErrors.skills = `필요스킬은 최대 ${MAX_LENGTH.skills}자까지 입력할 수 있습니다.`;
+    if (skillsInput.length > GROUP_POST_LIMITS.skills) {
+      nextErrors.skills = `필요스킬은 최대 ${GROUP_POST_LIMITS.skills}자까지 입력할 수 있습니다.`;
     }
 
     if (!recruitCountInput) {
@@ -154,7 +149,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
     if (mode === 'create') {
       createGroupPost(groupPostPayload, {
         onSuccess: (createdGroupPost) => {
-          router.replace(`/community/groups/${createdGroupPost.id}`);
+          replaceAfterSave(`/community/groups/${createdGroupPost.id}`);
         },
         onError,
       });
@@ -167,7 +162,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
       { groupId, data: groupPostPayload },
       {
         onSuccess: () => {
-          router.replace(`/community/groups/${groupId}`);
+          replaceAfterSave(`/community/groups/${groupId}`);
         },
         onError,
       },
@@ -187,7 +182,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
           <Input
             label="제목"
             name="title"
-            maxLength={MAX_LENGTH.title}
+            maxLength={GROUP_POST_LIMITS.title}
             errorMessage={errors.title}
             onChange={() => clearError('title')}
             required
@@ -237,7 +232,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
             <Input
               label="예상 기간"
               name="period"
-              maxLength={MAX_LENGTH.expectedPeriod}
+              maxLength={GROUP_POST_LIMITS.expectedPeriod}
               errorMessage={errors.expectedPeriod}
               onChange={() => clearError('expectedPeriod')}
               placeholder="예상 기간 입력"
@@ -251,7 +246,7 @@ export default function GroupPostForm({ mode, groupId, initialValues }: GroupPos
             <Input
               label="필요스킬"
               name="skills"
-              maxLength={MAX_LENGTH.skills}
+              maxLength={GROUP_POST_LIMITS.skills}
               errorMessage={errors.skills}
               onChange={() => clearError('skills')}
               placeholder="예) React, TypeScript"

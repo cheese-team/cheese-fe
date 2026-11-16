@@ -158,7 +158,7 @@ export default function ProblemQuestionCard({
       }}
     >
       <SkillsIcon
-        className="text-secondary-600 h-[18px] w-[18px] shrink-0 [&_*]:!fill-current [&_*]:!stroke-current"
+        className="text-secondary-600 h-[18px] w-[18px] [&_*]:!fill-current [&_*]:!stroke-current"
         aria-hidden="true"
         focusable="false"
       />
@@ -352,7 +352,7 @@ export default function ProblemQuestionCard({
               }}
             >
               <ReturnIcon
-                className="h-[24px] w-[20px] shrink-0 text-gray-600 [&_path]:!fill-current"
+                className="h-[24px] w-[20px] text-gray-600 [&_path]:!fill-current"
                 aria-hidden="true"
                 focusable="false"
               />
@@ -366,7 +366,7 @@ export default function ProblemQuestionCard({
               onClick={onNext}
             >
               <DoubleArrowIcon
-                className="h-[24px] w-[20px] shrink-0 [&_path]:!fill-current"
+                className="h-[24px] w-[20px] [&_path]:!fill-current"
                 aria-hidden="true"
                 focusable="false"
               />
@@ -392,7 +392,7 @@ export default function ProblemQuestionCard({
               }}
             >
               <DocumentsIcon
-                className="h-[18px] w-[18px] shrink-0 [&_*]:!fill-current [&_*]:!stroke-current"
+                className="h-[18px] w-[18px] [&_*]:!fill-current [&_*]:!stroke-current"
                 aria-hidden="true"
                 focusable="false"
               />

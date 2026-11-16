@@ -19,6 +19,9 @@ export function useUpdateGroupPost() {
         queryClient.invalidateQueries({
           queryKey: communityQueryKeys.groupLists(),
         }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
       ]);
     },
   });

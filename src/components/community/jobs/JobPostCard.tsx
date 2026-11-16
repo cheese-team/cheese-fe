@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { Button } from '@/components/common/Button';
 import JobApplyAction from './JobApplyAction';
 
 import { cn } from '@/lib/cn';
@@ -55,21 +56,28 @@ export default function JobPostCard({
 
   return (
     <article className="flex items-center justify-between border-b border-gray-300 px-5 py-8">
-      <div className={cn('flex w-[150px] items-center gap-1', isClosed && 'opacity-50')}>
-        <span className="w-fit max-w-[130px] leading-5 font-bold break-all">
+      <div className={cn('flex w-[150px] shrink-0 items-center gap-1', isClosed && 'opacity-50')}>
+        <span
+          className="line-clamp-3 w-fit max-w-[130px] leading-5 font-bold break-words"
+          title={post.companyName}
+        >
           {post.companyName}
         </span>
       </div>
 
-      <div className={cn('mx-7 flex flex-1 flex-col gap-2', isClosed && 'opacity-50')}>
-        <Link href={`/community/jobs/${post.id}`} className="w-fit">
-          <h3 className="leading-5 font-bold">{post.title}</h3>
+      <div
+        className={cn('mx-7 flex min-w-[300px] flex-1 flex-col gap-2', isClosed && 'opacity-50')}
+      >
+        <Link href={`/community/jobs/${post.id}`} className="w-fit max-w-full">
+          <h3 className="line-clamp-1 leading-5 font-bold" title={post.title}>
+            {post.title}
+          </h3>
         </Link>
 
-        <ul className="flex">
+        <ul className="flex flex-wrap gap-y-1">
           {jobConditions.map((item, i) => (
             <li key={i} className="flex items-center">
-              <span className="text-[12px]">{item}</span>
+              <span className="text-[12px] break-keep">{item}</span>
               {i !== jobConditions.length - 1 && <div className="mx-3 h-[10px] w-px bg-gray-300" />}
             </li>
           ))}
@@ -78,8 +86,12 @@ export default function JobPostCard({
         <span className="text-[12px] leading-5">{formatDeadline(post.deadline)}</span>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <button
+      <div className="flex shrink-0 flex-col gap-1">
+        <Button
+          variant="outlineGray"
+          size={40}
+          paddingX={12}
+          width={100}
           type="button"
           disabled={isLikePending}
           onClick={(e) => {
@@ -89,7 +101,7 @@ export default function JobPostCard({
               isLiked: post.isLiked,
             });
           }}
-          className="flex h-10 min-w-[69px] items-center justify-center gap-1 rounded-[10px] border border-gray-500 px-3"
+          className="gap-1"
         >
           {post.isLiked ? (
             <LikeFilledIcon className="text-error-subtle w-[14px]" />
@@ -97,10 +109,11 @@ export default function JobPostCard({
             <LikeOutlineIcon className="w-[14px] text-gray-500" />
           )}
 
-          <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : '')}>
+          <span className={cn('font-medium', post.isLiked ? 'text-error-subtle' : 'text-gray-600')}>
             {formatLikeCount(post.likeCount)}
           </span>
-        </button>
+        </Button>
+
         <JobApplyAction
           apply={post.apply}
           onDirectApply={onDirectApply}

@@ -67,7 +67,7 @@ export default function Input({
 
       {/* message (optional) */}
       {(hasError || hasSuccess || showMessageSpace) && (
-        <div className="flex h-[22px] items-end text-xs font-medium tracking-[-0.04em]">
+        <div className="mt-2 flex min-h-[14px] text-xs leading-[14px] font-medium tracking-[-0.04em]">
           {hasError ? (
             <p id={messageId} className="text-text-error">
               {errorMessage}

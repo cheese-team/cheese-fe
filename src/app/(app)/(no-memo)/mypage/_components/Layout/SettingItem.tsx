@@ -69,7 +69,7 @@ export default function SettingItem({
         variant="outlineLightGray"
         size={38}
         paddingX={8}
-        className={cn('shrink-0 gap-1 tracking-[-0.02em]', buttonClassName)}
+        className={cn('gap-1 tracking-[-0.02em]', buttonClassName)}
         onClick={onClick}
       >
         {buttonIcon && buttonIconPosition === 'left' && (

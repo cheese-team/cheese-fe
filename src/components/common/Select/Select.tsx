@@ -12,9 +12,11 @@ import ArrowIcon from '@/assets/icons/common/arrow.svg';
 import type { Option } from '@/types/option';
 
 export type SelectProps = {
+  id?: string;
   name?: string;
   value: string;
   options: readonly Option[];
+  disabled?: boolean;
   placeholder?: string;
   leadingIcon?: ReactNode;
   onChange: (value: string) => void;
@@ -25,9 +27,11 @@ export type SelectProps = {
 };
 
 export default function Select({
+  id,
   name,
   value,
   options,
+  disabled,
   placeholder = '선택',
   leadingIcon,
   onChange,
@@ -37,8 +41,9 @@ export default function Select({
   arrowIconClassName,
 }: SelectProps) {
   return (
-    <SelectPrimitive.Root name={name} value={value} onValueChange={onChange}>
+    <SelectPrimitive.Root name={name} value={value} onValueChange={onChange} disabled={disabled}>
       <SelectPrimitive.Trigger
+        id={id}
         className={cn(
           'group flex h-[30px] w-full items-center justify-between pr-5 font-medium',
           'border-b border-gray-400',

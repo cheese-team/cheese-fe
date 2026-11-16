@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
+import { Button } from '@/components/common/Button';
 import {
   dropdownContentStyle,
   dropdownOptionInteractiveStyle,
@@ -352,14 +353,16 @@ export function ListFilterBar<TSort extends string = string>({
       />
 
       {actionButton ? (
-        <button
+        <Button
           type="button"
           onClick={actionButton.onClick}
-          className="bg-secondary-700 hover:bg-secondary-800 flex h-[44px] items-center justify-center gap-[8px] rounded-[10px] px-[18px] text-[14px] font-medium text-white transition-colors"
+          size={44}
+          paddingX={18}
+          className="gap-[8px]"
         >
           <CreateIcon className="h-[16px] w-[16px]" aria-hidden="true" />
           {actionButton.label}
-        </button>
+        </Button>
       ) : null}
     </div>
   );

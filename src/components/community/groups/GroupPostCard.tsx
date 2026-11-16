@@ -11,7 +11,6 @@ import { formatLikeCount } from '@/lib/formatLikeCount';
 
 import LikeOutlineIcon from '@/assets/icons/common/like-outline.svg';
 import LikeFilledIcon from '@/assets/icons/common/like-filled.svg';
-import CommentIcon from '@/assets/icons/common/comment.svg';
 
 import type { Field, GroupPost } from '@/types/community/community';
 import type { ToggleGroupPostLikeParams } from '@/types/community/community';
@@ -40,7 +39,8 @@ export default function GroupPostCard({
   return (
     <article
       className={cn(
-        'flex h-[236px] w-full flex-col gap-2 rounded-[9px] border border-gray-300 p-5',
+        'relative flex h-[236px] w-full flex-col gap-2 rounded-[9px] border border-gray-300 p-5 shadow-none transition-shadow duration-200 focus-within:shadow-[0_4px_10px_rgba(0,0,0,0.10)] hover:shadow-[0_4px_10px_rgba(0,0,0,0.10)]',
+
         isClosed && 'opacity-50',
       )}
     >
@@ -57,8 +57,14 @@ export default function GroupPostCard({
           <span className="text-[12px] text-gray-600">{formatDeadline(post.deadline)}</span>
         </div>
 
-        <Link href={`/community/groups/${post.id}`} className="w-fit">
-          <h3 className="line-clamp-2 h-[60px] text-[14px] leading-[30px] font-bold">
+        <Link
+          href={`/community/groups/${post.id}`}
+          className="w-fit max-w-full after:absolute after:inset-0 after:rounded-[9px] after:content-[''] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2"
+        >
+          <h3
+            className="line-clamp-2 h-[60px] text-[14px] leading-[30px] font-bold"
+            title={post.title}
+          >
             {post.title}
           </h3>
         </Link>
@@ -66,7 +72,11 @@ export default function GroupPostCard({
 
       <div className="flex h-14 flex-col justify-end text-[14px] leading-7 text-gray-700">
         <div>모집인원: {post.recruitCount}명</div>
-        {post.expectedPeriod?.trim() && <div>예상기간: {post.expectedPeriod}</div>}
+        {post.expectedPeriod?.trim() && (
+          <div className="truncate" title={`예상기간: ${post.expectedPeriod}`}>
+            예상기간: {post.expectedPeriod}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between text-[12px] leading-[26px] text-gray-600">
@@ -93,7 +103,7 @@ export default function GroupPostCard({
                 isLiked: post.isLiked,
               });
             }}
-            className="flex items-center gap-1"
+            className="relative z-10 flex items-center gap-1 [&_svg]:shrink-0"
           >
             {post.isLiked ? (
               <LikeFilledIcon className="text-error-subtle w-[13px]" />

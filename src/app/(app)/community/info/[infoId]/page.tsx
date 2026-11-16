@@ -77,7 +77,7 @@ export default function InfoDetailPage() {
               variant="outlineGray"
               size={54}
               width={90}
-              className="shrink-0 gap-2 border-gray-400"
+              className="gap-2 border-gray-400"
               aria-label="좋아요"
               aria-pressed={infoPost.isLiked}
               disabled={isLikePending}

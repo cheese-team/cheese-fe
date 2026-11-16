@@ -2,31 +2,45 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code?: string,
+    readonly provider?: string,
   ) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
-async function readErrorMessage(response: Response) {
+async function readApiError(response: Response) {
+  let message = `API 요청에 실패했습니다. (${response.status})`;
+  let code: string | undefined;
+  let provider: string | undefined;
+
   try {
     const body: unknown = await response.json();
 
-    if (typeof body === 'object' && body !== null && 'message' in body) {
-      const message = (body as { message?: unknown }).message;
-
-      if (typeof message === 'string' && message.trim()) {
-        return message.trim();
+    if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
+      if ('code' in body && typeof body.code === 'string') {
+        code = body.code;
       }
 
-      if (Array.isArray(message)) {
-        const messages = message
+      if ('provider' in body && typeof body.provider === 'string') {
+        provider = body.provider;
+      }
+
+      const errorMessage = 'message' in body ? body.message : undefined;
+
+      if (typeof errorMessage === 'string' && errorMessage.trim()) {
+        message = errorMessage.trim();
+      }
+
+      if (Array.isArray(errorMessage)) {
+        const messages = errorMessage
           .filter((item): item is string => typeof item === 'string')
           .map((item) => item.trim())
           .filter(Boolean);
 
         if (messages.length > 0) {
-          return messages.join(', ');
+          message = messages.join(', ');
         }
       }
     }
@@ -34,7 +48,7 @@ async function readErrorMessage(response: Response) {
     // JSON 형식이 아닌 오류 응답
   }
 
-  return `API 요청에 실패했습니다. (${response.status})`;
+  return new ApiError(message, response.status, code, provider);
 }
 
 type ApiRequestOptions = RequestInit & {
@@ -75,7 +89,7 @@ export async function apiClient<T>(path: string, options?: ApiRequestOptions): P
   });
 
   if (!response.ok) {
-    throw new ApiError(await readErrorMessage(response), response.status);
+    throw await readApiError(response);
   }
 
   return (await response.json()) as T;

@@ -19,7 +19,7 @@ export default function JobApplyAction({
 }) {
   if (isApplied) {
     return (
-      <Button width={100} variant="gray" disabled>
+      <Button width={100} variant="gray" disabled className="font-bold">
         지원 완료
       </Button>
     );
@@ -27,7 +27,7 @@ export default function JobApplyAction({
 
   if (isClosed) {
     return (
-      <Button width={100} variant="gray" disabled>
+      <Button width={100} variant="gray" disabled className="font-bold">
         채용 마감
       </Button>
     );
@@ -35,7 +35,7 @@ export default function JobApplyAction({
 
   if (apply.type === 'homepage') {
     return (
-      <Button asChild width={100} variant="outlineGray">
+      <Button asChild width={100} variant="outlineGray" className="font-bold">
         <a href={apply.url} target="_blank" rel="noopener noreferrer">
           {APPLY_LABEL[apply.type]}
         </a>

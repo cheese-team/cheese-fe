@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { CategoryTabs } from '@/components/common/CategoryTabs';
 import ListFilterBar from '@/components/common/ListFilterBar';
+import { useCommunityPostNavigation } from './CommunityPostNavigationProvider';
 
 import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 import {
@@ -15,6 +16,7 @@ import {
 
 export default function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { navigate } = useCommunityPostNavigation();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -38,54 +40,50 @@ export default function CommunityLayoutContent({ children }: { children: React.R
   const handleChangeTab = (value: (typeof COMMUNITY_CATEGORY_TABS)[number]['value']) => {
     const nextPath = isCreatePage ? `${value}/create` : `${value}`;
 
-    if (isCreatePage) {
-      const isConfirmed = window.confirm('작성 중인 내용이 사라집니다. 이동하시겠습니까?');
-
-      if (!isConfirmed) return;
-    }
-
-    router.push(nextPath);
+    navigate(nextPath);
   };
 
   return (
-    <div className="flex h-dvh flex-col overflow-y-auto px-10 pt-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="mx-auto mb-8 flex w-full max-w-[1100px] flex-1 flex-col gap-8">
-        <div className="flex shrink-0 flex-col gap-5">
-          {isCommunityListPage && (
-            <ListFilterBar
-              sortOptions={sortOptions}
-              selectedSort={communitySort}
-              searchValue={communityKeyword}
-              searchPlaceholder="검색"
-              searchHistories={['프론트엔드', '스터디 모집', '포트폴리오', '채용공고']}
-              onSortChange={(value) => {
-                updateSearchParams('sort', value);
-              }}
-              onSearchChange={setCommunityKeyword}
-              onSearchSubmit={(value) => {
-                updateSearchParams('keyword', value);
-              }}
-              onSearchHistorySelect={(value) => {
-                setCommunityKeyword(value);
-                updateSearchParams('keyword', value);
-              }}
-              actionButton={{
-                label: '생성',
-                onClick: () => {
-                  router.push(createPostHref);
-                },
-              }}
+    <div className="@container/community min-w-0">
+      <div className="flex h-dvh flex-col overflow-y-auto px-4 pt-10 [scrollbar-width:none] @3xl/community:px-6 @5xl/community:px-10 [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto mb-8 flex w-full max-w-[1100px] min-w-0 flex-1 flex-col gap-8">
+          <div className="flex shrink-0 flex-col gap-5">
+            {isCommunityListPage && (
+              <ListFilterBar
+                sortOptions={sortOptions}
+                selectedSort={communitySort}
+                searchValue={communityKeyword}
+                searchPlaceholder="검색"
+                searchHistories={['프론트엔드', '스터디 모집', '포트폴리오', '채용공고']}
+                onSortChange={(value) => {
+                  updateSearchParams('sort', value);
+                }}
+                onSearchChange={setCommunityKeyword}
+                onSearchSubmit={(value) => {
+                  updateSearchParams('keyword', value);
+                }}
+                onSearchHistorySelect={(value) => {
+                  setCommunityKeyword(value);
+                  updateSearchParams('keyword', value);
+                }}
+                actionButton={{
+                  label: '생성',
+                  onClick: () => {
+                    router.push(createPostHref);
+                  },
+                }}
+              />
+            )}
+
+            <CategoryTabs
+              items={COMMUNITY_CATEGORY_TABS}
+              activeValue={activeCategory}
+              onChange={handleChangeTab}
             />
-          )}
+          </div>
 
-          <CategoryTabs
-            items={COMMUNITY_CATEGORY_TABS}
-            activeValue={activeCategory}
-            onChange={handleChangeTab}
-          />
+          <div className="flex min-w-0 flex-1 flex-col pb-8">{children}</div>
         </div>
-
-        <div className="flex flex-1 flex-col pb-8">{children}</div>
       </div>
     </div>
   );

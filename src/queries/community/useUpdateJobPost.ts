@@ -19,6 +19,9 @@ export function useUpdateJobPost() {
         queryClient.invalidateQueries({
           queryKey: communityQueryKeys.jobLists(),
         }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
       ]);
     },
   });

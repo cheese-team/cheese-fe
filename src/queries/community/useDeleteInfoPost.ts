@@ -15,9 +15,14 @@ export function useDeleteInfoPost() {
         exact: true,
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: communityQueryKeys.infoLists(),
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.infoLists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
+      ]);
     },
   });
 }

@@ -83,7 +83,7 @@ export default function ProblemSetSummaryCard({
           disabled={actionDisabled}
           size={46}
           paddingX={12}
-          className="ml-[32px] shrink-0 gap-[16px] !text-[16px]"
+          className="ml-[32px] gap-[16px] !text-[16px]"
         >
           {actionDisabled ? (
             actionContent

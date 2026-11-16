@@ -19,6 +19,9 @@ export function useUpdateInfoPost() {
         queryClient.invalidateQueries({
           queryKey: communityQueryKeys.infoLists(),
         }),
+        queryClient.invalidateQueries({
+          queryKey: communityQueryKeys.dashboardPopularPosts(),
+        }),
       ]);
     },
   });

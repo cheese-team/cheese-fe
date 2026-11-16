@@ -6,8 +6,24 @@ import type { EmailVerificationPurpose } from '@/api/auth.api';
 export function getSendEmailErrorMessage(
   error: unknown,
   purpose: EmailVerificationPurpose,
+  isLoggedIn = false,
 ): string {
-  if (!(error instanceof ApiError) || error.status !== 400) {
+  if (!(error instanceof ApiError)) {
+    return AUTH_MESSAGE.EMAIL.SEND_FAILED;
+  }
+
+  if (purpose === 'password-reset' && error.code === 'SOCIAL_PASSWORD_RESET_UNSUPPORTED') {
+    const providerName =
+      error.provider === 'google' ? '구글' : error.provider === 'kakao' ? '카카오' : '간편로그인';
+
+    if (isLoggedIn) {
+      return `해당 계정은 ${providerName} 계정으로 가입되어 있어\n비밀번호 변경이 불가합니다.`;
+    }
+
+    return `해당 이메일은 ${providerName} 계정으로 가입되어 있어\n비밀번호 변경이 불가합니다.\n\n${providerName} 계정으로 로그인해 주세요`;
+  }
+
+  if (error.status !== 400) {
     return AUTH_MESSAGE.EMAIL.SEND_FAILED;
   }
 

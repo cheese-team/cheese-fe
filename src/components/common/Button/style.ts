@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn';
 import type { ButtonProps, ButtonSize, ButtonVariant } from './type';
 
 const base =
-  'inline-flex items-center justify-center font-medium whitespace-nowrap hover:!opacity-80';
+  'inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap hover:!opacity-80 [&_svg]:shrink-0';
 
 const disabledStateClass = 'cursor-not-allowed pointer-events-none';
 const filledDisabled = 'bg-gray-400 text-gray-50';

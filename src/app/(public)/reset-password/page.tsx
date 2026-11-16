@@ -10,6 +10,9 @@ import AuthConfirmModal from '../_components/AuthConfirmModal';
 import AuthCard from '../_components/AuthCard';
 
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { getSendEmailErrorMessage } from '../(auth)/_lib/emailVerification';
+
+import type { ApiError } from '@/api/client';
 
 type Step = 'EMAIL' | 'VERIFY' | 'NEW_PASSWORD';
 
@@ -21,10 +24,16 @@ export default function ResetPasswordPage() {
   const [step, setStep] = useState<Step>('EMAIL');
   const [email, setEmail] = useState('');
   const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [initialRemainingSeconds, setInitialRemainingSeconds] = useState(0);
 
   const [isDoneOpen, setIsDoneOpen] = useState(false);
 
   const displayedEmail = user?.account.email ?? email;
+
+  const handleSocialPasswordResetUnsupported = (error: ApiError) => {
+    window.alert(getSendEmailErrorMessage(error, 'password-reset', !!user));
+    router.push(user ? '/mypage' : '/login');
+  };
 
   const handlePasswordResetComplete = () => {
     setIsDoneOpen(false);
@@ -38,7 +47,9 @@ export default function ResetPasswordPage() {
         <EmailStep
           email={displayedEmail}
           onEmailChange={setEmail}
-          onNext={() => {
+          onSocialPasswordResetUnsupported={handleSocialPasswordResetUnsupported}
+          onNext={(expiresInSeconds) => {
+            setInitialRemainingSeconds(expiresInSeconds);
             setStep('VERIFY');
           }}
           emailDisabled={isPending || !!user}
@@ -49,6 +60,8 @@ export default function ResetPasswordPage() {
       {step === 'VERIFY' && (
         <VerifyStep
           initialEmail={displayedEmail}
+          initialRemainingSeconds={initialRemainingSeconds}
+          onSocialPasswordResetUnsupported={handleSocialPasswordResetUnsupported}
           emailDisabled={isPending || !!user}
           onNext={(email) => {
             setVerifiedEmail(email);

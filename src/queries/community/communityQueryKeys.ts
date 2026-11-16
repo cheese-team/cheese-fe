@@ -7,6 +7,7 @@ import type {
 
 export const communityQueryKeys = {
   all: ['community'] as const,
+  dashboardPopularPosts: () => [...communityQueryKeys.all, 'dashboard', 'popularPosts'] as const,
   comments: (category: CommunityCommentCategory, postId: string) =>
     [...communityQueryKeys.all, category, postId, 'comments'] as const,
 

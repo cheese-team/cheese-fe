@@ -76,7 +76,8 @@ export default function PostDetailAsideActions({
         onClick={handleToggleLike}
         disabled={isLikePending}
         size={54}
-        className="flex w-full items-center justify-center gap-1 border-gray-400"
+        fullWidth
+        className="gap-1 border-gray-400"
       >
         {displayedIsLiked ? (
           <LikeFilledIcon className="text-error-subtle w-[14px]" />
@@ -91,7 +92,7 @@ export default function PostDetailAsideActions({
           disabled={isClosed || isApplyPending || isApplied}
           onClick={handleApplyClick}
           size={54}
-          className="flex gap-3"
+          className="gap-3"
         >
           <ShareIcon className="h-[13px]" />
           {isApplied

@@ -55,7 +55,7 @@ export default function DashboardProblemSets() {
 
   return (
     <section>
-      <DashboardSectionHeader icon={<ProblemSolvingIcon />} title="문제풀이" />
+      <DashboardSectionHeader icon={<ProblemSolvingIcon />} title="문제풀이" href="/problem" />
 
       {isLoading ? (
         <div

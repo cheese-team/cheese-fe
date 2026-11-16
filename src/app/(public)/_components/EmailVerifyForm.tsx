@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ApiError } from '@/api/client';
 import { Input, InputActionButton } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 
@@ -19,6 +20,7 @@ export type EmailVerifyBaseProps = {
   initialStatus?: EmailVerifyStatus;
   initialRemainingSeconds?: number;
   onNext: (email: string) => void;
+  onSocialPasswordResetUnsupported?: (error: ApiError) => void;
   emailDisabled?: boolean;
   purpose: EmailVerificationPurpose;
   emailLabel?: string;
@@ -42,6 +44,7 @@ export default function EmailVerifyForm({
   initialStatus = 'IDLE',
   initialRemainingSeconds = 0,
   onNext,
+  onSocialPasswordResetUnsupported,
   emailDisabled,
   purpose,
   emailLabel = '아이디(이메일)',
@@ -112,11 +115,26 @@ export default function EmailVerifyForm({
       setStatus('SENT');
     } catch (error) {
       setStatus('SEND_ERROR');
-      setEmailError(getSendEmailErrorMessage(error, purpose));
+      const errorMessage = getSendEmailErrorMessage(error, purpose);
+
+      if (
+        purpose === 'password-reset' &&
+        error instanceof ApiError &&
+        error.code === 'SOCIAL_PASSWORD_RESET_UNSUPPORTED'
+      ) {
+        if (onSocialPasswordResetUnsupported) {
+          onSocialPasswordResetUnsupported(error);
+        } else {
+          window.alert(errorMessage);
+        }
+        return;
+      }
+
+      setEmailError(errorMessage);
     } finally {
       sendInFlight.current = false;
     }
-  }, [email, isVerifying, isVerified, purpose, sendEmailCode]);
+  }, [email, isVerifying, isVerified, purpose, sendEmailCode, onSocialPasswordResetUnsupported]);
 
   useEffect(() => {
     if (!sendOnOpen || initialSendStarted.current) return;

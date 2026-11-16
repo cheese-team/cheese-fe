@@ -44,10 +44,10 @@ export default function ProblemTocCard({ problemSetId, questions }: ProblemTocCa
               asChild
               size={46}
               width={114}
-              className="shrink-0 gap-[16px] !text-[16px] leading-[30px]"
+              className="gap-[16px] !text-[16px] leading-[30px]"
             >
               <Link href={`/problem/${problemSetId}/questions/${question.id}`}>
-                <ProblemActionIcon className="h-[16px] w-[16px] shrink-0" />
+                <ProblemActionIcon className="h-[16px] w-[16px]" />
                 <span>문제 선택</span>
               </Link>
             </Button>

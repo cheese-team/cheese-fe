@@ -59,7 +59,7 @@ export default function CommunityPostEditor({
     editorProps: {
       attributes: {
         class:
-          'memo-rich-editor min-h-[640px] w-full outline-none text-[16px] font-medium leading-[24px] text-gray-700',
+          'memo-rich-editor min-h-[600px] w-full outline-none text-[16px] font-medium leading-[24px] text-gray-700',
       },
     },
     onUpdate: ({ editor: currentEditor }) => {
@@ -143,7 +143,7 @@ export default function CommunityPostEditor({
         }}
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="h-[640px] overflow-y-auto px-6 py-5">
         {children}
 
         <div>

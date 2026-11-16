@@ -43,7 +43,7 @@ export default function DashboardUpcomingEvents() {
 
   return (
     <section>
-      <DashboardSectionHeader icon={<CalendarIcon />} title="다가오는 일정" />
+      <DashboardSectionHeader icon={<CalendarIcon />} title="다가오는 일정" href="/calendar" />
 
       {upcomingEvents.length > 0 ? (
         <div className="group relative w-full overflow-visible">
