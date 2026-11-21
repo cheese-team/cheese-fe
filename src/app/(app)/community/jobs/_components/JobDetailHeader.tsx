@@ -43,6 +43,9 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
       onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
       onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={handleEdit}
+      onReport={() => {
+        setIsMenuOpen(false);
+      }}
       onDelete={() => {
         if (!user || !isMine || isDeletePending) return;
 

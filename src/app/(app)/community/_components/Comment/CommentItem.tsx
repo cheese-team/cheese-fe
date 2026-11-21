@@ -138,7 +138,6 @@ export default function CommentItem({
                   </DropdownMenu.Item>
                 </>
               ) : (
-                // TODO: 신고 모달 연결
                 <DropdownMenu.Item disabled={disabled} className={optionClassName}>
                   신고
                 </DropdownMenu.Item>

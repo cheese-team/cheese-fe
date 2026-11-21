@@ -30,6 +30,7 @@ type PostDetailHeaderProps = {
   onCloseMenu?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onReport?: () => void;
 };
 
 export default function PostDetailHeader({
@@ -43,6 +44,7 @@ export default function PostDetailHeader({
   onCloseMenu,
   onEdit,
   onDelete,
+  onReport,
 }: PostDetailHeaderProps) {
   const router = useRouter();
 
@@ -132,7 +134,12 @@ export default function PostDetailHeader({
               ) : (
                 <button
                   type="button"
-                  className={cn(dropdownOptionStyle, dropdownOptionInteractiveStyle)}
+                  className={cn(
+                    dropdownOptionStyle,
+                    dropdownOptionInteractiveStyle,
+                    'disabled:cursor-not-allowed disabled:opacity-50',
+                  )}
+                  onClick={onReport}
                 >
                   신고
                 </button>
