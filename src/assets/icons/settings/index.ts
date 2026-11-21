@@ -1,3 +1,5 @@
+export { default as AdminProblemIcon } from './admin-problem.svg';
+export { default as AdminReportsIcon } from './admin-reports.svg';
 export { default as CompanyIcon } from './company.svg';
 export { default as CookieIcon } from './cookie.svg';
 export { default as DocumentsIcon } from './documents.svg';

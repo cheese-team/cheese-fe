@@ -41,6 +41,9 @@ export default function GroupDetailHeader({ groupPost }: GroupDetailHeaderProps)
       onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
       onCloseMenu={() => setIsMenuOpen(false)}
       onEdit={handleEdit}
+      onReport={() => {
+        setIsMenuOpen(false);
+      }}
       onDelete={() => {
         if (!user || !isMine || isDeletePending) return;
         if (!window.confirm('삭제하시겠습니까?')) return;
