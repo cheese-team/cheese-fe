@@ -48,7 +48,7 @@ export default function MyPageSidebar() {
       <nav className="px-4 pt-[90px]">
         <ul className="flex flex-col gap-2">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
               <li key={item.href}>
@@ -76,7 +76,7 @@ export default function MyPageSidebar() {
 
               <ul className="flex flex-col gap-2">
                 {ADMIN_MENU_ITEMS.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
                   return (
                     <li key={item.href}>
