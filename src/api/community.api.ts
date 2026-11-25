@@ -404,8 +404,8 @@ export async function createComment({
   category,
   postId,
   ...data
-}: CreateCommentRequest): Promise<CommunityCommentsResponse> {
-  return apiClient<CommunityCommentsResponse>(
+}: CreateCommentRequest): Promise<CommunityCommentResult> {
+  return apiClient<CommunityCommentResult>(
     `/backend-api/community/${category}/${postId}/comments`,
     {
       method: 'POST',

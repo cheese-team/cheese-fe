@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
@@ -15,18 +15,21 @@ export default function CommentForm({
   onSubmit,
   disabled = false,
   profileImageUrl,
+  isReply = false,
+  textareaRef: externalTextareaRef,
 }: CommentFormProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = externalTextareaRef ?? internalTextareaRef;
+
+  useEffect(() => {
+    if (!value && textareaRef.current) {
+      textareaRef.current.style.height = '30px';
+    }
+  }, [value, textareaRef]);
 
   const handleSubmit = () => {
     if (disabled || !value.trim()) return;
     onSubmit();
-
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '30px';
-      }
-    });
   };
 
   return (
@@ -48,7 +51,8 @@ export default function CommentForm({
               handleSubmit();
             }
           }}
-          placeholder="댓글 등록"
+          aria-label={isReply ? '답글 입력' : '댓글 입력'}
+          placeholder="댓글을 추가해보세요"
           rows={1}
           className="h-[30px] max-h-60 w-full resize-none overflow-y-auto pt-1 outline-none"
         />

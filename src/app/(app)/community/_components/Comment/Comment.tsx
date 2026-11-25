@@ -33,8 +33,11 @@ export default function Comment({ category, postId }: CommentProps) {
   const [commentValue, setCommentValue] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  const [replyingCommentId, setReplyingCommentId] = useState<string | null>(null);
+  const [replyValue, setReplyValue] = useState('');
 
   const editingTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const busy = create.isPending || update.isPending || remove.isPending;
@@ -42,8 +45,15 @@ export default function Comment({ category, postId }: CommentProps) {
   const disabled = busy || !user;
 
   const comments = data?.pages.flatMap((page) => page.items) ?? [];
+  const editingComment = comments
+    .flatMap((comment) => [comment, ...comment.replies])
+    .find((comment) => comment.id === editingCommentId);
 
   const profile = user?.profile;
+
+  useEffect(() => {
+    if (replyingCommentId) replyTextareaRef.current?.focus();
+  }, [replyingCommentId]);
 
   useEffect(() => {
     if (editingCommentId) editingTextareaRef.current?.focus();
@@ -67,6 +77,16 @@ export default function Comment({ category, postId }: CommentProps) {
     alert(error instanceof ApiError ? error.message : '댓글 요청에 실패했습니다.');
   };
 
+  const confirmInputChange = () => {
+    const hasEditingChanges = !!editingComment && editingValue !== editingComment.content;
+    const hasReplyChanges = replyingCommentId !== null && replyValue.length > 0;
+
+    return (
+      (!hasEditingChanges && !hasReplyChanges) ||
+      window.confirm('작성 중인 내용이 사라집니다. 계속하시겠습니까?')
+    );
+  };
+
   const submit = () => {
     const content = commentValue.trim();
 
@@ -83,7 +103,23 @@ export default function Comment({ category, postId }: CommentProps) {
     );
   };
 
-  const renderItem = (comment: CommunityCommentResult) => (
+  const submitReply = (parentId: string) => {
+    const content = replyValue.trim();
+    if (disabled || !content) return;
+
+    create.mutate(
+      { content, parentId },
+      {
+        onSuccess: () => {
+          setReplyValue('');
+          setReplyingCommentId(null);
+        },
+        onError,
+      },
+    );
+  };
+
+  const renderItem = (comment: CommunityCommentResult, hasReplies = false) => (
     <CommentItem
       key={comment.id}
       comment={comment}
@@ -92,8 +128,33 @@ export default function Comment({ category, postId }: CommentProps) {
       isEditing={editingCommentId === comment.id}
       editingValue={editingValue}
       textareaRef={editingTextareaRef}
+      isReplying={replyingCommentId === comment.id}
+      onReply={
+        comment.parentId === null
+          ? () => {
+              if (disabled) return;
+              if (replyingCommentId === comment.id) {
+                setReplyingCommentId(null);
+                setReplyValue('');
+                return;
+              }
+              if (!confirmInputChange()) return;
+              setEditingCommentId(null);
+              setEditingValue('');
+              setReplyValue('');
+              setReplyingCommentId(comment.id);
+            }
+          : undefined
+      }
       onStartEdit={(item) => {
         if (disabled || item.author.userId !== user?.account.userId) return;
+        if (editingCommentId === item.id) {
+          editingTextareaRef.current?.focus();
+          return;
+        }
+        if (!confirmInputChange()) return;
+        setReplyingCommentId(null);
+        setReplyValue('');
         setEditingCommentId(item.id);
         setEditingValue(item.content);
       }}
@@ -118,7 +179,22 @@ export default function Comment({ category, postId }: CommentProps) {
       }}
       onDelete={(commentId) => {
         if (disabled || comment.author.userId !== user?.account.userId) return;
+        if (
+          hasReplies &&
+          !window.confirm('댓글을 삭제하면 해당 댓글의 답글도 함께 사라집니다.\n삭제하시겠습니까?')
+        )
+          return;
         remove.mutate(commentId, {
+          onSuccess: () => {
+            if (editingCommentId === commentId || editingComment?.parentId === commentId) {
+              setEditingCommentId(null);
+              setEditingValue('');
+            }
+            if (replyingCommentId === commentId) {
+              setReplyingCommentId(null);
+              setReplyValue('');
+            }
+          },
           onError,
         });
       }}
@@ -150,11 +226,27 @@ export default function Comment({ category, postId }: CommentProps) {
       <ul className="mt-6 flex flex-col gap-4">
         {comments.map((comment) => (
           <Fragment key={comment.id}>
-            {renderItem(comment)}
+            {renderItem(comment, comment.replies.length > 0)}
+
+            {replyingCommentId === comment.id && (
+              <li className="ml-12">
+                <CommentForm
+                  value={replyValue}
+                  onValueChange={setReplyValue}
+                  onSubmit={() => submitReply(comment.id)}
+                  isReply
+                  textareaRef={replyTextareaRef}
+                  disabled={disabled}
+                  profileImageUrl={profile?.profileImageUrl}
+                />
+              </li>
+            )}
 
             {comment.replies.length > 0 && (
               <li className="ml-12 flex flex-col gap-4">
-                <ul className="flex flex-col gap-4">{comment.replies.map(renderItem)}</ul>
+                <ul className="flex flex-col gap-4">
+                  {comment.replies.map((reply) => renderItem(reply))}
+                </ul>
               </li>
             )}
           </Fragment>

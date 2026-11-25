@@ -30,6 +30,8 @@ export default function CommentItem({
   onUpdate,
   onCancelEdit,
   onDelete,
+  onReply,
+  isReplying = false,
 }: CommentItemProps) {
   const focusEditorOnCloseRef = useRef(false);
   const optionClassName = cn(
@@ -89,6 +91,17 @@ export default function CommentItem({
             </div>
           ) : (
             <p className="whitespace-pre-line">{comment.content}</p>
+          )}
+          {onReply && (
+            <button
+              type="button"
+              disabled={disabled}
+              aria-expanded={isReplying}
+              onClick={onReply}
+              className="self-start text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              답글 달기
+            </button>
           )}
         </div>
 

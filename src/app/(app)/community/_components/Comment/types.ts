@@ -6,6 +6,8 @@ export type CommentFormProps = {
   value: string;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
+  isReply?: boolean;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 };
 
 export type CommentItemProps = {
@@ -20,4 +22,6 @@ export type CommentItemProps = {
   onUpdate: (commentId: string) => void;
   onCancelEdit: () => void;
   onDelete: (commentId: string) => void;
+  onReply?: () => void;
+  isReplying?: boolean;
 };
