@@ -76,7 +76,8 @@ export default function InfoDetailPage() {
             <Button
               variant="outlineGray"
               size={54}
-              width={90}
+              width={94.5}
+              paddingX={16}
               className="gap-2 border-gray-400"
               aria-label="좋아요"
               aria-pressed={infoPost.isLiked}
@@ -97,7 +98,8 @@ export default function InfoDetailPage() {
             <Button
               variant="outlineGray"
               size={54}
-              className="border-secondary-600 text-secondary-600 min-w-0 flex-1 gap-3 font-medium"
+              width={131}
+              className="border-secondary-600 text-secondary-600 gap-3 font-medium"
               onClick={() => {
                 void shareUrl({
                   title: infoPost.title,
@@ -105,7 +107,7 @@ export default function InfoDetailPage() {
                 });
               }}
             >
-              <ShareIcon className="w-4" />
+              <ShareIcon className="h-7.5 w-4" />
               공유하기
             </Button>
           </div>
