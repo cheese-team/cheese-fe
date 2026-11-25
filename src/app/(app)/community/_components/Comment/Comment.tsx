@@ -14,9 +14,9 @@ import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
 import type { CommunityCommentCategory, CommunityCommentResult } from '@/types/community/comment';
 
-type CommentProps = { category: CommunityCommentCategory; postId: string };
+type CommentProps = { category: CommunityCommentCategory; postId: string; postAuthorId: string };
 
-export default function Comment({ category, postId }: CommentProps) {
+export default function Comment({ category, postId, postAuthorId }: CommentProps) {
   const {
     data,
     isPending,
@@ -125,6 +125,7 @@ export default function Comment({ category, postId }: CommentProps) {
       comment={comment}
       disabled={disabled}
       isMine={!!user && comment.author.userId === user.account.userId}
+      isPostAuthor={comment.author.userId === postAuthorId}
       isEditing={editingCommentId === comment.id}
       editingValue={editingValue}
       textareaRef={editingTextareaRef}
@@ -134,6 +135,7 @@ export default function Comment({ category, postId }: CommentProps) {
           ? () => {
               if (disabled) return;
               if (replyingCommentId === comment.id) {
+                if (!confirmInputChange()) return;
                 setReplyingCommentId(null);
                 setReplyValue('');
                 return;
@@ -160,10 +162,18 @@ export default function Comment({ category, postId }: CommentProps) {
       }}
       onChangeEditingValue={setEditingValue}
       onUpdate={(commentId) => {
-        if (disabled || comment.author.userId !== user?.account.userId || !editingValue.trim())
+        if (disabled || comment.author.userId !== user?.account.userId) return;
+
+        const content = editingValue.trim();
+
+        if (!content) {
+          window.alert('댓글 내용을 입력하지 않았습니다');
+          editingTextareaRef.current?.focus();
           return;
+        }
+
         update.mutate(
-          { commentId, content: editingValue.trim() },
+          { commentId, content },
           {
             onSuccess: () => {
               setEditingCommentId(null);
@@ -174,6 +184,8 @@ export default function Comment({ category, postId }: CommentProps) {
         );
       }}
       onCancelEdit={() => {
+        if (!confirmInputChange()) return;
+
         setEditingCommentId(null);
         setEditingValue('');
       }}
@@ -202,13 +214,14 @@ export default function Comment({ category, postId }: CommentProps) {
   );
 
   return (
-    <section className="text-[14px] leading-5">
+    <section className="w-full min-w-0 text-[14px] leading-5">
       <CommentForm
         value={commentValue}
         onValueChange={setCommentValue}
         onSubmit={() => submit()}
         disabled={disabled}
         profileImageUrl={profile?.profileImageUrl}
+        displayName={profile?.displayName}
       />
 
       {isPending && <CommunityListState type="loading" message="로딩 중..." />}
@@ -234,10 +247,16 @@ export default function Comment({ category, postId }: CommentProps) {
                   value={replyValue}
                   onValueChange={setReplyValue}
                   onSubmit={() => submitReply(comment.id)}
+                  onCancel={() => {
+                    if (!confirmInputChange()) return;
+                    setReplyingCommentId(null);
+                    setReplyValue('');
+                  }}
                   isReply
                   textareaRef={replyTextareaRef}
                   disabled={disabled}
                   profileImageUrl={profile?.profileImageUrl}
+                  displayName={profile?.displayName}
                 />
               </li>
             )}

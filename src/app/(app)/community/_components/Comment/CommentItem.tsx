@@ -3,6 +3,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
+import { Chip } from '@/components/common/Chip';
 
 import {
   dropdownContentStyle,
@@ -32,6 +33,7 @@ export default function CommentItem({
   onDelete,
   onReply,
   isReplying = false,
+  isPostAuthor,
 }: CommentItemProps) {
   const focusEditorOnCloseRef = useRef(false);
   const optionClassName = cn(
@@ -45,9 +47,13 @@ export default function CommentItem({
         <ProfileImage size={30} src={comment.author.profileImageUrl} />
       </div>
 
-      <div className="flex w-full gap-2.5">
-        <div className="flex flex-1 flex-col gap-1">
-          <h3 className="font-medium">{comment.author.displayName}</h3>
+      <div className="flex w-full min-w-0 gap-2.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[16px] font-medium wrap-anywhere">{comment.author.displayName}</h3>
+
+            {isPostAuthor && <Chip className="h-5 bg-green-200">작성자</Chip>}
+          </div>
 
           {isEditing ? (
             <div className="flex flex-col gap-3">
@@ -90,15 +96,16 @@ export default function CommentItem({
               </div>
             </div>
           ) : (
-            <p className="whitespace-pre-line">{comment.content}</p>
+            <p className="wrap-anywhere whitespace-pre-line">{comment.content}</p>
           )}
+
           {onReply && (
             <button
               type="button"
               disabled={disabled}
               aria-expanded={isReplying}
               onClick={onReply}
-              className="self-start text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-2 self-start text-gray-500 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               답글 달기
             </button>

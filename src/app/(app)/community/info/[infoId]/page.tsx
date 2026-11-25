@@ -48,7 +48,7 @@ export default function InfoDetailPage() {
 
   return (
     <div className="mb-[50px] flex items-start gap-5">
-      <section className="flex flex-1 flex-col gap-10 px-5">
+      <section className="flex flex-1 flex-col gap-8 px-5">
         <InfoDetailHeader infoPost={infoPost} />
 
         <article className="flex flex-col gap-6">
@@ -66,7 +66,7 @@ export default function InfoDetailPage() {
           )}
         </article>
 
-        <Comment category="info" postId={infoPost.id} />
+        <Comment category="info" postId={infoPost.id} postAuthorId={infoPost.author.userId} />
       </section>
 
       <PostDetailAside

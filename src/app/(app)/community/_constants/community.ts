@@ -76,4 +76,5 @@ export const INFO_POST_LIMITS = {
      게시글 상세 페이지
    ================================ */
 
-export const POST_CONTENT_CLASS = '[&_p]:m-0 [&_p]:min-h-6 [&_br]:block [&_br]:content-[""]';
+export const POST_CONTENT_CLASS =
+  'min-h-40 [&_p]:m-0 [&_p]:min-h-6 [&_br]:block [&_br]:content-[""]';
