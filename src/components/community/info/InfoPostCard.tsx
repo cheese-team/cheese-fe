@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { getOptionLabel } from '@/lib/getOptionLabel';
 
-import { INFO_SORT_OPTIONS, POST_CONTENT_CLASS } from '@/app/(app)/community/_constants/community';
+import { INFO_SORT_OPTIONS } from '@/app/(app)/community/_constants/community';
 
 import { formatLikeCount } from '@/lib/formatLikeCount';
 
@@ -54,12 +54,7 @@ export default function InfoPostCard({
               </span>
               <h3 className="truncate">{post.title}</h3>
             </div>
-            <p
-              className={cn(
-                POST_CONTENT_CLASS,
-                'line-clamp-2 h-10 text-[14px] leading-5 font-medium text-gray-700',
-              )}
-            >
+            <p className="line-clamp-2 h-10 text-[14px] leading-5 font-medium text-gray-700">
               {post.previewText}
             </p>
           </Link>
