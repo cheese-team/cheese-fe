@@ -17,6 +17,7 @@ import { formatDate } from '@/lib/formatDate';
 import { INFO_SORT_OPTIONS } from '../../_constants/community';
 
 import ViewIcon from '@/assets/icons/common/view.svg';
+import CommentIcon from '@/assets/icons/common/comment.svg';
 import MoreIcon from '@/assets/icons/common/more.svg';
 
 type PostDetailHeaderProps = {
@@ -24,6 +25,7 @@ type PostDetailHeaderProps = {
   title: string;
   createdAt: string;
   viewCount: number;
+  commentCount?: number;
   isMine?: boolean;
   isMenuOpen?: boolean;
   onToggleMenu?: () => void;
@@ -38,6 +40,7 @@ export default function PostDetailHeader({
   title,
   createdAt,
   viewCount,
+  commentCount,
   isMine = false,
   isMenuOpen = false,
   onToggleMenu,
@@ -92,9 +95,20 @@ export default function PostDetailHeader({
       <div className="flex items-center justify-end gap-5">
         <span className="text-[14px] leading-6 text-gray-600"> {formatDate(createdAt)}</span>
 
-        <div className="flex h-6 items-center gap-1">
-          <ViewIcon className="w-4 text-gray-500" />
-          <span className="text-[12px] leading-6 font-medium text-gray-600">{viewCount}</span>
+        <div className="flex gap-2">
+          <div className="flex h-6 items-center gap-1">
+            <ViewIcon className="w-4 text-gray-500" />
+            <span className="text-[12px] leading-6 font-medium text-gray-600">{viewCount}</span>
+          </div>
+
+          {commentCount !== undefined && (
+            <div className="flex h-6 items-center gap-1">
+              <CommentIcon className="w-4 text-gray-500" />
+              <span className="text-[12px] leading-6 font-medium text-gray-600">
+                {commentCount}
+              </span>
+            </div>
+          )}
         </div>
 
         <div ref={menuRef} className="relative">

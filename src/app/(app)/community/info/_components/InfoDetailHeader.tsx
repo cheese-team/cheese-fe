@@ -37,6 +37,7 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
       title={infoPost.title}
       createdAt={infoPost.createdAt}
       viewCount={infoPost.viewCount}
+      commentCount={infoPost.commentCount}
       isMine={isMine}
       isMenuOpen={isMenuOpen}
       onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
