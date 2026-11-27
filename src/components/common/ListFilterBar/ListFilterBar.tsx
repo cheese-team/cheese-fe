@@ -28,6 +28,7 @@ type ListFilterBarProps<TSort extends string = string> = {
   sortOptions: readonly Option<TSort>[];
   selectedSort: TSort;
   onSortChange: (value: TSort) => void;
+  filterLabel?: string;
 
   searchValue: string;
   onSearchChange: (value: string) => void;
@@ -89,10 +90,12 @@ function SortDropdown<TSort extends string>({
   options,
   value,
   onChange,
+  label = '정렬',
 }: {
   options: readonly Option<TSort>[];
   value: TSort;
   onChange: (value: TSort) => void;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -120,7 +123,7 @@ function SortDropdown<TSort extends string>({
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        aria-label={`정렬: ${selectedLabel}`}
+        aria-label={`${label}: ${selectedLabel}`}
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
@@ -326,6 +329,7 @@ export function ListFilterBar<TSort extends string = string>({
   sortOptions,
   selectedSort,
   onSortChange,
+  filterLabel,
   searchValue,
   onSearchChange,
   onSearchSubmit,
@@ -339,7 +343,12 @@ export function ListFilterBar<TSort extends string = string>({
 }: ListFilterBarProps<TSort>) {
   return (
     <div className={cn('flex items-center gap-[10px]', className)}>
-      <SortDropdown options={sortOptions} value={selectedSort} onChange={onSortChange} />
+      <SortDropdown
+        options={sortOptions}
+        value={selectedSort}
+        onChange={onSortChange}
+        label={filterLabel}
+      />
 
       <SearchInput
         value={searchValue}

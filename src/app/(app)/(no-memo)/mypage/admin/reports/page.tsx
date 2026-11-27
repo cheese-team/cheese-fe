@@ -10,9 +10,11 @@ import { ApiError } from '@/api/client';
 import { Chip } from '@/components/common/Chip';
 import { Button } from '@/components/common/Button';
 import CategoryTabs from '@/components/common/CategoryTabs';
+import MypageListFilterBar from '../../_components/MypageListFilterBar';
 import AdminReportModal from './_components/AdminReportModal';
 
 import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
+import { useSearchHistories } from '@/hooks/useSearchHistories';
 
 import { useAdminReports } from '@/queries/admin/useAdminReports';
 import { useUpdateAdminReport } from '@/queries/admin/useUpdateAdminReport';
@@ -44,6 +46,16 @@ const TARGET_TYPE_LABELS = {
   info: '정보/자료공유',
   comment: '댓글',
 };
+
+const TARGET_TYPE_OPTIONS = [
+  { value: 'all', label: '전체' },
+  { value: 'jobs', label: TARGET_TYPE_LABELS.jobs },
+  { value: 'groups', label: TARGET_TYPE_LABELS.groups },
+  { value: 'info', label: TARGET_TYPE_LABELS.info },
+  { value: 'comment', label: TARGET_TYPE_LABELS.comment },
+] as const;
+
+const EMPTY_SEARCH_HISTORIES: readonly string[] = [];
 
 const REPORT_ACTIONS = {
   approve: {
@@ -81,6 +93,23 @@ function formatReportTime(date: string) {
   return new Date(date).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 }
 
+function matchesKeyword(report: ReportListItem, keyword: string) {
+  const fields = [
+    report.id,
+    REPORT_STATUS_LABELS[report.status],
+    TARGET_TYPE_LABELS[report.targetType],
+    report.targetId,
+    report.reason ?? '-',
+    report.reporter?.nickname ?? '알 수 없음',
+    report.reporter?.id,
+    formatReportTime(report.createdAt),
+  ];
+  if (report.status !== 'pending') {
+    fields.push(report.resolution ?? undefined, formatReportTime(report.updatedAt));
+  }
+  return fields.some((field) => field?.toLowerCase().includes(keyword));
+}
+
 const TARGET_NOT_FOUND = /^(?:comment|job post|group post|info post) not found\.?$/i;
 
 export default function AdminReportsPage() {
@@ -88,9 +117,25 @@ export default function AdminReportsPage() {
   const updateSearchParams = useUpdateSearchParams();
   const statusFilter =
     REPORT_STATUS_TABS.find((tab) => tab.value === searchParams.get('status'))?.value ?? 'all';
+  const typeFilter =
+    TARGET_TYPE_OPTIONS.find((option) => option.value === searchParams.get('type'))?.value ?? 'all';
+  const searchValue = searchParams.get('q')?.trim() ?? '';
+  const keyword = searchValue.toLowerCase();
+  const isFiltering = typeFilter !== 'all' || Boolean(keyword);
+  const { histories, addHistory } = useSearchHistories('admin-reports', EMPTY_SEARCH_HISTORIES);
   const list = useAdminReports(statusFilter === 'all' ? undefined : statusFilter);
-  const reports = list.data?.pages.flatMap((page) => page.items) ?? [];
   const { fetchNextPage, hasNextPage, isFetching, isError } = list;
+  const hasCompleteResults = list.isSuccess && !hasNextPage && !isFetching;
+  const loadedReports = list.data?.pages.flatMap((page) => page.items) ?? [];
+  const reports = isFiltering
+    ? hasCompleteResults
+      ? loadedReports.filter(
+          (report) =>
+            (typeFilter === 'all' || report.targetType === typeFilter) &&
+            (!keyword || matchesKeyword(report, keyword)),
+        )
+      : []
+    : loadedReports;
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -103,15 +148,22 @@ export default function AdminReportsPage() {
   const { mutateAsync, isPending: isUpdating } = useUpdateAdminReport();
 
   useEffect(() => {
+    if (!hasNextPage || isFetching || isError) return;
+
+    if (isFiltering) {
+      void fetchNextPage({ cancelRefetch: false });
+      return;
+    }
+
     const target = loadMoreRef.current;
-    if (!target || !hasNextPage || isFetching || isError) return;
+    if (!target) return;
 
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) void fetchNextPage({ cancelRefetch: false });
     });
     observer.observe(target);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetching, isError]);
+  }, [fetchNextPage, hasNextPage, isFetching, isError, isFiltering, statusFilter]);
 
   const restoreFocus = useCallback(() => {
     const trigger = triggerRef.current;
@@ -162,6 +214,12 @@ export default function AdminReportsPage() {
     updateSearchParams({ status: status === 'all' ? null : status });
   };
 
+  const handleSearchSubmit = (value: string) => {
+    const query = value.trim();
+    if (query) addHistory(query);
+    updateSearchParams('q', query);
+  };
+
   return (
     <section ref={pageRef} tabIndex={-1} className="flex flex-col gap-5" aria-label="신고 관리">
       <CategoryTabs
@@ -170,6 +228,19 @@ export default function AdminReportsPage() {
         onChange={handleStatusChange}
         size="sm"
         className="flex-wrap"
+      />
+
+      <MypageListFilterBar
+        sortOptions={TARGET_TYPE_OPTIONS}
+        selectedSort={typeFilter}
+        filterLabel="신고 대상 분류"
+        onSortChange={(value) => updateSearchParams({ type: value === 'all' ? null : value })}
+        searchValue={searchValue}
+        searchHistories={histories}
+        onSearchSubmit={handleSearchSubmit}
+        onSearchClear={() => updateSearchParams('q', '')}
+        searchClassName="w-full sm:w-[500px]"
+        className="gap-3"
       />
 
       {list.isPending && (
@@ -186,8 +257,13 @@ export default function AdminReportsPage() {
         />
       )}
 
-      {list.isSuccess && reports.length === 0 && (
-        <CommunityListState type="empty" message="해당 상태의 신고가 없습니다." />
+      {(isFiltering ? hasCompleteResults : list.isSuccess) && reports.length === 0 && (
+        <CommunityListState
+          type="empty"
+          message={
+            isFiltering ? '검색 조건에 해당하는 신고가 없습니다.' : '해당 상태의 신고가 없습니다.'
+          }
+        />
       )}
 
       <ul className="flex flex-col gap-4">
@@ -285,10 +361,19 @@ export default function AdminReportsPage() {
           </li>
         ))}
       </ul>
-      <div ref={loadMoreRef} className="h-px" />
+      {!isFiltering && <div ref={loadMoreRef} className="h-px" />}
 
-      {list.isFetchingNextPage && (
-        <CommunityListState type="loading" message="신고 목록을 더 불러오는 중입니다." />
+      {(isFiltering
+        ? !list.isPending && !isError && !hasCompleteResults
+        : list.isFetchingNextPage) && (
+        <CommunityListState
+          type="loading"
+          message={
+            isFiltering
+              ? '검색할 신고 목록을 불러오는 중입니다.'
+              : '신고 목록을 더 불러오는 중입니다.'
+          }
+        />
       )}
 
       {list.isFetchNextPageError && (
