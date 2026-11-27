@@ -31,7 +31,7 @@ export default function CommunityJobsPage() {
     refetch,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
+    isFetching,
     isFetchNextPageError,
   } = useJobPosts({ sort, keyword, limit: COMMUNITY_LIST_LIMIT });
 
@@ -43,13 +43,13 @@ export default function CommunityJobsPage() {
   useEffect(() => {
     const target = loadMoreRef.current;
 
-    if (!target || !hasNextPage || isFetchNextPageError) return;
+    if (!target || !hasNextPage || isFetching || isFetchNextPageError) return;
 
     const observer = new IntersectionObserver((entries) => {
       const [entry] = entries;
 
-      if (entry.isIntersecting && !isFetchingNextPage) {
-        void fetchNextPage();
+      if (entry.isIntersecting) {
+        void fetchNextPage({ cancelRefetch: false });
       }
     });
 
@@ -58,7 +58,7 @@ export default function CommunityJobsPage() {
     return () => {
       observer.disconnect();
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
+  }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
 
   const { mutate: toggleJobPostLike, isPending: isLikePending } = useToggleJobPostLike();
   const {
@@ -116,9 +116,9 @@ export default function CommunityJobsPage() {
             width={120}
             variant="outlineGray"
             onClick={() => {
-              void fetchNextPage();
+              void fetchNextPage({ cancelRefetch: false });
             }}
-            disabled={isFetchingNextPage}
+            disabled={isFetching}
           >
             다시 시도
           </Button>

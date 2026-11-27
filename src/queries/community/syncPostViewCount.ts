@@ -23,6 +23,9 @@ export function syncPostViewCount(
       // A removed list must not be recreated by a late response.
       if (queryClient.getQueryCache().get(query.queryHash) !== query) return;
 
+      // setQueryData clears invalidation even when dataUpdatedAt is preserved.
+      if (query.state.isInvalidated) return;
+
       const current = query.state.data as PostListData | undefined;
 
       if (
