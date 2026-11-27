@@ -32,7 +32,7 @@ const ICON_MAP = {
   reports: <AdminReportsIcon />,
 };
 
-export default function MyPageSidebar() {
+export default function MyPageSidebar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
 
   const { data: user } = useCurrentUser();
@@ -59,6 +59,8 @@ export default function MyPageSidebar() {
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn('h-[54px] gap-3 p-3', getSidebarItemClassName(isActive))}
+                  scroll={false}
+                  onNavigate={onMenuClick}
                 >
                   <span className={cn('h-4 w-4', getSidebarIconClassName(isActive))}>
                     {ICON_MAP[item.icon]}
@@ -86,6 +88,8 @@ export default function MyPageSidebar() {
                         href={item.href}
                         aria-current={isActive ? 'page' : undefined}
                         className={cn('h-[54px] gap-3 p-3', getSidebarItemClassName(isActive))}
+                        scroll={false}
+                        onNavigate={onMenuClick}
                       >
                         <span className={cn('h-4 w-4', getSidebarIconClassName(isActive))}>
                           {ICON_MAP[item.icon]}
