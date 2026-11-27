@@ -31,11 +31,15 @@ export default function CommentItem({
   onUpdate,
   onCancelEdit,
   onDelete,
+  onReport,
+  isReportPending,
   onReply,
   isReplying = false,
   isPostAuthor,
 }: CommentItemProps) {
   const focusEditorOnCloseRef = useRef(false);
+  const reportOnCloseRef = useRef(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const optionClassName = cn(
     dropdownOptionStyle,
     !disabled && dropdownOptionInteractiveStyle,
@@ -118,6 +122,7 @@ export default function CommentItem({
               type="button"
               disabled={disabled}
               aria-label="댓글 더보기"
+              ref={menuTriggerRef}
               className="mt-4 flex w-[33px] shrink-0 justify-center self-start"
             >
               <MoreIcon className="h-3" aria-hidden="true" />
@@ -130,6 +135,13 @@ export default function CommentItem({
               alignOffset={-8}
               className={cn(dropdownContentStyle, 'z-[60] flex w-25 flex-col gap-2')}
               onCloseAutoFocus={(event) => {
+                if (reportOnCloseRef.current) {
+                  event.preventDefault();
+                  reportOnCloseRef.current = false;
+                  menuTriggerRef.current?.focus();
+                  onReport(comment.id);
+                  return;
+                }
                 if (focusEditorOnCloseRef.current) {
                   event.preventDefault();
                   focusEditorOnCloseRef.current = false;
@@ -158,7 +170,13 @@ export default function CommentItem({
                   </DropdownMenu.Item>
                 </>
               ) : (
-                <DropdownMenu.Item disabled={disabled} className={optionClassName}>
+                <DropdownMenu.Item
+                  disabled={disabled || isReportPending}
+                  className={optionClassName}
+                  onSelect={() => {
+                    reportOnCloseRef.current = true;
+                  }}
+                >
                   신고
                 </DropdownMenu.Item>
               )}

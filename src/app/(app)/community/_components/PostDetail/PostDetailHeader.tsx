@@ -33,6 +33,7 @@ type PostDetailHeaderProps = {
   onEdit?: () => void;
   onDelete?: () => void;
   onReport?: () => void;
+  isReportPending?: boolean;
 };
 
 export default function PostDetailHeader({
@@ -48,6 +49,7 @@ export default function PostDetailHeader({
   onEdit,
   onDelete,
   onReport,
+  isReportPending = false,
 }: PostDetailHeaderProps) {
   const router = useRouter();
 
@@ -153,7 +155,11 @@ export default function PostDetailHeader({
                     dropdownOptionInteractiveStyle,
                     'disabled:cursor-not-allowed disabled:opacity-50',
                   )}
-                  onClick={onReport}
+                  onClick={() => {
+                    menuRef.current?.querySelector('button')?.focus();
+                    onReport?.();
+                  }}
+                  disabled={isReportPending}
                 >
                   신고
                 </button>

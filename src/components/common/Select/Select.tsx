@@ -45,7 +45,7 @@ export default function Select({
       <SelectPrimitive.Trigger
         id={id}
         className={cn(
-          'group flex h-[30px] w-full items-center justify-between pr-5 font-medium',
+          'group flex h-[30px] w-full items-center justify-between pr-5 !font-medium',
           'border-b border-gray-400',
           'data-[placeholder]:text-gray-500',
           'data-[state=open]:border-secondary-600',
@@ -64,7 +64,7 @@ export default function Select({
         <SelectPrimitive.Icon asChild>
           <ArrowIcon
             className={cn(
-              'h-[10px] rotate-[-90deg] text-gray-500 transition-transform',
+              'mr-2 h-[20px] w-3 rotate-[-90deg] text-gray-500 transition-transform',
               'group-data-[state=open]:rotate-90',
               arrowIconClassName,
             )}

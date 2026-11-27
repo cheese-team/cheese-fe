@@ -53,6 +53,7 @@ async function readApiError(response: Response) {
 
 type ApiRequestOptions = RequestInit & {
   query?: Record<string, string | undefined>;
+  responseType?: 'json' | 'void';
 };
 
 function createApiUrl(path: string, query?: Record<string, string | undefined>) {
@@ -69,8 +70,16 @@ function createApiUrl(path: string, query?: Record<string, string | undefined>) 
   return queryString ? `${path}?${queryString}` : path;
 }
 
-export async function apiClient<T>(path: string, options?: ApiRequestOptions): Promise<T> {
-  const { query, ...requestInit } = options ?? {};
+export function apiClient(
+  path: string,
+  options: ApiRequestOptions & { responseType: 'void' },
+): Promise<void>;
+export function apiClient<T>(
+  path: string,
+  options?: ApiRequestOptions & { responseType?: 'json' },
+): Promise<T>;
+export async function apiClient<T>(path: string, options?: ApiRequestOptions): Promise<T | void> {
+  const { query, responseType, ...requestInit } = options ?? {};
 
   const headers = new Headers(requestInit.headers);
 
@@ -91,6 +100,8 @@ export async function apiClient<T>(path: string, options?: ApiRequestOptions): P
   if (!response.ok) {
     throw await readApiError(response);
   }
+
+  if (responseType === 'void') return;
 
   return (await response.json()) as T;
 }

@@ -6,11 +6,13 @@ import { Button } from '@/components/common/Button';
 import CommunityListState from '../CommunityListState';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
+import ReportModal from '../ReportModal';
 
 import { ApiError } from '@/api/client';
 import { useComments } from '@/queries/community/useComments';
 import { useCommentMutations } from '@/queries/community/useCommentMutations';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
+import { useReportContent } from '../../_hooks/useReportContent';
 
 import type { CommunityCommentCategory, CommunityCommentResult } from '@/types/community/comment';
 
@@ -29,6 +31,8 @@ export default function Comment({ category, postId, postAuthorId }: CommentProps
   } = useComments({ category, postId });
   const { create, update, remove } = useCommentMutations({ category, postId });
   const { data: user } = useCurrentUser();
+  const { reportTarget, openReportModal, closeReportModal, submitReport, isReportPending } =
+    useReportContent();
 
   const [commentValue, setCommentValue] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -124,6 +128,17 @@ export default function Comment({ category, postId, postAuthorId }: CommentProps
       key={comment.id}
       comment={comment}
       disabled={disabled}
+      isReportPending={isReportPending}
+      onReport={(commentId) => {
+        if (disabled) return;
+        openReportModal({
+          targetType: 'comment',
+          targetId: commentId,
+          authorId: comment.author.userId,
+          authorName: comment.author.displayName,
+          content: comment.content,
+        });
+      }}
       isMine={!!user && comment.author.userId === user.account.userId}
       isPostAuthor={comment.author.userId === postAuthorId}
       isEditing={editingCommentId === comment.id}
@@ -285,6 +300,16 @@ export default function Comment({ category, postId, postAuthorId }: CommentProps
         >
           다시 시도
         </Button>
+      )}
+      {reportTarget && (
+        <ReportModal
+          reportTarget={reportTarget}
+          isPending={isReportPending}
+          onClose={closeReportModal}
+          onSubmit={(reason) => {
+            void submitReport(reason);
+          }}
+        />
       )}
     </section>
   );

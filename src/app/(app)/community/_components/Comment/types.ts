@@ -24,6 +24,8 @@ export type CommentItemProps = {
   onUpdate: (commentId: string) => void;
   onCancelEdit: () => void;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
+  isReportPending: boolean;
   onReply?: () => void;
   isReplying?: boolean;
   isPostAuthor: boolean;

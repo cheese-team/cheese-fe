@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import PostDetailHeader from '../../_components/PostDetail';
+import ReportModal from '../../_components/ReportModal';
+import { useReportContent } from '../../_hooks/useReportContent';
 
 import { ApiError } from '@/api/client';
 
@@ -23,6 +25,8 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
+  const { reportTarget, openReportModal, closeReportModal, submitReport, isReportPending } =
+    useReportContent();
   const { mutate: deleteJobPost, isPending: isDeletePending } = useDeleteJobPost();
 
   const isMine = !!user && jobPost.author.userId === user.account.userId;
@@ -34,38 +38,60 @@ export default function JobDetailHeader({ jobId, jobPost }: JobDetailHeaderProps
   };
 
   return (
-    <PostDetailHeader
-      title={jobPost.title}
-      createdAt={jobPost.createdAt}
-      viewCount={jobPost.viewCount}
-      isMine={isMine}
-      isMenuOpen={isMenuOpen}
-      onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
-      onCloseMenu={() => setIsMenuOpen(false)}
-      onEdit={handleEdit}
-      onReport={() => {
-        setIsMenuOpen(false);
-      }}
-      onDelete={() => {
-        if (!user || !isMine || isDeletePending) return;
+    <>
+      <PostDetailHeader
+        title={jobPost.title}
+        createdAt={jobPost.createdAt}
+        viewCount={jobPost.viewCount}
+        isMine={isMine}
+        isMenuOpen={isMenuOpen}
+        onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
+        onCloseMenu={() => setIsMenuOpen(false)}
+        onEdit={handleEdit}
+        isReportPending={isReportPending || !user}
+        onReport={() => {
+          setIsMenuOpen(false);
+          openReportModal({
+            targetType: 'jobs',
+            targetId: jobId,
+            authorId: jobPost.author.userId,
+            authorName: jobPost.author.displayName,
+            content: jobPost.title,
+          });
+        }}
+        onDelete={() => {
+          if (!user || !isMine || isDeletePending) return;
 
-        const confirmed = window.confirm('삭제하시겠습니까?');
-        if (!confirmed) return;
+          const confirmed = window.confirm('삭제하시겠습니까?');
+          if (!confirmed) return;
 
-        deleteJobPost(
-          { jobId },
-          {
-            onSuccess: () => {
-              router.push('/community/jobs');
+          deleteJobPost(
+            { jobId },
+            {
+              onSuccess: () => {
+                router.push('/community/jobs');
+              },
+              onError: (error) => {
+                alert(
+                  error instanceof ApiError
+                    ? error.message
+                    : '채용공고 게시글 삭제에 실패했습니다.',
+                );
+              },
             },
-            onError: (error) => {
-              alert(
-                error instanceof ApiError ? error.message : '채용공고 게시글 삭제에 실패했습니다.',
-              );
-            },
-          },
-        );
-      }}
-    />
+          );
+        }}
+      />
+      {reportTarget && (
+        <ReportModal
+          reportTarget={reportTarget}
+          isPending={isReportPending}
+          onClose={closeReportModal}
+          onSubmit={(reason) => {
+            void submitReport(reason);
+          }}
+        />
+      )}
+    </>
   );
 }
