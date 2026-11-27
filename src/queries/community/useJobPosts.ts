@@ -15,6 +15,7 @@ export function useJobPosts(params: JobPostsListParams) {
 
   return useInfiniteQuery({
     queryKey: communityQueryKeys.jobList(requestParams),
+    refetchOnMount: 'always',
 
     queryFn: ({ pageParam, signal }) =>
       getJobPosts({ ...requestParams, cursor: pageParam, signal }),

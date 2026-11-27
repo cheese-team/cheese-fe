@@ -15,6 +15,7 @@ export function useGroupPosts(params: GroupPostsListParams) {
 
   return useInfiniteQuery({
     queryKey: communityQueryKeys.groupList(requestParams),
+    refetchOnMount: 'always',
 
     queryFn: ({ pageParam, signal }) =>
       getGroupPosts({ ...requestParams, cursor: pageParam, signal }),

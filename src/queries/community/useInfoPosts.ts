@@ -15,6 +15,7 @@ export function useInfoPosts(params: InfoPostsListParams) {
 
   return useInfiniteQuery({
     queryKey: communityQueryKeys.infoList(requestParams),
+    refetchOnMount: 'always',
 
     queryFn: ({ pageParam, signal }) =>
       getInfoPosts({ ...requestParams, cursor: pageParam, signal }),
