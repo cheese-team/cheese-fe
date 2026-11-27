@@ -118,25 +118,16 @@ export default function ReportModal({
             if (!isPending && reason) onSubmit(reason);
           }}
         >
-          <div className="mb-3 min-w-0 rounded-[5px] bg-gray-200 px-3 py-4">
-            <p className="mb-2 text-[16px] font-bold text-gray-700">
-              {isComment ? '신고 대상 댓글' : '신고 대상 게시글'}
-            </p>
+          <dl className="mb-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-[5px] bg-gray-200 p-3 text-sm">
+            <dt className="font-medium text-gray-600">신고 대상</dt>
+            <dd>{isComment ? '댓글' : '게시글'}</dd>
 
-            <p
-              className={cn(
-                'text-[16px] leading-5 wrap-anywhere whitespace-pre-wrap',
-                isComment ? 'line-clamp-3' : 'line-clamp-2',
-              )}
-            >
-              {isComment ? '' : '제목: '}
-              {reportTarget.content}
-            </p>
+            <dt className="font-medium text-gray-600">{isComment ? '' : '제목'}</dt>
+            <dd className="wrap-anywhere">{reportTarget.content}</dd>
 
-            <p className="mt-2 text-[14px] wrap-anywhere text-gray-700">
-              작성자: {reportTarget.authorName}
-            </p>
-          </div>
+            <dt className="font-medium text-gray-600">작성자</dt>
+            <dd className="wrap-anywhere">{reportTarget.authorName}</dd>
+          </dl>
 
           <label htmlFor={`${formId}-select`} className="sr-only">
             신고 사유

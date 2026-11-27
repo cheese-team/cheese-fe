@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -9,6 +10,7 @@ import { ApiError } from '@/api/client';
 import { Chip } from '@/components/common/Chip';
 import { Button } from '@/components/common/Button';
 import CategoryTabs from '@/components/common/CategoryTabs';
+import AdminReportModal from './_components/AdminReportModal';
 
 import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 
@@ -43,6 +45,36 @@ const TARGET_TYPE_LABELS = {
   comment: '댓글',
 };
 
+const REPORT_ACTIONS = {
+  approve: {
+    title: '신고 승인',
+    description: '신고 승인 시 해당 게시글 또는 댓글이 삭제됩니다.',
+    request: {
+      status: 'resolved',
+      action: 'delete_target',
+    },
+  },
+  dismiss: {
+    title: '신고 기각',
+    description: '신고 대상은 삭제되지 않으며 신고가 기각됩니다.',
+    request: {
+      status: 'dismissed',
+    },
+  },
+  close: {
+    title: '신고 종결',
+    description: '추가 조치 없이 신고를 처리 완료 상태로 변경합니다.',
+    request: {
+      status: 'resolved',
+    },
+  },
+} satisfies Record<
+  string,
+  { title: string; description: string; request: Omit<UpdateAdminReportRequest, 'resolution'> }
+>;
+
+type ReportAction = keyof typeof REPORT_ACTIONS;
+
 type ReportStatusFilter = (typeof REPORT_STATUS_TABS)[number]['value'];
 
 function formatReportTime(date: string) {
@@ -60,6 +92,13 @@ export default function AdminReportsPage() {
   const reports = list.data?.pages.flatMap((page) => page.items) ?? [];
   const { fetchNextPage, hasNextPage, isFetching, isError } = list;
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [selection, setSelection] = useState<{
+    report: ReportListItem;
+    action: ReportAction;
+  } | null>(null);
+  const selectedAction = selection ? REPORT_ACTIONS[selection.action] : null;
   const isSubmittingRef = useRef(false);
   const { mutateAsync, isPending: isUpdating } = useUpdateAdminReport();
 
@@ -74,33 +113,42 @@ export default function AdminReportsPage() {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isError]);
 
-  const handleUpdate = async (report: ReportListItem, defaults: UpdateAdminReportRequest) => {
+  const restoreFocus = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (trigger?.isConnected && !trigger.disabled) trigger.focus();
+    else pageRef.current?.focus();
+  }, []);
+
+  const openModal = (report: ReportListItem, action: ReportAction, trigger: HTMLButtonElement) => {
     if (report.status !== 'pending' || isUpdating || isSubmittingRef.current) return;
+    triggerRef.current = trigger;
+    setSelection({ report, action });
+  };
 
-    const input = window.prompt('신고 처리 사유를 입력해 주세요.', defaults.resolution);
-    if (input === null) return;
+  const closeModal = () => {
+    if (!isUpdating && !isSubmittingRef.current) setSelection(null);
+  };
 
+  const handleUpdate = async (input: string) => {
+    if (!selection || !selectedAction || isUpdating || isSubmittingRef.current) return;
     const resolution = input.trim();
-    if (!resolution) {
-      window.alert('신고 처리 사유를 입력해 주세요.');
-      return;
-    }
-    if (defaults.action === 'delete_target' && !window.confirm('신고 대상을 삭제하시겠습니까?'))
-      return;
+    if (!resolution) return;
+    const { report, action } = selection;
 
     isSubmittingRef.current = true;
     try {
-      await mutateAsync({ report, request: { ...defaults, resolution } });
+      await mutateAsync({ report, request: { ...selectedAction.request, resolution } });
+      flushSync(() => setSelection(null));
       window.alert('신고가 처리되었습니다.');
     } catch (error) {
       if (
-        defaults.action === 'delete_target' &&
+        action === 'approve' &&
         error instanceof ApiError &&
         error.status === 404 &&
         TARGET_NOT_FOUND.test(error.message)
       ) {
         window.alert(
-          '신고 대상을 찾을 수 없습니다.\n이미 삭제된 대상이라면 중복 신고 처리를 이용해 주세요.',
+          '신고 대상을 찾을 수 없습니다.\n이미 삭제된 대상이라면 신고 종결을 이용해 주세요.',
         );
       } else {
         window.alert(error instanceof ApiError ? error.message : '신고 처리에 실패했습니다.');
@@ -115,7 +163,7 @@ export default function AdminReportsPage() {
   };
 
   return (
-    <section className="flex flex-col gap-5" aria-label="신고 관리">
+    <section ref={pageRef} tabIndex={-1} className="flex flex-col gap-5" aria-label="신고 관리">
       <CategoryTabs
         items={REPORT_STATUS_TABS}
         activeValue={statusFilter}
@@ -207,13 +255,7 @@ export default function AdminReportsPage() {
                     size={36}
                     paddingX={16}
                     disabled={isUpdating}
-                    onClick={() => {
-                      void handleUpdate(report, {
-                        status: 'resolved',
-                        resolution: '운영 정책 위반으로 신고 대상을 삭제했습니다.',
-                        action: 'delete_target',
-                      });
-                    }}
+                    onClick={(event) => openModal(report, 'approve', event.currentTarget)}
                   >
                     신고 승인
                   </Button>
@@ -223,12 +265,7 @@ export default function AdminReportsPage() {
                     size={36}
                     paddingX={16}
                     disabled={isUpdating}
-                    onClick={() => {
-                      void handleUpdate(report, {
-                        status: 'dismissed',
-                        resolution: '운영 정책 위반에 해당하지 않아 신고를 기각합니다.',
-                      });
-                    }}
+                    onClick={(event) => openModal(report, 'dismiss', event.currentTarget)}
                   >
                     신고 기각
                   </Button>
@@ -238,14 +275,9 @@ export default function AdminReportsPage() {
                     size={36}
                     paddingX={16}
                     disabled={isUpdating}
-                    onClick={() => {
-                      void handleUpdate(report, {
-                        status: 'resolved',
-                        resolution: '이미 처리된 신고 대상입니다.',
-                      });
-                    }}
+                    onClick={(event) => openModal(report, 'close', event.currentTarget)}
                   >
-                    중복 신고 처리
+                    신고 종결
                   </Button>
                 </div>
               )}
@@ -266,6 +298,22 @@ export default function AdminReportsPage() {
           onRetry={() => {
             void fetchNextPage({ cancelRefetch: false });
           }}
+        />
+      )}
+      {selection && selectedAction && (
+        <AdminReportModal
+          report={selection.report}
+          targetLabel={TARGET_TYPE_LABELS[selection.report.targetType]}
+          title={selectedAction.title}
+          action={selection.action}
+          description={selectedAction.description}
+          deletesTarget={selection.action === 'approve'}
+          isPending={isUpdating}
+          onClose={closeModal}
+          onSubmit={(resolution) => {
+            void handleUpdate(resolution);
+          }}
+          restoreFocus={restoreFocus}
         />
       )}
     </section>
