@@ -46,7 +46,7 @@ export default function Chip({ children, variant = 'default', size = 'sm', class
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-full px-3 text-[12px] font-bold whitespace-nowrap',
+        'inline-flex shrink-0 items-center justify-center rounded-full px-3 text-[12px] font-bold whitespace-nowrap',
         variantStyles[variant],
         sizeStyles[size],
         className,

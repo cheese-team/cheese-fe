@@ -48,7 +48,7 @@ export default function InfoDetailPage() {
 
   return (
     <div className="mb-[50px] flex items-start gap-5">
-      <section className="flex flex-1 flex-col gap-10 px-5">
+      <section className="flex flex-1 flex-col gap-8 px-5">
         <InfoDetailHeader infoPost={infoPost} />
 
         <article className="flex flex-col gap-6">
@@ -66,7 +66,7 @@ export default function InfoDetailPage() {
           )}
         </article>
 
-        <Comment category="info" postId={infoPost.id} />
+        <Comment category="info" postId={infoPost.id} postAuthorId={infoPost.author.userId} />
       </section>
 
       <PostDetailAside
@@ -76,7 +76,8 @@ export default function InfoDetailPage() {
             <Button
               variant="outlineGray"
               size={54}
-              width={90}
+              width={94.5}
+              paddingX={16}
               className="gap-2 border-gray-400"
               aria-label="좋아요"
               aria-pressed={infoPost.isLiked}
@@ -97,7 +98,8 @@ export default function InfoDetailPage() {
             <Button
               variant="outlineGray"
               size={54}
-              className="border-secondary-600 text-secondary-600 min-w-0 flex-1 gap-3 font-medium"
+              width={131}
+              className="border-secondary-600 text-secondary-600 gap-3 font-medium"
               onClick={() => {
                 void shareUrl({
                   title: infoPost.title,
@@ -105,7 +107,7 @@ export default function InfoDetailPage() {
                 });
               }}
             >
-              <ShareIcon className="w-4" />
+              <ShareIcon className="h-7.5 w-4" />
               공유하기
             </Button>
           </div>

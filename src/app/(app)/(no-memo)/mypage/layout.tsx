@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 import MypageHeaderTitle from './_components/Layout/MypageHeaderTitle';
@@ -10,14 +11,20 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
 
   const isMyPageMain = pathname === '/mypage';
 
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const resetScroll = () => {
+    contentRef.current?.scrollTo({ top: 0 });
+  };
+
   return (
     <div className="bg-background-2 flex min-h-dvh items-center justify-center px-8 py-6">
       <div className="flex h-[70vh] max-h-[780px] min-h-[560px] w-full max-w-[1200px] overflow-hidden rounded-[10px] border border-gray-300 bg-white">
         <aside className="w-[200px] shrink-0 border-r border-gray-300">
-          <MyPageSidebar />
+          <MyPageSidebar onMenuClick={resetScroll} />
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={contentRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10">
           <div className={isMyPageMain ? 'mb-8' : 'mb-5'}>
             <MypageHeaderTitle />
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
@@ -13,27 +13,42 @@ export default function CommentForm({
   value,
   onValueChange,
   onSubmit,
+  onCancel,
   disabled = false,
   profileImageUrl,
+  displayName,
+  isReply = false,
+  textareaRef: externalTextareaRef,
 }: CommentFormProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = externalTextareaRef ?? internalTextareaRef;
+
+  useEffect(() => {
+    if (!value && textareaRef.current) {
+      textareaRef.current.style.height = '30px';
+    }
+  }, [value, textareaRef]);
 
   const handleSubmit = () => {
-    if (disabled || !value.trim()) return;
-    onSubmit();
+    if (disabled) return;
 
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '30px';
-      }
-    });
+    if (!value.trim()) {
+      window.alert('댓글 내용을 입력하지 않았습니다');
+      textareaRef.current?.focus();
+      return;
+    }
+
+    onSubmit();
   };
 
   return (
-    <div className="flex gap-3">
-      <ProfileImage size={40} src={profileImageUrl} />
+    <div className="focus-within:border-secondary-600 flex flex-col gap-3 rounded-[10px] border border-gray-400 px-4 py-3 transition-colors">
+      <div className="flex items-center gap-2">
+        <ProfileImage size={30} src={profileImageUrl} />
+        <h3 className="leading-5 font-medium">{displayName}</h3>
+      </div>
 
-      <div className="focus-within:border-secondary-600 flex w-full items-center gap-2.5 border-b border-gray-400 pb-3 transition-colors">
+      <div className="flex w-full items-center gap-2.5">
         <textarea
           disabled={disabled}
           ref={textareaRef}
@@ -48,12 +63,35 @@ export default function CommentForm({
               handleSubmit();
             }
           }}
-          placeholder="댓글 등록"
+          aria-label={isReply ? '답글 입력' : '댓글 입력'}
+          placeholder={isReply ? '답글을 추가해보세요' : '댓글을 추가해보세요'}
           rows={1}
-          className="h-[30px] max-h-60 w-full resize-none overflow-y-auto pt-1 outline-none"
+          className="h-[30px] max-h-60 w-full resize-none overflow-y-auto outline-none"
         />
+      </div>
 
-        <Button disabled={disabled || !value.trim()} onClick={handleSubmit} width={56} size={36}>
+      <div className="flex gap-2 self-end">
+        {isReply && (
+          <Button
+            disabled={disabled}
+            onClick={onCancel}
+            variant="outlineLightGray"
+            width={48}
+            size={36}
+            className="text-gray-500 hover:border-gray-400 hover:bg-gray-400 hover:text-gray-700"
+          >
+            취소
+          </Button>
+        )}
+
+        <Button
+          disabled={disabled}
+          onClick={handleSubmit}
+          variant="outlinePrimary"
+          width={48}
+          size={36}
+          className="text-secondary-800 hover:bg-secondary-600 text-[14px] hover:text-gray-50"
+        >
           등록
         </Button>
       </div>

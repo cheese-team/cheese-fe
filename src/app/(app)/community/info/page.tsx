@@ -27,6 +27,7 @@ export default function CommunityInfoPage() {
     refetch,
     fetchNextPage,
     hasNextPage,
+    isFetching,
     isFetchingNextPage,
     isFetchNextPageError,
   } = useInfoPosts({ sort, keyword, limit: COMMUNITY_LIST_LIMIT });
@@ -37,18 +38,18 @@ export default function CommunityInfoPage() {
   useEffect(() => {
     const target = loadMoreRef.current;
 
-    if (!target || !hasNextPage || isFetchNextPageError) return;
+    if (!target || !hasNextPage || isFetching || isFetchNextPageError) return;
 
     const observer = new IntersectionObserver((entries) => {
       const [entry] = entries;
-      if (entry.isIntersecting && !isFetchingNextPage) {
-        void fetchNextPage();
+      if (entry.isIntersecting) {
+        void fetchNextPage({ cancelRefetch: false });
       }
     });
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isFetchNextPageError]);
+  }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError]);
 
   if (isPending) {
     return <CommunityListState type="loading" message="로딩 중..." />;
@@ -98,9 +99,9 @@ export default function CommunityInfoPage() {
             width={120}
             variant="outlineGray"
             onClick={() => {
-              if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+              if (hasNextPage && !isFetching) void fetchNextPage({ cancelRefetch: false });
             }}
-            disabled={isFetchingNextPage}
+            disabled={isFetching}
           >
             다시 시도
           </Button>

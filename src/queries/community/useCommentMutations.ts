@@ -5,6 +5,7 @@ import {
   updateComment,
   deleteComment,
   type CommentsParams,
+  type CreateCommentRequest,
 } from '@/api/community.api';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 
@@ -33,51 +34,22 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
         ? communityQueryKeys.groupLists()
         : communityQueryKeys.infoLists();
 
-  const updateCommentCount = (delta: number) => {
-    type PostWithCommentCount = { id: string; commentCount?: number };
-
-    const updateCount = (post: PostWithCommentCount) =>
-      typeof post.commentCount === 'number'
-        ? { ...post, commentCount: Math.max(0, post.commentCount + delta) }
-        : post;
-
-    queryClient.setQueriesData<PostWithCommentCount>(
-      { queryKey: [...detailKey, postId] },
-      (current) => (current ? updateCount(current) : current),
-    );
-
-    queryClient.setQueriesData<InfiniteData<{ items: PostWithCommentCount[] }>>(
-      { queryKey: listKey },
-      (current) =>
-        current
-          ? {
-              ...current,
-              pages: current.pages.map((page) => ({
-                ...page,
-                items: page.items.map((post) => (post.id === postId ? updateCount(post) : post)),
-              })),
-            }
-          : current,
-    );
+  const invalidateComments = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey, exact: true }),
+      queryClient.invalidateQueries({ queryKey: [...detailKey, postId], exact: true }),
+      queryClient.invalidateQueries({ queryKey: listKey }),
+      category === 'info' &&
+        queryClient.invalidateQueries({ queryKey: communityQueryKeys.dashboardPopularPosts() }),
+    ]);
   };
 
   const cancel = () => queryClient.cancelQueries({ queryKey, exact: true });
 
   const create = useMutation({
-    mutationFn: (data: { content: string; parentId?: string }) =>
+    mutationFn: (data: Pick<CreateCommentRequest, 'content' | 'parentId'>) =>
       createComment({ category, postId, ...data }),
-
-    onSuccess: async () => {
-      updateCommentCount(1);
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey, exact: true }),
-        category === 'info' &&
-          queryClient.invalidateQueries({
-            queryKey: communityQueryKeys.dashboardPopularPosts(),
-          }),
-      ]);
-    },
+    onSuccess: invalidateComments,
   });
 
   const update = useMutation({
@@ -94,7 +66,7 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
 
     onMutate: cancel,
 
-    onSuccess: (response, variables) => {
+    onSuccess: async (response, variables) => {
       queryClient.setQueryData<InfiniteData<CommunityCommentsResponse>>(queryKey, (current) => {
         if (!current) return current;
         return {
@@ -124,6 +96,7 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
           })),
         };
       });
+      await invalidateComments();
     },
   });
 
@@ -136,43 +109,8 @@ export function useCommentMutations({ category, postId }: CommentsParams) {
       return response;
     },
 
-    onMutate: async (commentId) => {
-      await cancel();
-
-      const current = queryClient.getQueryData<InfiniteData<CommunityCommentsResponse>>(queryKey);
-
-      const comment = current?.pages
-        .flatMap((page) => page.items)
-        .find((item) => item.id === commentId);
-
-      return { deletedCount: comment ? 1 + comment.replies.length : 1 };
-    },
-
-    onSuccess: (_, commentId, context) => {
-      updateCommentCount(-(context?.deletedCount ?? 1));
-
-      queryClient.setQueryData<InfiniteData<CommunityCommentsResponse>>(queryKey, (current) => {
-        if (!current) return current;
-        return {
-          ...current,
-          pages: current.pages.map((page) => ({
-            ...page,
-            items: page.items
-              .filter((comment) => comment.id !== commentId)
-              .map((comment) => ({
-                ...comment,
-                replies: comment.replies.filter((reply) => reply.id !== commentId),
-              })),
-          })),
-        };
-      });
-
-      if (category === 'info') {
-        void queryClient.invalidateQueries({
-          queryKey: communityQueryKeys.dashboardPopularPosts(),
-        });
-      }
-    },
+    onMutate: cancel,
+    onSuccess: invalidateComments,
   });
 
   return { create, update, remove };

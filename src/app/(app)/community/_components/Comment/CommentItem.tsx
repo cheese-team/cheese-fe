@@ -3,6 +3,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import ProfileImage from '@/components/common/ProfileImage';
 import { Button } from '@/components/common/Button';
+import { Chip } from '@/components/common/Chip';
 
 import {
   dropdownContentStyle,
@@ -30,8 +31,15 @@ export default function CommentItem({
   onUpdate,
   onCancelEdit,
   onDelete,
+  onReport,
+  isReportPending,
+  onReply,
+  isReplying = false,
+  isPostAuthor,
 }: CommentItemProps) {
   const focusEditorOnCloseRef = useRef(false);
+  const reportOnCloseRef = useRef(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const optionClassName = cn(
     dropdownOptionStyle,
     !disabled && dropdownOptionInteractiveStyle,
@@ -43,9 +51,13 @@ export default function CommentItem({
         <ProfileImage size={30} src={comment.author.profileImageUrl} />
       </div>
 
-      <div className="flex w-full gap-2.5">
-        <div className="flex flex-1 flex-col gap-1">
-          <h3 className="font-medium">{comment.author.displayName}</h3>
+      <div className="flex w-full min-w-0 gap-2.5">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[16px] font-medium wrap-anywhere">{comment.author.displayName}</h3>
+
+            {isPostAuthor && <Chip className="h-5 bg-green-200">작성자</Chip>}
+          </div>
 
           {isEditing ? (
             <div className="flex flex-col gap-3">
@@ -88,7 +100,19 @@ export default function CommentItem({
               </div>
             </div>
           ) : (
-            <p className="whitespace-pre-line">{comment.content}</p>
+            <p className="wrap-anywhere whitespace-pre-line">{comment.content}</p>
+          )}
+
+          {onReply && (
+            <button
+              type="button"
+              disabled={disabled}
+              aria-expanded={isReplying}
+              onClick={onReply}
+              className="mt-2 self-start text-gray-500 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              답글 달기
+            </button>
           )}
         </div>
 
@@ -98,6 +122,7 @@ export default function CommentItem({
               type="button"
               disabled={disabled}
               aria-label="댓글 더보기"
+              ref={menuTriggerRef}
               className="mt-4 flex w-[33px] shrink-0 justify-center self-start"
             >
               <MoreIcon className="h-3" aria-hidden="true" />
@@ -110,6 +135,13 @@ export default function CommentItem({
               alignOffset={-8}
               className={cn(dropdownContentStyle, 'z-[60] flex w-25 flex-col gap-2')}
               onCloseAutoFocus={(event) => {
+                if (reportOnCloseRef.current) {
+                  event.preventDefault();
+                  reportOnCloseRef.current = false;
+                  menuTriggerRef.current?.focus();
+                  onReport(comment.id);
+                  return;
+                }
                 if (focusEditorOnCloseRef.current) {
                   event.preventDefault();
                   focusEditorOnCloseRef.current = false;
@@ -138,7 +170,13 @@ export default function CommentItem({
                   </DropdownMenu.Item>
                 </>
               ) : (
-                <DropdownMenu.Item disabled={disabled} className={optionClassName}>
+                <DropdownMenu.Item
+                  disabled={disabled || isReportPending}
+                  className={optionClassName}
+                  onSelect={() => {
+                    reportOnCloseRef.current = true;
+                  }}
+                >
                   신고
                 </DropdownMenu.Item>
               )}

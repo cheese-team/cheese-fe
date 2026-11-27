@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import PostDetailHeader from '../../_components/PostDetail';
+import ReportModal from '../../_components/ReportModal';
+import { useReportContent } from '../../_hooks/useReportContent';
 
 import { ApiError } from '@/api/client';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
@@ -16,12 +18,14 @@ type InfoDetailHeaderProps = {
 };
 
 export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const router = useRouter();
 
   const { data: user } = useCurrentUser();
+  const { reportTarget, openReportModal, closeReportModal, submitReport, isReportPending } =
+    useReportContent();
   const { mutate: deleteInfoPost, isPending: isDeletePending } = useDeleteInfoPost();
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isMine = !!user && infoPost.author.userId === user.account.userId;
 
@@ -32,39 +36,60 @@ export default function InfoDetailHeader({ infoPost }: InfoDetailHeaderProps) {
   };
 
   return (
-    <PostDetailHeader
-      category={infoPost.category}
-      title={infoPost.title}
-      createdAt={infoPost.createdAt}
-      viewCount={infoPost.viewCount}
-      isMine={isMine}
-      isMenuOpen={isMenuOpen}
-      onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
-      onCloseMenu={() => setIsMenuOpen(false)}
-      onEdit={handleEdit}
-      onReport={() => {
-        setIsMenuOpen(false);
-      }}
-      onDelete={() => {
-        if (!user || !isMine || isDeletePending) return;
-        if (!window.confirm('삭제하시겠습니까?')) return;
+    <>
+      <PostDetailHeader
+        category={infoPost.category}
+        title={infoPost.title}
+        createdAt={infoPost.createdAt}
+        viewCount={infoPost.viewCount}
+        commentCount={infoPost.commentCount}
+        isMine={isMine}
+        isMenuOpen={isMenuOpen}
+        onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
+        onCloseMenu={() => setIsMenuOpen(false)}
+        onEdit={handleEdit}
+        isReportPending={isReportPending || !user}
+        onReport={() => {
+          setIsMenuOpen(false);
+          openReportModal({
+            targetType: 'info',
+            targetId: infoPost.id,
+            authorId: infoPost.author.userId,
+            authorName: infoPost.author.displayName,
+            content: infoPost.title,
+          });
+        }}
+        onDelete={() => {
+          if (!user || !isMine || isDeletePending) return;
+          if (!window.confirm('삭제하시겠습니까?')) return;
 
-        deleteInfoPost(
-          { infoId: infoPost.id },
-          {
-            onSuccess: () => {
-              router.push('/community/info');
+          deleteInfoPost(
+            { infoId: infoPost.id },
+            {
+              onSuccess: () => {
+                router.push('/community/info');
+              },
+              onError: (error) => {
+                alert(
+                  error instanceof ApiError
+                    ? error.message
+                    : '정보/자료공유 게시글 삭제에 실패했습니다.',
+                );
+              },
             },
-            onError: (error) => {
-              alert(
-                error instanceof ApiError
-                  ? error.message
-                  : '정보/자료공유 게시글 삭제에 실패했습니다.',
-              );
-            },
-          },
-        );
-      }}
-    />
+          );
+        }}
+      />
+      {reportTarget && (
+        <ReportModal
+          reportTarget={reportTarget}
+          isPending={isReportPending}
+          onClose={closeReportModal}
+          onSubmit={(reason) => {
+            void submitReport(reason);
+          }}
+        />
+      )}
+    </>
   );
 }

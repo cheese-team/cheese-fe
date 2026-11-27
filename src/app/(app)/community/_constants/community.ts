@@ -76,4 +76,26 @@ export const INFO_POST_LIMITS = {
      게시글 상세 페이지
    ================================ */
 
-export const POST_CONTENT_CLASS = '[&_p]:m-0 [&_p]:min-h-6 [&_br]:block [&_br]:content-[""]';
+export const POST_CONTENT_CLASS =
+  'min-h-40 [&_p]:m-0 [&_p]:min-h-6 [&_br]:block [&_br]:content-[""]';
+
+/* ================================
+     커뮤니티 신고
+   ================================ */
+
+export type ReportReason =
+  | 'spam'
+  | 'abuse'
+  | 'false-information'
+  | 'inappropriate'
+  | 'privacy'
+  | 'other';
+
+export const REPORT_REASON_OPTIONS: Option<ReportReason>[] = [
+  { label: '스팸 및 광고성 콘텐츠', value: 'spam' },
+  { label: '욕설 및 비방', value: 'abuse' },
+  { label: '허위 정보', value: 'false-information' },
+  { label: '음란물 및 불건전한 콘텐츠', value: 'inappropriate' },
+  { label: '개인정보 침해', value: 'privacy' },
+  { label: '기타', value: 'other' },
+];

@@ -1,4 +1,7 @@
 import { apiClient } from '@/api/client';
+
+import type { CreateCommunityReportRequest } from '@/types/community/report';
+
 import type {
   CommunityCommentCategory,
   CommunityCommentResult,
@@ -21,6 +24,14 @@ import type {
   InfoPostsListParams,
   JobPostsListParams,
 } from '@/types/community/query';
+
+export function createCommunityReport(request: CreateCommunityReportRequest): Promise<void> {
+  return apiClient('/backend-api/community/reports', {
+    method: 'POST',
+    body: JSON.stringify(request),
+    responseType: 'void',
+  });
+}
 
 /* ================================
      Job
@@ -404,8 +415,8 @@ export async function createComment({
   category,
   postId,
   ...data
-}: CreateCommentRequest): Promise<CommunityCommentsResponse> {
-  return apiClient<CommunityCommentsResponse>(
+}: CreateCommentRequest): Promise<CommunityCommentResult> {
+  return apiClient<CommunityCommentResult>(
     `/backend-api/community/${category}/${postId}/comments`,
     {
       method: 'POST',

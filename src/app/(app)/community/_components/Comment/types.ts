@@ -3,9 +3,13 @@ import type { CommunityCommentResult } from '@/types/community/comment';
 export type CommentFormProps = {
   disabled?: boolean;
   profileImageUrl?: string;
+  displayName?: string;
   value: string;
   onValueChange: (value: string) => void;
   onSubmit: () => void;
+  onCancel?: () => void;
+  isReply?: boolean;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 };
 
 export type CommentItemProps = {
@@ -20,4 +24,9 @@ export type CommentItemProps = {
   onUpdate: (commentId: string) => void;
   onCancelEdit: () => void;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
+  isReportPending: boolean;
+  onReply?: () => void;
+  isReplying?: boolean;
+  isPostAuthor: boolean;
 };
