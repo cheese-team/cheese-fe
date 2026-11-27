@@ -24,10 +24,7 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
           <MyPageSidebar onMenuClick={resetScroll} />
         </aside>
 
-        <div
-          ref={contentRef}
-          className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
+        <div ref={contentRef} className="flex min-w-0 flex-1 flex-col overflow-y-auto p-10">
           <div className={isMyPageMain ? 'mb-8' : 'mb-5'}>
             <MypageHeaderTitle />
           </div>

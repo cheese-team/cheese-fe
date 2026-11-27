@@ -14,6 +14,8 @@ import {
   INFO_SORT_OPTIONS,
 } from '../../_constants/community';
 
+import { cn } from '@/lib/cn';
+
 export default function CommunityLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { navigate } = useCommunityPostNavigation();
@@ -22,9 +24,11 @@ export default function CommunityLayoutContent({ children }: { children: React.R
 
   const updateSearchParams = useUpdateSearchParams();
 
-  const isCommunityListPage = pathname.split('/').filter(Boolean).length === 2;
+  const pathDepth = pathname.split('/').filter(Boolean).length;
+  const isCommunityListPage = pathDepth === 2;
   const isInfoPage = pathname.startsWith('/community/info');
   const isCreatePage = pathname.endsWith('/create');
+  const isCommunityDetailPage = pathDepth === 3 && !isCreatePage;
 
   const sortOptions = isInfoPage ? INFO_SORT_OPTIONS : COMMUNITY_SORT_OPTIONS;
   const defaultSort = isInfoPage ? 'all' : 'latest';
@@ -45,7 +49,14 @@ export default function CommunityLayoutContent({ children }: { children: React.R
 
   return (
     <div className="@container/community min-w-0">
-      <div className="flex h-dvh flex-col overflow-y-auto px-4 pt-10 [scrollbar-width:none] @3xl/community:px-6 @5xl/community:px-10 [&::-webkit-scrollbar]:hidden">
+      <div
+        className={cn(
+          'flex h-dvh flex-col overflow-y-auto px-4 pt-10 @3xl/community:px-6 @5xl/community:px-10',
+          isCommunityListPage || isCommunityDetailPage
+            ? '[scrollbar-gutter:stable]'
+            : '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        )}
+      >
         <div className="mx-auto mb-8 flex w-full max-w-[1100px] min-w-0 flex-1 flex-col gap-8">
           <div className="flex shrink-0 flex-col gap-5">
             {isCommunityListPage && (
