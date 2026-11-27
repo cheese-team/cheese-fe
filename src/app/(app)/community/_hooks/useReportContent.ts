@@ -7,13 +7,18 @@ import { ApiError } from '@/api/client';
 import { useCurrentUser } from '@/queries/auth/useCurrentUser';
 import { useCreateCommunityReport } from '@/queries/community/useCreateCommunityReport';
 
+import { serializeReportReason } from '@/lib/reportReason';
+
 import type { CreateCommunityReportRequest } from '@/types/community/report';
 
-export type ReportContentTarget = Omit<CreateCommunityReportRequest, 'reason'> & {
+export type ReportContentTarget = Pick<CreateCommunityReportRequest, 'targetId'> & {
   authorId: string;
   authorName: string;
   content: string;
-};
+} & (
+    | { targetType: 'comment'; postId: string }
+    | { targetType: Exclude<CreateCommunityReportRequest['targetType'], 'comment'> }
+  );
 
 export function useReportContent() {
   const { data: user } = useCurrentUser();
@@ -55,7 +60,15 @@ export function useReportContent() {
     isReportingRef.current = true;
 
     try {
-      await mutateAsync({ targetType, targetId, reason });
+      await mutateAsync({
+        targetType,
+        targetId,
+        // TODO: 신고 API에 postId 필드가 추가되면 별도 필드로 전달
+        reason:
+          reportTarget.targetType === 'comment'
+            ? serializeReportReason(reason, reportTarget.postId)
+            : reason,
+      });
       flushSync(() => setReportTarget(null));
       window.alert('신고가 접수되었습니다.');
     } catch (error) {

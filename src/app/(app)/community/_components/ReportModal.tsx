@@ -7,7 +7,6 @@ import { Select } from '@/components/common/Select';
 import { Button } from '@/components/common/Button';
 
 import { REPORT_REASON_OPTIONS } from '../_constants/community';
-import { cn } from '@/lib/cn';
 
 import CloseIcon from '@/assets/icons/common/close.svg';
 
@@ -118,12 +117,14 @@ export default function ReportModal({
             if (!isPending && reason) onSubmit(reason);
           }}
         >
-          <dl className="mb-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-[5px] bg-gray-200 p-3 text-sm">
+          <dl className="bg-bg-3 mb-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-[10px] p-3 text-sm">
             <dt className="font-medium text-gray-600">신고 대상</dt>
             <dd>{isComment ? '댓글' : '게시글'}</dd>
 
-            <dt className="font-medium text-gray-600">{isComment ? '' : '제목'}</dt>
-            <dd className="wrap-anywhere">{reportTarget.content}</dd>
+            <dt className="font-medium text-gray-600">{isComment ? '댓글 내용' : '게시글 제목'}</dt>
+            <dd className="max-h-30 overflow-y-auto wrap-anywhere [scrollbar-color:var(--color-gray-500)_transparent] [scrollbar-width:thin]">
+              {reportTarget.content}
+            </dd>
 
             <dt className="font-medium text-gray-600">작성자</dt>
             <dd className="wrap-anywhere">{reportTarget.authorName}</dd>

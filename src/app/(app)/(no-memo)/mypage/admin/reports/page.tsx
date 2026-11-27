@@ -15,6 +15,7 @@ import AdminReportModal from './_components/AdminReportModal';
 
 import { useUpdateSearchParams } from '@/hooks/useUpdateSearchParams';
 import { useSearchHistories } from '@/hooks/useSearchHistories';
+import { parseReportReason } from '@/lib/reportReason';
 
 import { useAdminReports } from '@/queries/admin/useAdminReports';
 import { useUpdateAdminReport } from '@/queries/admin/useUpdateAdminReport';
@@ -93,12 +94,15 @@ function formatReportTime(date: string) {
   return new Date(date).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
 }
 
-function matchesKeyword(report: ReportListItem, keyword: string) {
+type DisplayReport = ReportListItem & { postId?: string };
+
+function matchesKeyword(report: DisplayReport, keyword: string) {
   const fields = [
     report.id,
     REPORT_STATUS_LABELS[report.status],
     TARGET_TYPE_LABELS[report.targetType],
     report.targetId,
+    report.postId,
     report.reason ?? '-',
     report.reporter?.nickname ?? '알 수 없음',
     report.reporter?.id,
@@ -126,7 +130,13 @@ export default function AdminReportsPage() {
   const list = useAdminReports(statusFilter === 'all' ? undefined : statusFilter);
   const { fetchNextPage, hasNextPage, isFetching, isError } = list;
   const hasCompleteResults = list.isSuccess && !hasNextPage && !isFetching;
-  const loadedReports = list.data?.pages.flatMap((page) => page.items) ?? [];
+  const loadedReports =
+    list.data?.pages.flatMap((page) =>
+      page.items.map((report) => ({
+        ...report,
+        ...parseReportReason(report.targetType, report.reason),
+      })),
+    ) ?? [];
   const reports = isFiltering
     ? hasCompleteResults
       ? loadedReports.filter(
@@ -281,6 +291,21 @@ export default function AdminReportsPage() {
                 <dt className="text-text-muted">분류</dt>
                 <dd>{TARGET_TYPE_LABELS[report.targetType]}</dd>
 
+                {report.postId && (
+                  <>
+                    <dt className="text-text-muted">게시글 ID</dt>
+                    <dd className="break-all">
+                      {/* 현재 댓글 기능은 정보/자료공유 게시판에서만 제공됨 */}
+                      <Link
+                        href={`/community/info/${encodeURIComponent(report.postId)}`}
+                        className="text-secondary-700 underline underline-offset-2"
+                      >
+                        {report.postId}
+                      </Link>
+                    </dd>
+                  </>
+                )}
+
                 <dt className="text-text-muted">
                   {report.targetType === 'comment' ? '댓글' : '게시글'} ID
                 </dt>
@@ -385,6 +410,7 @@ export default function AdminReportsPage() {
           }}
         />
       )}
+
       {selection && selectedAction && (
         <AdminReportModal
           report={selection.report}

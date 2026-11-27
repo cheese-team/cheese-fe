@@ -28,7 +28,7 @@ const RESOLUTION_OPTIONS = {
 };
 
 type AdminReportModalProps = {
-  report: ReportListItem;
+  report: ReportListItem & { postId?: string };
   targetLabel: string;
   title: string;
   action: keyof typeof RESOLUTION_OPTIONS;
@@ -156,11 +156,20 @@ export default function AdminReportModal({
           </p>
         </div>
 
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-[5px] bg-gray-200 p-3 text-sm">
+        <dl className="bg-bg-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-[10px] p-3 text-sm">
           <dt className="font-medium text-gray-600">신고 대상 유형</dt>
           <dd>{targetLabel}</dd>
 
-          <dt className="font-medium text-gray-600">신고 대상 ID</dt>
+          {report.targetType === 'comment' && report.postId && (
+            <>
+              <dt className="font-medium text-gray-600">게시글 ID</dt>
+              <dd className="wrap-anywhere">{report.postId}</dd>
+            </>
+          )}
+
+          <dt className="font-medium text-gray-600">
+            {report.targetType === 'comment' ? '댓글' : '게시글'} ID
+          </dt>
           <dd className="wrap-anywhere">{report.targetId}</dd>
 
           <dt className="font-medium text-gray-600">신고 사유</dt>

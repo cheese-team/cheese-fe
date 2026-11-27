@@ -134,6 +134,7 @@ export default function Comment({ category, postId, postAuthorId }: CommentProps
         openReportModal({
           targetType: 'comment',
           targetId: commentId,
+          postId,
           authorId: comment.author.userId,
           authorName: comment.author.displayName,
           content: comment.content,
